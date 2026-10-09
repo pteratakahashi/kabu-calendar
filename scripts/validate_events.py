@@ -17,7 +17,7 @@ THEMES = ROOT / "data" / "themes.json"
 
 REQUIRED = ("id", "d", "country", "title", "impact")
 COUNTRIES = {"JP", "US", "TW", "CN", "EU", "KR", "GLOBAL"}
-ALLOWED_KEYS = {"id", "code", "d", "t", "approx", "country", "title", "desc",
+ALLOWED_KEYS = {"id", "code", "ticker", "d", "t", "approx", "country", "title", "desc",
                 "impact", "themes", "tentative", "src"}
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")

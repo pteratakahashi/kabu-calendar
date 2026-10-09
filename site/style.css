@@ -13,6 +13,7 @@
   --sat: #1d6fe0;
   --today: #1d6fe0;
   --sel-bg: #e7f0fd;
+  --up: #d32f2f; --down: #1565c0;
   --big: #7b4ddb;
   --star: #f0a400;
   --star-off: #d5dae0;
@@ -35,6 +36,7 @@
     --sat: #6aa8ff;
     --today: #5aa0ff;
     --sel-bg: #1d2f48;
+    --up: #ff6b6b; --down: #5aa0ff;
     --big: #a98bff; --star: #ffc23d; --star-off: #36404b;
     --d1: #3a1f26; --d2: #3a3020; --d3: #1d3324; --d4: #1b2d3d; --d5: #2a2340; --d6: #232a33; --d0: #3a2020;
     --hi: #2a1d22;
@@ -44,6 +46,7 @@
   --bg: #0f1419; --surface: #182029; --text: #e8ecf0; --muted: #8b96a3; --line: #26303b;
   --accent: #5aa0ff; --watch: #ffc23d; --watch-bg: #3a2f12; --us: #ff6b6b; --us-bg: #3a1c1f;
   --sun: #ff7b7b; --sat: #6aa8ff; --today: #5aa0ff; --sel-bg: #1d2f48;
+  --up: #ff6b6b; --down: #5aa0ff;
   --big: #a98bff; --star: #ffc23d; --star-off: #36404b;
   --d1: #3a1f26; --d2: #3a3020; --d3: #1d3324; --d4: #1b2d3d; --d5: #2a2340; --d6: #232a33; --d0: #3a2020;
   --hi: #2a1d22;
@@ -234,3 +237,45 @@ dialog#sheet::backdrop { background: rgba(0,0,0,.45); }
 .sheet-head button { font-size: 18px; width: 36px; height: 36px; }
 .sheet-desc { font-size: 13px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
 .sheet-evs { display: block; margin-top: 6px; color: var(--text); font-size: 12px; border-left: 3px solid var(--us); padding-left: 8px; }
+
+/* ---------- v3: 株価の反応・月間まとめ ---------- */
+[hidden] { display: none !important; }
+.pct { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 12.5px; white-space: nowrap; }
+.pct.up { color: var(--up); } .pct.down { color: var(--down); } .pct.flat { color: var(--muted); }
+.rxline { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 6px; padding-top: 6px; border-top: 1px dashed var(--line); }
+.rxline .pct { font-weight: 600; }
+.rxhint { font-size: 11px; color: var(--accent); margin-left: auto; white-space: nowrap; }
+.has-rx { cursor: pointer; }
+.list li .pct { flex: none; }
+
+.chart-box { background: var(--surface); border-radius: 12px; padding: 10px 10px 4px; margin-bottom: 8px; }
+.chart-h { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; font-size: 13px; }
+.chart-h span { font-size: 11.5px; color: var(--muted); }
+.chart { width: 100%; height: auto; display: block; }
+.chart .zero { stroke: var(--line); stroke-dasharray: 3 3; }
+.chart .evline { stroke: var(--accent); stroke-width: 1.2; stroke-dasharray: 4 2; }
+.chart .evlabel { fill: var(--accent); font-size: 10px; font-weight: 700; }
+.chart .pre { fill: none; stroke: var(--muted); stroke-width: 1.6; opacity: .7; }
+.chart .post { fill: none; stroke-width: 2.2; stroke-linejoin: round; }
+.chart .post.up { stroke: var(--up); } .chart .post.down { stroke: var(--down); } .chart .post.flat { stroke: var(--muted); }
+.chart .post-dot.up { fill: var(--up); } .chart .post-dot.down { fill: var(--down); } .chart .post-dot.flat { fill: var(--muted); }
+.chart .yl { fill: var(--muted); font-size: 9.5px; text-anchor: end; font-variant-numeric: tabular-nums; }
+.chart .xl { fill: var(--muted); font-size: 9.5px; }
+
+.rxtable { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 10px; background: var(--surface); border-radius: 10px; overflow: hidden; }
+.rxtable th, .rxtable td { padding: 7px 4px; text-align: right; border-bottom: 1px solid var(--line); }
+.rxtable thead th { color: var(--muted); font-weight: 500; font-size: 11px; }
+.rxtable tbody th { text-align: left; font-weight: 600; white-space: nowrap; padding-left: 8px; }
+.rxtable tr:last-child th, .rxtable tr:last-child td { border-bottom: 0; }
+.rxtable .pct { font-size: 12px; }
+.rx-big { display: flex; align-items: baseline; gap: 10px; margin: 2px 0 10px; }
+.rx-big .pct { font-size: 28px; }
+.rx-big span:last-child { font-size: 12px; color: var(--muted); }
+.note { font-size: 11px; color: var(--muted); margin: 2px 0 12px; }
+.sheet-h { font-size: 14px; margin: 14px 0 8px; }
+
+.mday { display: flex; justify-content: space-between; align-items: baseline; font-size: 15px; margin: 16px 0 6px; padding-bottom: 4px; border-bottom: 2px solid var(--line); }
+.mday.today { border-bottom-color: var(--today); }
+.mday span { font-size: 12px; color: var(--muted); font-weight: 400; }
+.msum { font-size: 13px; color: var(--muted); margin: 4px 0; }
+.msum b { color: var(--text); font-size: 16px; }

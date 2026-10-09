@@ -47,6 +47,10 @@
       <button id="next" aria-label="次の月">›</button>
       <button id="today-btn" class="chip">今日</button>
     </div>
+    <div class="seg" id="cal-mode" role="group" aria-label="表示">
+      <button data-v="day" class="on">カレンダー</button>
+      <button data-v="month">月間まとめ</button>
+    </div>
     <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
     <div id="grid" class="grid"></div>
     <div class="legend">
@@ -72,6 +76,7 @@
     </div>
     <div class="theme-bar" id="cal-themes"></div>
     <ul id="day-list" class="list"></ul>
+    <div id="month-list"></div>
   </section>
 
   <!-- 検索 -->
@@ -93,8 +98,7 @@
     <h3 id="sheet-title"></h3>
     <button id="sheet-close" aria-label="閉じる">✕</button>
   </div>
-  <p id="sheet-desc" class="sheet-desc"></p>
-  <ul id="sheet-list" class="list"></ul>
+  <div id="sheet-body"></div>
 </dialog>
 
 <nav class="tabs">

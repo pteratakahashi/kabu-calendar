@@ -3,6 +3,7 @@ name: update-data
 on:
   schedule:
     - cron: "30 9 * * *"   # 毎日 18:30 JST（JPX の翌営業日分更新 17:00頃 の後）
+    - cron: "0 22 * * *"   # 毎日 07:00 JST（前夜の米国指標・決算の反応を取り込む）
   workflow_dispatch:        # 手動実行ボタン
   push:
     branches: [main]
@@ -33,6 +34,10 @@ jobs:
         env:
           JQUANTS_API_KEY: ${{ secrets.JQUANTS_API_KEY }}
         run: python scripts/fetch_data.py
+
+      - name: Fetch market reactions
+        continue-on-error: true   # Yahoo 側の不調で全体を止めない
+        run: python scripts/fetch_reactions.py
 
       - name: Commit data
         run: |

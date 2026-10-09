@@ -576,7 +576,12 @@ function swipe(el, fn) {
 swipe($("#grid"), shiftMonth);
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js").catch(() => {});
+  // 新しいバージョンが有効になったら自動で読み込み直す
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (hadController) location.reload(); });
+  navigator.serviceWorker.register("sw.js", { updateViaCache: "none" })
+    .then((reg) => { reg.update(); document.addEventListener("visibilitychange", () => { if (!document.hidden) reg.update(); }); })
+    .catch(() => {});
 }
 
 load();

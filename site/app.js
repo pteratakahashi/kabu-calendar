@@ -10,7 +10,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ evImp: "2", calImp: "2", calSort: "imp", calMode: "day", evMode: "week" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -23,6 +23,7 @@ const state = {
   month: null, selected: null, weekStart: null,
   evTheme: "", calTheme: "",
   rx: { events: {}, earnings: {} }, // 株価の反応（reactions.json）
+  ipo: [], ipoByDate: new Map(),    // IPO（ipo.json）
   sheetFn: null,                    // 開いているシートの再描画関数
 };
 
@@ -95,6 +96,7 @@ async function load() {
       ["earnings.json", "stocks.json", "events.json", "themes.json", "meta.json"].map(getJSON));
     Object.assign(state, { earnings, stocks, events, themes, meta });
     state.rx = await getJSON("reactions.json").catch(() => state.rx);
+    state.ipo = await getJSON("ipo.json").catch(() => []);
   } catch (e) {
     $("#updated").textContent = "データ取得に失敗しました";
     $("#updated").classList.add("stale");
@@ -124,6 +126,10 @@ function index() {
       || (e.d >= today && (cur.d < today || e.d < cur.d))
       || (e.d < today && cur.d < today && e.d > cur.d);
     if (better) state.nextByCode.set(e.c, e);
+  }
+  for (const x of state.ipo) {
+    if (!state.ipoByDate.has(x.d)) state.ipoByDate.set(x.d, []);
+    state.ipoByDate.get(x.d).push(x);
   }
   for (const ev of state.events) {
     if (!state.evByDate.has(ev.d)) state.evByDate.set(ev.d, []);
@@ -193,7 +199,13 @@ function weekItems(day) {
     return { kind: "earn", ...ev, c: ev.code, rxKey: `${ev.code}@${day}`, watched: state.watch.has(ev.code),
       impact: Math.max(ev.impact, s.imp || 1), themes: ev.themes?.length ? ev.themes : (s.th || []) };
   });
-  const covered = new Set(items.filter((it) => it.c).map((it) => it.c));
+  for (const x of state.ipoByDate.get(day) || []) {
+    if (x.tech) continue; // テクニカル上場は新規公開ではないので出さない
+    const price = x.price ? `公開価格 ${x.price.toLocaleString()}円` : x.range ? `仮条件 ${x.range}円` : "価格未定";
+    items.push({ kind: "ipo", c: x.c, d: day, t: "09:00", country: "JP", impact: x.imp || 1, themes: [], ipo: x,
+      title: `IPO ${x.n}（${x.c}）`, desc: [x.mkt, price, x.size ? `吸収 ${x.size}億円` : ""].filter(Boolean).join(" · ") });
+  }
+  const covered = new Set(items.filter((it) => it.c && it.kind !== "ipo").map((it) => it.c));
   for (const e0 of state.byDate.get(day) || []) {
     if (covered.has(e0.c)) continue;
     const e = info(e0);
@@ -213,7 +225,10 @@ function evRow(it) {
   const tent = it.tentative ? '<span class="badge tent">予定</span>' : "";
   const watch = it.watched ? '<span class="badge wbadge">ウォッチ</span>' : "";
   let rx = "", attr = it.kind === "earn" ? `data-code="${esc(it.c)}"` : "";
-  if (it.kind === "earn" && state.rx.earnings[it.rxKey]) {
+  if (it.kind === "ipo") {
+    attr = `data-ipo="${esc(it.c)}"`;
+    if (it.ipo.first != null) rx = `<div class="rxline">${pct(it.ipo.first_r, { digits: 1, label: "初値 " })}${pct(it.ipo.last_r, { digits: 1, label: "現在 " })}<span class="rxhint">チャート ›</span></div>`;
+  } else if (it.kind === "earn" && state.rx.earnings[it.rxKey]) {
     const r = state.rx.earnings[it.rxKey];
     rx = `<div class="rxline">${pct(r.r, { label: r.day === it.d ? "当日 " : "翌日 " })}<span class="rxhint">チャート ›</span></div>`;
     attr = `data-rx="${esc(it.rxKey)}"`;
@@ -227,7 +242,7 @@ function evRow(it) {
     attr = `data-evrx="${esc(it.id)}"`;
   }
   return `<div class="ev imp${it.impact}${it.watched ? " watched" : ""}${rx ? " has-rx" : ""}" ${attr}>
-    <span class="flag">${FLAG[it.country] || "🌐"}</span>
+    <span class="flag">${it.kind === "ipo" ? "🆕" : FLAG[it.country] || "🌐"}</span>
     <div class="ev-main">
       <div class="ev-title">${esc(it.title)}${tent}${watch}</div>
       ${it.desc ? `<div class="ev-desc">${esc(it.desc)}</div>` : ""}
@@ -248,13 +263,12 @@ function renderWeek() {
     const end = new Date(start); end.setDate(start.getDate() + 6);
     $("#week-label").textContent = `${start.getMonth() + 1}/${start.getDate()}(月)〜${end.getMonth() + 1}/${end.getDate()}(日)`;
   }
-  const minImp = Number(prefs.evImp);
   const today = todayStr();
   let html = "";
   for (let i = 0; i < days; i++) {
     const d = new Date(start); d.setDate(start.getDate() + i);
     const key = ymd(d);
-    let items = weekItems(key).filter((it) => it.impact >= minImp || it.watched);
+    let items = weekItems(key);
     if (state.evTheme) items = items.filter((it) => (it.themes || []).includes(state.evTheme) || (!it.themes?.length && it.impact === 3 && it.kind === "ev"));
     if (!items.length) continue;
     items.sort((a, b) => (a.t || "99").localeCompare(b.t || "99") || b.impact - a.impact);
@@ -327,19 +341,14 @@ function renderDay() {
   const key = state.selected;
   const all = (state.byDate.get(key) || []).map(info);
   let list = all;
-  const f = prefs.calImp;
-  if (f === "w") list = list.filter((e) => state.watch.has(e.c));
-  else list = list.filter((e) => e.imp >= Number(f) || state.watch.has(e.c));
   if (state.calTheme) list = list.filter((e) => e.th.includes(state.calTheme));
   const sorter = SORTERS[prefs.calSort] || SORTERS.imp;
   // ウォッチ銘柄は常に先頭
   list.sort((a, b) => (state.watch.has(b.c) - state.watch.has(a.c)) || sorter(a, b));
   const big = all.filter((e) => e.imp === 3).length;
   $("#day-label").textContent = `${fmtDay(key)}　決算 ${all.length}社${big ? `（★★★ ${big}社）` : ""}`;
-  const hidden = all.length - list.length;
   let html = list.map((e) => stockRow(e)).join("");
-  if (!html) html = `<li class="empty">${all.length ? "条件に合う銘柄はありません" : "予定はありません"}</li>`;
-  if (hidden > 0 && f !== "1") html += `<li class="more"><button data-showall>ほか ${hidden}社を表示</button></li>`;
+  if (!html) html = `<li class="empty">${all.length ? "このテーマの銘柄はありません" : "予定はありません"}</li>`;
   $("#day-list").innerHTML = html;
 }
 
@@ -348,28 +357,80 @@ function applyCalMode() {
   const month = prefs.calMode === "month";
   for (const sel of [".weekdays", "#grid", ".legend", ".day-head", "#day-list"]) $(sel).hidden = month;
   $("#month-list").hidden = !month;
+  document.querySelector(".cal-cols").classList.toggle("month", month);
   $("#today-btn").hidden = month;
 }
 
 function renderMonth() {
   if (prefs.calMode !== "month") return;
   const [y, m] = state.month.split("-").map(Number);
-  const f = prefs.calImp;
   const sorter = SORTERS[prefs.calSort] || SORTERS.imp;
   const days = [...state.byDate.keys()].filter((d) => d.startsWith(state.month)).sort();
   let total = 0, html = "";
   for (const d of days) {
     let list = state.byDate.get(d).map(info);
-    list = f === "w" ? list.filter((e) => state.watch.has(e.c)) : list.filter((e) => e.imp >= Number(f) || state.watch.has(e.c));
+    list = list.filter((e) => e.imp >= 2 || state.watch.has(e.c)); // 大企業（★★以上）＋ウォッチ
     if (state.calTheme) list = list.filter((e) => e.th.includes(state.calTheme));
     if (!list.length) continue;
     list.sort((a, b) => (state.watch.has(b.c) - state.watch.has(a.c)) || sorter(a, b));
     total += list.length;
     html += `<h4 class="mday${d === todayStr() ? " today" : ""}">${fmtDay(d)}<span>${list.length}社</span></h4><ul class="list">${list.map((e) => stockRow(e)).join("")}</ul>`;
   }
-  const label = { "3": "★★★", "2": "★★以上", "1": "全", w: "ウォッチ" }[f];
-  $("#month-list").innerHTML = `<p class="msum">${y}年${m}月の${label}決算 <b>${total}社</b>${state.calTheme ? `（${esc(state.theme.get(state.calTheme)?.name)}）` : ""}</p>`
+  $("#month-list").innerHTML = `<p class="msum">${y}年${m}月の大企業（★★以上）の決算 <b>${total}社</b>${state.calTheme ? `（${esc(state.theme.get(state.calTheme)?.name)}）` : ""}</p>`
     + (html || `<p class="empty-msg">該当する決算はありません</p>`);
+}
+
+// ---------- IPO ----------
+function ipoCard(x) {
+  const price = x.price ? `公開価格 <b>${x.price.toLocaleString()}円</b>` : x.range ? `仮条件 <b>${esc(x.range)}円</b>` : "価格未定";
+  const listed = x.first != null;
+  return `<li data-ipo="${esc(x.c)}" class="ipo-row">
+    <div class="lead"><span class="code">${esc(x.c)}</span>${stars(x.imp || 1)}</div>
+    <div class="main"><div class="name">${esc(x.n)}</div>
+      <div class="sub"><span class="badge">${esc(x.mkt)}</span>${fmtDay(x.d)} 上場 · 承認 ${fmtDay(x.appr)}</div>
+      <div class="sub">${price}${x.size ? ` · 吸収 ${x.size}億円` : ""}</div>
+      ${listed ? `<div class="rxline">${pct(x.first_r, { digits: 1, label: "初値 " })}${pct(x.last_r, { digits: 1, label: "現在 " })}<span class="rxhint">チャート ›</span></div>` : ""}
+    </div>
+  </li>`;
+}
+
+function renderIpo() {
+  const today = todayStr();
+  const up = prefs.ipoMode !== "past";
+  const list = state.ipo.filter((x) => !x.tech && (up ? x.d >= today : x.d < today));
+  list.sort((a, b) => (up ? a.d.localeCompare(b.d) : b.d.localeCompare(a.d)));
+  let html = "";
+  if (!up && list.some((x) => x.first_r != null)) {
+    const done = list.filter((x) => x.first_r != null);
+    const wins = done.filter((x) => x.first_r > 0).length;
+    const avg = done.reduce((s, x) => s + x.first_r, 0) / done.length;
+    html += `<p class="msum">今年の上場 <b>${done.length}社</b> · 初値が公開価格超え ${wins}社（${Math.round((wins / done.length) * 100)}%）· 初値騰落率の平均 ${pct(avg, { digits: 1 })}</p>`;
+  }
+  html += list.length ? `<ul class="list">${list.map(ipoCard).join("")}</ul>` : `<p class="empty-msg">${up ? "予定されている IPO はありません" : "データがありません"}</p>`;
+  $("#ipo-list").innerHTML = html;
+}
+
+function openIpo(c) {
+  const x = state.ipo.find((i) => i.c === c);
+  if (!x) return;
+  const rows = [
+    ["上場日", fmtDay(x.d)], ["上場承認日", fmtDay(x.appr)], ["市場", x.mkt],
+    ["仮条件", x.range ? `${x.range}円` : "—"], ["公開価格", x.price ? `${x.price.toLocaleString()}円` : "—"],
+    ["公募 / 売出", `${(x.pub || 0).toLocaleString()}千株 / ${(x.sell || 0).toLocaleString()}千株${x.oa ? `（OA ${x.oa.toLocaleString()}）` : ""}`],
+    ["吸収金額", x.size ? `${x.size}億円` : "—"],
+    ["初値", x.first != null ? `${x.first.toLocaleString()}円（${fmtDay(x.first_d)}）` : "—"],
+  ];
+  let html = `<table class="rxtable kv"><tbody>${rows.map(([k, v]) => `<tr><th>${k}</th><td>${esc(v)}</td></tr>`).join("")}</tbody></table>`;
+  if (x.first != null) {
+    html += `<div class="rx-big">${pct(x.first_r, { digits: 1 })}<span>初値の騰落率（公開価格比）</span></div>`;
+    if (x.pts?.length > 1) {
+      const pts = x.pts.map((p, i) => [i, p[1]]);
+      html += `<div class="chart-box"><div class="chart-h"><b>上場後の終値（公開価格=0%）</b><span>現在 ${pct(x.last_r, { digits: 1 })}</span></div>`
+        + lineChart([[-1, 0], ...pts], { x0: -0.5, x0Label: "上場", xLabels: [[0, x.pts[0][0].replace("-", "/")], [pts.length - 1, x.pts[x.pts.length - 1][0].replace("-", "/")]] })
+        + `</div><p class="note">上場から最大40営業日分（データ: Yahoo Finance）</p>`;
+    }
+  }
+  openSheet(`IPO ${x.n}（${x.c}）`, html, () => openIpo(c));
 }
 
 // ---------- テーマ ----------
@@ -496,7 +557,7 @@ function renderWatch() {
 }
 
 function renderAll() {
-  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderWatch();
+  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderWatch(); renderIpo();
   renderMonth();
   if ($("#sheet").open && state.sheetFn) state.sheetFn();
 }
@@ -534,21 +595,19 @@ document.addEventListener("click", (ev) => {
   if (seg) {
     const box = seg.parentElement;
     setSeg(box, seg.dataset.v);
-    if (box.id === "ev-imp") { prefs.evImp = seg.dataset.v; renderWeek(); }
+    if (box.id === "ipo-mode") { prefs.ipoMode = seg.dataset.v; renderIpo(); }
     else if (box.id === "ev-mode") {
       prefs.evMode = seg.dataset.v;
       if (prefs.evMode === "week") state.weekStart = mondayOf(state.weekStart);
       renderWeek();
     }
     else if (box.id === "cal-mode") { prefs.calMode = seg.dataset.v; applyCalMode(); renderMonth(); }
-    else { prefs.calImp = seg.dataset.v; renderDay(); renderMonth(); }
+
     saveJSON(PREF_KEY, prefs);
     return;
   }
-  if (ev.target.closest("[data-showall]")) {
-    prefs.calImp = "1"; setSeg($("#cal-imp"), "1"); saveJSON(PREF_KEY, prefs); renderDay(); renderMonth();
-    return;
-  }
+  const ipoEl = ev.target.closest("[data-ipo]");
+  if (ipoEl) { openIpo(ipoEl.dataset.ipo); return; }
   const earn = ev.target.closest(".ev[data-code]");
   if (earn) {
     // 決算イベントをタップ → 決算タブのその日へ
@@ -588,11 +647,10 @@ $("#today-btn").onclick = () => {
 $("#q").addEventListener("input", renderSearch);
 $("#cal-sort").value = prefs.calSort;
 $("#cal-sort").addEventListener("change", (e) => { prefs.calSort = e.target.value; saveJSON(PREF_KEY, prefs); renderDay(); renderMonth(); });
-setSeg($("#ev-imp"), prefs.evImp);
+setSeg($("#ipo-mode"), prefs.ipoMode);
 setSeg($("#ev-mode"), prefs.evMode);
 setSeg($("#cal-mode"), prefs.calMode);
 applyCalMode();
-setSeg($("#cal-imp"), prefs.calImp);
 
 // 左右スワイプで月送り・週送り
 function swipe(el, fn) {

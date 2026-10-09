@@ -35,6 +35,10 @@ jobs:
           JQUANTS_API_KEY: ${{ secrets.JQUANTS_API_KEY }}
         run: python scripts/fetch_data.py
 
+      - name: Fetch IPO
+        continue-on-error: true
+        run: python scripts/fetch_ipo.py
+
       - name: Fetch market reactions
         continue-on-error: true   # Yahoo 側の不調で全体を止めない
         run: python scripts/fetch_reactions.py

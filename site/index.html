@@ -35,11 +35,6 @@
       <button data-v="week" class="on">週</button>
       <button data-v="month">月</button>
     </div>
-    <div class="seg" id="ev-imp" role="group" aria-label="影響度">
-      <button data-v="3">★★★のみ</button>
-      <button data-v="2" class="on">★★以上</button>
-      <button data-v="1">すべて</button>
-    </div>
     <div class="theme-bar" id="ev-themes"></div>
     <div id="week"></div>
   </section>
@@ -56,6 +51,7 @@
       <button data-v="day" class="on">カレンダー</button>
       <button data-v="month">月間まとめ</button>
     </div>
+    <div class="cal-cols"><div class="cal-left">
     <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
     <div id="grid" class="grid"></div>
     <div class="legend">
@@ -63,13 +59,8 @@
       <span><i class="dot watch"></i>ウォッチ</span>
       <span><i class="num-sample">12</i>決算社数</span>
     </div>
+    </div><div class="cal-right">
     <div class="day-head"><h3 id="day-label"></h3></div>
-    <div class="seg" id="cal-imp" role="group" aria-label="絞り込み">
-      <button data-v="3">★★★</button>
-      <button data-v="2" class="on">★★以上</button>
-      <button data-v="1">すべて</button>
-      <button data-v="w">ウォッチ</button>
-    </div>
     <div class="sortbar">
       <label>並び順
         <select id="cal-sort">
@@ -82,6 +73,17 @@
     <div class="theme-bar" id="cal-themes"></div>
     <ul id="day-list" class="list"></ul>
     <div id="month-list"></div>
+    </div></div>
+  </section>
+
+  <!-- IPO -->
+  <section id="view-ipo" class="view">
+    <div class="seg" id="ipo-mode" role="group" aria-label="IPO表示">
+      <button data-v="up" class="on">これから</button>
+      <button data-v="past">上場済み（今年）</button>
+    </div>
+    <div id="ipo-list"></div>
+    <p class="note">出典: JPX 新規上場会社情報。初値・騰落率は公開価格比（データ: Yahoo Finance）</p>
   </section>
 
   <!-- 検索 -->
@@ -109,10 +111,25 @@
 <nav class="tabs">
   <button data-v="events" class="on"><span class="ti">📰</span>イベント</button>
   <button data-v="cal"><span class="ti">📅</span>決算</button>
+  <button data-v="ipo"><span class="ti">🆕</span>IPO</button>
   <button data-v="search"><span class="ti">🔍</span>検索</button>
   <button data-v="watch"><span class="ti">★</span>ウォッチ</button>
 </nav>
 
+<script>
+// 古い版（v1〜v3: キャッシュ優先）が残っていたら掃除して読み込み直す
+(async () => {
+  try {
+    const keys = await caches.keys();
+    if (keys.some((k) => /^kabucal-v[1-3]$/.test(k))) {
+      await Promise.all(keys.map((k) => caches.delete(k)));
+      const regs = await navigator.serviceWorker.getRegistrations();
+      await Promise.all(regs.map((r) => r.unregister()));
+      location.reload();
+    }
+  } catch { /* noop */ }
+})();
+</script>
 <script src="app.js"></script>
 </body>
 </html>

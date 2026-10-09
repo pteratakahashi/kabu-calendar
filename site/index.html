@@ -26,9 +26,14 @@
   <section id="view-events" class="view active">
     <div class="month-nav">
       <h2 id="week-label"></h2>
-      <button id="wprev" aria-label="前の週">‹</button>
-      <button id="wnext" aria-label="次の週">›</button>
-      <button id="thisweek" class="chip">今週</button>
+      <label class="datejump" aria-label="日付を選んで移動">📆<input type="date" id="ev-date"></label>
+      <button id="wprev" aria-label="前へ">‹</button>
+      <button id="wnext" aria-label="次へ">›</button>
+      <button id="thisweek" class="chip">今日</button>
+    </div>
+    <div class="seg" id="ev-mode" role="group" aria-label="表示">
+      <button data-v="week" class="on">週</button>
+      <button data-v="month">月</button>
     </div>
     <div class="seg" id="ev-imp" role="group" aria-label="影響度">
       <button data-v="3">★★★のみ</button>

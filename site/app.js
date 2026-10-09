@@ -10,7 +10,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ evImp: "2", calImp: "2", calSort: "imp", calMode: "day" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ evImp: "2", calImp: "2", calSort: "imp", calMode: "day", evMode: "week" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -71,7 +71,7 @@ function lineChart(pts, { x0 = 0, xLabels = [], x0Label = "" } = {}) {
     <path class="pre" d="${line(pre)}"/><path class="post ${cls}" d="${line(post)}"/>
     <circle class="post-dot ${cls}" cx="${X(xs[xs.length - 1])}" cy="${Y(last)}" r="3"/>
     ${xLabels.map(([x, l]) => {
-      const px = X(x), anchor = px > W - R - 20 ? "end" : px < L + 10 ? "start" : "middle";
+      const px = Math.min(Math.max(X(x), L), W - R), anchor = px > W - R - 20 ? "end" : px < L + 10 ? "start" : "middle";
       return `<text class="xl" x="${px}" y="${H - 6}" text-anchor="${anchor}">${esc(l)}</text>`;
     }).join("")}
   </svg>`;
@@ -219,9 +219,11 @@ function evRow(it) {
     attr = `data-rx="${esc(it.rxKey)}"`;
   } else if (it.kind === "ev" && state.rx.events[it.id]) {
     const r = state.rx.events[it.id];
-    const parts = r.series.map((x) => pct(x.m30 ?? x.end, { label: `${x.name} ` }));
+    const hourly = r.iv === "1h";
+    const parts = r.series.map((x) => pct(hourly ? (x.m60 ?? x.end) : (x.m30 ?? x.end), { label: `${x.name} ` }))
+      .concat((r.idx || []).map((x) => pct(x.r, { label: `${x.name} ` })));
     if (r.jp?.length) parts.push(pct(r.jp[0].r, { label: `${r.jp[0].n} ` }));
-    rx = `<div class="rxline">${parts.slice(0, 3).join("")}<span class="rxhint">${r.series.length ? "30分後" : "日本株"} · チャート ›</span></div>`;
+    rx = `<div class="rxline">${parts.slice(0, 3).join("")}<span class="rxhint">${r.series.length ? (hourly ? "1時間後" : "30分後") : r.idx ? "休場明け" : "日本株"} · チャート ›</span></div>`;
     attr = `data-evrx="${esc(it.id)}"`;
   }
   return `<div class="ev imp${it.impact}${it.watched ? " watched" : ""}${rx ? " has-rx" : ""}" ${attr}>
@@ -237,13 +239,19 @@ function evRow(it) {
 }
 
 function renderWeek() {
-  const start = parse(state.weekStart);
-  const end = new Date(start); end.setDate(start.getDate() + 6);
-  $("#week-label").textContent = `${start.getMonth() + 1}/${start.getDate()}(月)〜${end.getMonth() + 1}/${end.getDate()}(日)`;
+  let start = parse(state.weekStart), days = 7;
+  if (prefs.evMode === "month") {
+    start = new Date(start.getFullYear(), start.getMonth(), 1);
+    days = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+    $("#week-label").textContent = `${start.getFullYear()}年${start.getMonth() + 1}月`;
+  } else {
+    const end = new Date(start); end.setDate(start.getDate() + 6);
+    $("#week-label").textContent = `${start.getMonth() + 1}/${start.getDate()}(月)〜${end.getMonth() + 1}/${end.getDate()}(日)`;
+  }
   const minImp = Number(prefs.evImp);
   const today = todayStr();
   let html = "";
-  for (let i = 0; i < 7; i++) {
+  for (let i = 0; i < days; i++) {
     const d = new Date(start); d.setDate(start.getDate() + i);
     const key = ymd(d);
     let items = weekItems(key).filter((it) => it.impact >= minImp || it.watched);
@@ -255,13 +263,15 @@ function renderWeek() {
       <div class="day-items">${items.map(evRow).join("")}</div>
     </section>`;
   }
-  $("#week").innerHTML = html || `<p class="empty-msg">この週の該当イベントはありません</p>`;
+  $("#week").innerHTML = html || `<p class="empty-msg">この${prefs.evMode === "month" ? "月" : "週"}の該当イベントはありません</p>`;
 }
 
 function shiftWeek(delta) {
-  const d = parse(state.weekStart); d.setDate(d.getDate() + 7 * delta);
-  state.weekStart = ymd(d);
+  const d = parse(state.weekStart);
+  if (prefs.evMode === "month") { d.setDate(1); d.setMonth(d.getMonth() + delta); state.weekStart = ymd(d); }
+  else { d.setDate(d.getDate() + 7 * delta); state.weekStart = mondayOf(ymd(d)); }
   renderWeek();
+  window.scrollTo(0, 0);
 }
 
 // ---------- 決算カレンダー ----------
@@ -408,16 +418,27 @@ function openEventRx(id) {
   const hhmm = `${pad(t.getHours())}:${pad(t.getMinutes())}`;
   let html = `<p class="sheet-desc">${fmtDay(ev.d)} ${esc(ev.t || "")} 発表（日本時間）${ev.desc ? "<br>" + esc(ev.desc) : ""}</p>`;
   if (r.series.length) {
-    html += `<table class="rxtable"><thead><tr><th></th><th>5分後</th><th>30分後</th><th>1時間後</th><th>3時間後</th></tr></thead><tbody>`
-      + r.series.map((x) => `<tr><th>${esc(x.name)}</th><td>${pct(x.m5)}</td><td>${pct(x.m30)}</td><td>${pct(x.m60)}</td><td>${pct(x.end)}</td></tr>`).join("")
+    const hourly = r.iv === "1h";
+    const marks = (x) => x.marks || [["5分後", x.m5], ["30分後", x.m30], ["1時間後", x.m60], ["3時間後", x.end]];
+    const heads = marks(r.series[0]).map((m) => m[0]);
+    html += `<table class="rxtable"><thead><tr><th></th>${heads.map((h) => `<th>${h}</th>`).join("")}</tr></thead><tbody>`
+      + r.series.map((x) => `<tr><th>${esc(x.name)}</th>${marks(x).map((m) => `<td>${pct(m[1])}</td>`).join("")}</tr>`).join("")
       + `</tbody></table>`;
+    const xl = hourly ? [[-180, "-3h"], [180, "+3h"], [360, "+6h"]] : [[-60, "-1h"], [60, "+1h"], [120, "+2h"], [180, "+3h"]];
     for (const x of r.series) {
       html += `<div class="chart-box"><div class="chart-h"><b>${esc(x.name)}</b><span>高値 ${pct(x.hi)} / 安値 ${pct(x.lo)}</span></div>`
-        + lineChart(x.pts, { x0: 0, x0Label: `発表 ${hhmm}`, xLabels: [[-60, "-1h"], [60, "+1h"], [120, "+2h"], [180, "+3h"]] })
+        + lineChart(x.pts, { x0: 0, x0Label: `発表 ${hhmm}`, xLabels: xl })
         + `</div>`;
     }
-    html += `<p class="note">発表直前の値を 0% として、5分ごとの騰落率を表示（データ: Yahoo Finance）</p>`;
+    html += `<p class="note">発表直前の値を 0% として、${hourly ? "1時間ごと（60日より前のため1時間足）" : "5分ごと"}の騰落率を表示（データ: Yahoo Finance）</p>`;
   }
+  for (const x of r.idx || []) {
+    const pts = x.pts.map((p, i) => [i, p[1]]);
+    html += `<div class="chart-box"><div class="chart-h"><b>${esc(x.name)}</b><span>${fmtDay(x.day)} ${pct(x.r)}</span></div>`
+      + lineChart(pts, { x0: x.k - 0.5, x0Label: "休場明け", xLabels: [[0, x.pts[0][0].replace("-", "/")], [pts.length - 1, x.pts[x.pts.length - 1][0].replace("-", "/")]] })
+      + `</div>`;
+  }
+  if (r.idx) html += `<p class="note">発表が休場中だったため、休場明けの取引日の終値ベース（前日終値=0%）で表示</p>`;
   if (r.jp?.length) {
     html += `<h4 class="sheet-h">日本の関連株（${fmtDay(r.jp[0].day)} 終値ベース）</h4><ul class="list">`
       + r.jp.map((j) => `<li><span class="code">${esc(j.c)}</span><div class="main"><div class="name">${esc(j.n)}</div></div>${pct(j.r)}</li>`).join("")
@@ -514,6 +535,11 @@ document.addEventListener("click", (ev) => {
     const box = seg.parentElement;
     setSeg(box, seg.dataset.v);
     if (box.id === "ev-imp") { prefs.evImp = seg.dataset.v; renderWeek(); }
+    else if (box.id === "ev-mode") {
+      prefs.evMode = seg.dataset.v;
+      if (prefs.evMode === "week") state.weekStart = mondayOf(state.weekStart);
+      renderWeek();
+    }
     else if (box.id === "cal-mode") { prefs.calMode = seg.dataset.v; applyCalMode(); renderMonth(); }
     else { prefs.calImp = seg.dataset.v; renderDay(); renderMonth(); }
     saveJSON(PREF_KEY, prefs);
@@ -550,6 +576,11 @@ $("#next").onclick = () => shiftMonth(1);
 $("#wprev").onclick = () => shiftWeek(-1);
 $("#wnext").onclick = () => shiftWeek(1);
 $("#thisweek").onclick = () => { state.weekStart = mondayOf(todayStr()); renderWeek(); };
+$("#ev-date").addEventListener("change", (e) => {
+  if (!e.target.value) return;
+  state.weekStart = prefs.evMode === "month" ? e.target.value : mondayOf(e.target.value);
+  renderWeek();
+});
 $("#today-btn").onclick = () => {
   state.selected = todayStr(); state.month = state.selected.slice(0, 7);
   renderCalendar(); renderDay();
@@ -558,6 +589,7 @@ $("#q").addEventListener("input", renderSearch);
 $("#cal-sort").value = prefs.calSort;
 $("#cal-sort").addEventListener("change", (e) => { prefs.calSort = e.target.value; saveJSON(PREF_KEY, prefs); renderDay(); renderMonth(); });
 setSeg($("#ev-imp"), prefs.evImp);
+setSeg($("#ev-mode"), prefs.evMode);
 setSeg($("#cal-mode"), prefs.calMode);
 applyCalMode();
 setSeg($("#cal-imp"), prefs.calImp);

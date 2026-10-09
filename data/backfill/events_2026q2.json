@@ -1,0 +1,1279 @@
+[
+ {
+  "id": "2026-04-01-jp-tankan",
+  "d": "2026-04-01",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日銀短観（3月調査）",
+  "desc": "大企業製造業の業況判断DIに注目",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.bk.mufg.jp/report/ecoinf2026/report_jp_20260401.pdf",
+  "tentative": false
+ },
+ {
+  "id": "2026-04-01-us-retail",
+  "d": "2026-04-01",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（2月分）",
+  "desc": "米個人消費の強さを測る指標。政府閉鎖で遅延分",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://therighttrader.com/economic-calendar/retail-sales"
+ },
+ {
+  "id": "2026-04-01-us-ism-mfg",
+  "d": "2026-04-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米3月ISM製造業景況指数",
+  "desc": "米製造業の景況感。50が節目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.metalsmine.com/news/1391567-us-manufacturing-pmi-at-527-march-2026-ism"
+ },
+ {
+  "id": "2026-04-03-us-jobs",
+  "d": "2026-04-03",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（3月分）",
+  "desc": "FRBの利下げ観測を左右する最重要指標",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/empsit.htm"
+ },
+ {
+  "id": "2026-04-03-us-holiday",
+  "d": "2026-04-03",
+  "country": "US",
+  "title": "米国市場休場（グッドフライデー）",
+  "desc": "米国株は休場。雇用統計は通常通り発表",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-04-06-us-ism-services",
+  "d": "2026-04-06",
+  "t": "23:00",
+  "country": "US",
+  "title": "米3月ISM非製造業景況指数",
+  "desc": "米サービス業の景況感。50が節目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/services/march/"
+ },
+ {
+  "id": "2026-04-07-samsung-prelim",
+  "d": "2026-04-07",
+  "country": "KR",
+  "title": "サムスン電子 1-3月期暫定決算",
+  "desc": "メモリ市況を占う。半導体株の材料",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://news.samsung.com/global/samsung-electronics-announces-earnings-guidance-for-first-quarter-2026",
+  "ticker": "005930.KS"
+ },
+ {
+  "id": "2026-04-08-us-iran-ceasefire",
+  "d": "2026-04-08",
+  "t": "07:30",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "トランプ大統領 イランと2週間の停戦を発表",
+  "desc": "ホルムズ海峡再開で原油急落。日経平均+5.4%",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://rollcall.com/2026/04/07/trump-announces-iran-ceasefire-backing-down-on-threat-to-destroy-country/"
+ },
+ {
+  "id": "2026-04-09-fomc-minutes",
+  "d": "2026-04-09",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC議事要旨（3月会合分）",
+  "desc": "利下げ・インフレ警戒の議論内容に注目",
+  "impact": 2,
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-04-09-jp-machine-tool",
+  "d": "2026-04-09",
+  "t": "15:00",
+  "country": "JP",
+  "title": "3月工作機械受注（速報）",
+  "desc": "設備投資・中国需要の先行指標",
+  "impact": 2,
+  "themes": [
+   "machine"
+  ],
+  "src": "https://www.sbbit.jp/article/refers/184172",
+  "tentative": false
+ },
+ {
+  "id": "2026-04-09-fastretailing",
+  "d": "2026-04-09",
+  "t": "15:30",
+  "approx": true,
+  "country": "JP",
+  "title": "ファーストリテイリング 8月期第2四半期決算",
+  "desc": "通期上方修正・増配。日経平均への寄与大",
+  "impact": 2,
+  "themes": [
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/stocks/9983/news/k202604090034/",
+  "code": "9983"
+ },
+ {
+  "id": "2026-04-09-us-pce",
+  "d": "2026-04-09",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCEデフレーター（2月分）",
+  "desc": "FRBが重視する物価指標。個人所得・支出",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bea.gov/news/2026/personal-income-and-outlays-february-2026"
+ },
+ {
+  "id": "2026-04-10-tsmc-monthly",
+  "d": "2026-04-10",
+  "t": "14:30",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 月次売上高（3月）",
+  "desc": "世界の半導体需要を占う注目材料",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://pr.tsmc.com/english/news/3294",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2026-04-10-us-cpi",
+  "d": "2026-04-10",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（3月分）",
+  "desc": "インフレ動向。FRBの政策判断の最重要指標",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/cpi.htm"
+ },
+ {
+  "id": "2026-04-10-us-umich-prelim",
+  "d": "2026-04-10",
+  "t": "23:00",
+  "country": "US",
+  "title": "米4月ミシガン大消費者態度指数（速報）",
+  "desc": "米消費者心理と期待インフレ率",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.newsquawk.com/headlines/us-michigan-consumer-sentiment-prel-apr-476-vs-exp-52-prev-533"
+ },
+ {
+  "id": "2026-04-13-hormuz-blockade",
+  "d": "2026-04-13",
+  "country": "GLOBAL",
+  "title": "米イラン協議決裂 トランプ氏がホルムズ海峡封鎖を指示",
+  "desc": "原油100ドル超え。半導体株中心に売り",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://worldoil.com/news/2026/4/12/trump-threatens-hormuz-blockade-as-iran-talks-fail-oil-flows-at-risk/"
+ },
+ {
+  "id": "2026-04-14-us-ppi",
+  "d": "2026-04-14",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（3月分）",
+  "desc": "生産者物価。CPIの先行指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/ppi.htm"
+ },
+ {
+  "id": "2026-04-15-asml",
+  "d": "2026-04-15",
+  "t": "14:00",
+  "country": "GLOBAL",
+  "title": "ASML 1-3月期決算",
+  "desc": "露光装置の受注動向。半導体装置株に波及",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.asml.com/en/news/press-releases/2026/q1-2026-financial-results",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2026-04-16-cn-gdp",
+  "d": "2026-04-16",
+  "t": "11:00",
+  "country": "CN",
+  "title": "中国1-3月期GDP",
+  "desc": "中国景気の勢い。鉱工業生産・小売も同時発表",
+  "impact": 2,
+  "themes": [
+   "steel",
+   "machine",
+   "ship"
+  ],
+  "src": "https://www.stats.gov.cn/english/PressRelease/ReleaseCalendar/202512/t20251226_1962154.html",
+  "tentative": false
+ },
+ {
+  "id": "2026-04-16-tsmc-q1",
+  "d": "2026-04-16",
+  "t": "15:00",
+  "country": "TW",
+  "title": "TSMC 1-3月期決算説明会",
+  "desc": "AI半導体需要と設備投資計画に注目",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000199/a1q26e_withguidancexfinal.htm",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2026-04-21-us-retail",
+  "d": "2026-04-21",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（3月分）",
+  "desc": "米個人消費の強さを測る指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://floordaily.net/?p=13798"
+ },
+ {
+  "id": "2026-04-21-warsh-hearing",
+  "d": "2026-04-21",
+  "t": "23:00",
+  "country": "US",
+  "title": "ウォーシュ次期FRB議長 指名承認公聴会",
+  "desc": "上院銀行委。金融政策スタンスの発言に注目",
+  "impact": 2,
+  "src": "https://www.kitco.com/news/off-the-wire/2026-04-21/warshs-path-top-fed-job-entangled-ahead-senate-confirmation-hearing",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-04-22-disco",
+  "d": "2026-04-22",
+  "t": "16:00",
+  "country": "JP",
+  "title": "ディスコ 3月期決算",
+  "desc": "6期連続最高益。4-6月期は営業22%増計画",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202604220020/",
+  "code": "6146"
+ },
+ {
+  "id": "2026-04-23-tesla",
+  "d": "2026-04-23",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 1-3月期決算",
+  "desc": "EV需要の動向。06:30〜説明会",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://www.businesswire.com/news/home/20260422960098/en/Tesla-Releases-First-Quarter-2026-Financial-Results",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2026-04-24-intel",
+  "d": "2026-04-24",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 1-3月期決算",
+  "desc": "PC・データセンター需要とファウンドリ",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/Archives/edgar/data/0000050863/000005086326000077/q126earningsrelease.htm",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2026-04-24-jp-cpi",
+  "d": "2026-04-24",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（3月分）",
+  "desc": "国内インフレ動向。日銀会合前の注目指標",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://investinglive.com/news/japan-national-march-2026-cpi-18-yy-vs-expected-18-prior-16-20260423/",
+  "tentative": false
+ },
+ {
+  "id": "2026-04-24-keyence",
+  "d": "2026-04-24",
+  "t": "16:00",
+  "country": "JP",
+  "title": "キーエンス 3月期決算",
+  "desc": "FA需要の動向。今期予想は非開示",
+  "impact": 1,
+  "themes": [
+   "machine"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202604240056/",
+  "code": "6861"
+ },
+ {
+  "id": "2026-04-27-advantest",
+  "d": "2026-04-27",
+  "t": "15:30",
+  "country": "JP",
+  "title": "アドバンテスト 3月期決算",
+  "desc": "AI半導体テスタ需要。今期も最高益見通し",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202604270053/",
+  "code": "6857"
+ },
+ {
+  "id": "2026-04-27-hitachi",
+  "d": "2026-04-27",
+  "t": "15:30",
+  "country": "JP",
+  "title": "日立製作所 3月期決算",
+  "desc": "送配電・DX事業。今期最終6%増計画",
+  "impact": 2,
+  "themes": [
+   "wire",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202604270054/",
+  "code": "6501"
+ },
+ {
+  "id": "2026-04-28-boj",
+  "d": "2026-04-28",
+  "t": "12:00",
+  "approx": true,
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "4/27-28開催。展望レポート公表。15:30〜総裁会見",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/index.htm",
+  "tentative": false
+ },
+ {
+  "id": "2026-04-28-shinetsu",
+  "d": "2026-04-28",
+  "t": "15:30",
+  "country": "JP",
+  "title": "信越化学工業 3月期決算",
+  "desc": "今期予想非開示。最大2500億円の自社株買い",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202604280085/",
+  "code": "4063"
+ },
+ {
+  "id": "2026-04-29-jp-holiday",
+  "d": "2026-04-29",
+  "country": "JP",
+  "title": "東証休場（昭和の日）",
+  "desc": "日本市場は休場。米国株は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-04-30-fomc",
+  "d": "2026-04-30",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC 結果発表",
+  "desc": "4/28-29開催。03:30〜議長会見（パウエル議長最後）",
+  "impact": 3,
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-04-30-amazon",
+  "d": "2026-04-30",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 1-3月期決算",
+  "desc": "AWSの成長とAI投資に注目",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001018724&type=8-K&dateb=20260510",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2026-04-30-alphabet",
+  "d": "2026-04-30",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 1-3月期決算",
+  "desc": "AI・クラウド投資額に注目",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001652044&type=8-K",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2026-04-30-meta",
+  "d": "2026-04-30",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 1-3月期決算",
+  "desc": "AI設備投資額に注目",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001326801&type=8-K",
+  "ticker": "META"
+ },
+ {
+  "id": "2026-04-30-microsoft",
+  "d": "2026-04-30",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 1-3月期決算",
+  "desc": "Azure成長とAI設備投資に注目",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000789019&type=8-K&dateb=20260510",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2026-04-30-cn-pmi",
+  "d": "2026-04-30",
+  "t": "10:30",
+  "country": "CN",
+  "title": "中国4月製造業PMI",
+  "desc": "中国景気の先行指標。50が節目",
+  "impact": 1,
+  "themes": [
+   "steel",
+   "machine",
+   "ship"
+  ],
+  "src": "https://www.stats.gov.cn/english/PressRelease/ReleaseCalendar/202512/t20251226_1962154.html",
+  "tentative": false
+ },
+ {
+  "id": "2026-04-30-tokyo-electron",
+  "d": "2026-04-30",
+  "t": "16:00",
+  "country": "JP",
+  "title": "東京エレクトロン 3月期決算",
+  "desc": "半期開示へ移行。上期営業益42%増計画",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://kabutan.jp/news/?b=k202604300133",
+  "code": "8035"
+ },
+ {
+  "id": "2026-04-30-ecb",
+  "d": "2026-04-30",
+  "t": "21:15",
+  "country": "EU",
+  "title": "ECB理事会 政策金利発表",
+  "desc": "21:45〜ラガルド総裁会見",
+  "impact": 2,
+  "src": "https://www.bde.es/wbe/en/noticias-eventos/actualidad-bce/decisiones-politica-monetaria/bce-tipos-abril26.html",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-04-30-us-gdp",
+  "d": "2026-04-30",
+  "t": "21:30",
+  "country": "US",
+  "title": "米1-3月期GDP（速報値）",
+  "desc": "米景気の勢いを確認する四半期指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bea.gov/news/2026/gdp-advance-estimate-1st-quarter-2026"
+ },
+ {
+  "id": "2026-04-30-us-pce",
+  "d": "2026-04-30",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCEデフレーター（3月分）",
+  "desc": "FRBが重視する物価指標。個人所得・支出",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bea.gov/news/schedule/full"
+ },
+ {
+  "id": "2026-04-30-jp-fx-intervention",
+  "d": "2026-04-30",
+  "country": "JP",
+  "title": "政府・日銀が円買い介入（約1年9カ月ぶり）",
+  "desc": "160円台から155円台へ急伸。5/4・5/6も追加介入",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://www.thestandard.com.hk/finance/article/330820/Yen-jumps-3-percent-after-officials-final-warning-oil-swept-lower"
+ },
+ {
+  "id": "2026-05-01-apple",
+  "d": "2026-05-01",
+  "t": "05:30",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 1-3月期決算",
+  "desc": "iPhone販売動向。電子部品株に波及",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000320193&type=8-K",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2026-05-01-us-ism-mfg",
+  "d": "2026-05-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米4月ISM製造業景況指数",
+  "desc": "米製造業の景況感。50が節目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://seekingalpha.com/news/4583967-ism-manufacturing-pmi-flatlines-in-april-missing-consensus"
+ },
+ {
+  "id": "2026-05-04-jp-holiday",
+  "d": "2026-05-04",
+  "country": "JP",
+  "title": "東証休場（みどりの日）",
+  "desc": "日本市場は休場。米国株は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-05-05-us-ism-services",
+  "d": "2026-05-05",
+  "t": "23:00",
+  "country": "US",
+  "title": "米4月ISM非製造業景況指数",
+  "desc": "米サービス業の景況感。50が節目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.metalsmine.com/news/1396894-us-services-pmi-at-536-april-2026-ism/amp"
+ },
+ {
+  "id": "2026-05-05-jp-holiday",
+  "d": "2026-05-05",
+  "country": "JP",
+  "title": "東証休場（こどもの日）",
+  "desc": "日本市場は休場。米国株は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-05-06-amd",
+  "d": "2026-05-06",
+  "t": "05:15",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 1-3月期決算",
+  "desc": "AI向けGPU需要。データセンター事業に注目",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://ir.amd.com/news-events/press-releases/detail/1284/amd-reports-first-quarter-2026-financial-results",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2026-05-06-jp-holiday",
+  "d": "2026-05-06",
+  "country": "JP",
+  "title": "東証休場（振替休日）",
+  "desc": "日本市場は休場。米国株は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-05-06-us-iran-mou-report",
+  "d": "2026-05-06",
+  "country": "GLOBAL",
+  "title": "米イラン終戦合意が近いとの報道",
+  "desc": "原油急落。連休明け5/7の日経平均は過去最大の上げ幅",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://www.semafor.com/article/05/06/2026/stocks-climb-on-us-iran-deal-hopes"
+ },
+ {
+  "id": "2026-05-08-sony",
+  "d": "2026-05-08",
+  "t": "12:00",
+  "country": "JP",
+  "title": "ソニーグループ 3月期決算",
+  "desc": "ゲーム・音楽・半導体。今期最高益見通し",
+  "impact": 2,
+  "themes": [
+   "game",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605080015/",
+  "code": "6758"
+ },
+ {
+  "id": "2026-05-08-toyota",
+  "d": "2026-05-08",
+  "t": "13:55",
+  "country": "JP",
+  "title": "トヨタ自動車 3月期決算",
+  "desc": "米関税影響で今期営業益20%減見通し",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605080045/",
+  "code": "7203"
+ },
+ {
+  "id": "2026-05-08-tsmc-monthly",
+  "d": "2026-05-08",
+  "t": "14:30",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 月次売上高（4月）",
+  "desc": "世界の半導体需要を占う注目材料",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://pr.tsmc.com/english/news/3305",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2026-05-08-nintendo",
+  "d": "2026-05-08",
+  "t": "15:30",
+  "country": "JP",
+  "title": "任天堂 3月期決算",
+  "desc": "スイッチ2の2年目。今期減益・減配計画",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605080214/",
+  "code": "7974"
+ },
+ {
+  "id": "2026-05-08-us-jobs",
+  "d": "2026-05-08",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（4月分）",
+  "desc": "FRBの利下げ観測を左右する最重要指標",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/empsit.htm"
+ },
+ {
+  "id": "2026-05-08-us-umich-prelim",
+  "d": "2026-05-08",
+  "t": "23:00",
+  "country": "US",
+  "title": "米5月ミシガン大消費者態度指数（速報）",
+  "desc": "米消費者心理と期待インフレ率",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.newsquawk.com/headlines/us-michigan-consumer-sentiment-prel-may-482-vs-exp-495-prev-498"
+ },
+ {
+  "id": "2026-05-12-mhi",
+  "d": "2026-05-12",
+  "t": "13:30",
+  "country": "JP",
+  "title": "三菱重工業 3月期決算",
+  "desc": "防衛・エナジー。4期連続最高益見通し",
+  "impact": 2,
+  "themes": [
+   "defense"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605120060/",
+  "code": "7011"
+ },
+ {
+  "id": "2026-05-12-us-cpi",
+  "d": "2026-05-12",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（4月分）",
+  "desc": "インフレ動向。FRBの政策判断の最重要指標",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/cpi.htm"
+ },
+ {
+  "id": "2026-05-13-softbank-group",
+  "d": "2026-05-13",
+  "t": "15:30",
+  "country": "JP",
+  "title": "ソフトバンクグループ 3月期決算",
+  "desc": "日本企業初の純利益5兆円台。AI投資の成果",
+  "impact": 2,
+  "themes": [
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605130199/",
+  "code": "9984"
+ },
+ {
+  "id": "2026-05-13-us-ppi",
+  "d": "2026-05-13",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（4月分）",
+  "desc": "生産者物価。CPIの先行指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/ppi.htm"
+ },
+ {
+  "id": "2026-05-14-fujikura",
+  "d": "2026-05-14",
+  "t": "14:00",
+  "country": "JP",
+  "title": "フジクラ 3月期決算",
+  "desc": "DC向け光ファイバー。今期最終微減益予想",
+  "impact": 2,
+  "themes": [
+   "wire",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605140125/",
+  "code": "5803"
+ },
+ {
+  "id": "2026-05-14-us-retail",
+  "d": "2026-05-14",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（4月分）",
+  "desc": "米個人消費の強さを測る指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.census.gov/retail/release_schedule.html"
+ },
+ {
+  "id": "2026-05-15-jp-machine-tool",
+  "d": "2026-05-15",
+  "t": "15:00",
+  "country": "JP",
+  "title": "4月工作機械受注（速報）",
+  "desc": "設備投資・中国需要の先行指標",
+  "impact": 2,
+  "themes": [
+   "machine"
+  ],
+  "src": "https://tradingeconomics.com/japan/machine-tool-orders/news/551007",
+  "tentative": false
+ },
+ {
+  "id": "2026-05-15-kioxia",
+  "d": "2026-05-15",
+  "t": "15:30",
+  "country": "JP",
+  "title": "キオクシアHD 3月期決算",
+  "desc": "NAND価格上昇で上振れ。4-6月期も大幅増益計画",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605150520/",
+  "code": "285A"
+ },
+ {
+  "id": "2026-05-15-mufg",
+  "d": "2026-05-15",
+  "t": "16:15",
+  "country": "JP",
+  "title": "三菱UFJフィナンシャル・グループ 3月期決算",
+  "desc": "4期連続最高益見通し。10円増配へ",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "tentative": false,
+  "src": "https://s.kabutan.jp/news/k202605150697/",
+  "code": "8306"
+ },
+ {
+  "id": "2026-05-19-jp-gdp",
+  "d": "2026-05-19",
+  "t": "08:50",
+  "country": "JP",
+  "title": "1-3月期GDP（1次速報）",
+  "desc": "国内景気の現状。日銀の判断材料",
+  "impact": 1,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.bk.mufg.jp/report/whatsnew/report_jp_20260519.pdf",
+  "tentative": false
+ },
+ {
+  "id": "2026-05-21-fomc-minutes",
+  "d": "2026-05-21",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC議事要旨（4月会合分）",
+  "desc": "利上げ転換の議論の有無に注目",
+  "impact": 2,
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-05-21-nvda",
+  "d": "2026-05-21",
+  "t": "05:20",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア決算（Q1 FY27）",
+  "desc": "AI・半導体相場の最重要決算。06:00〜説明会",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000051/q1fy27pr.htm",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2026-05-22-jp-cpi",
+  "d": "2026-05-22",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（4月分）",
+  "desc": "国内インフレ動向。日銀会合前の注目指標",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.dir.co.jp/report/research/economics/japan/20260522_025772.pdf",
+  "tentative": false
+ },
+ {
+  "id": "2026-05-25-us-holiday",
+  "d": "2026-05-25",
+  "country": "US",
+  "title": "米国市場休場（メモリアルデー）",
+  "desc": "米国株は休場。日本市場は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-05-28-us-pce",
+  "d": "2026-05-28",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCEデフレーター（4月分）",
+  "desc": "FRBが重視する物価指標。個人所得・支出",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bea.gov/news/schedule/full"
+ },
+ {
+  "id": "2026-05-29-us-iran-ceasefire-extension",
+  "d": "2026-05-29",
+  "country": "GLOBAL",
+  "title": "米イラン 停戦60日延長で合意と報道",
+  "desc": "ホルムズ海峡の航行制限解除へ。日経平均66000円台",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.algemeiner.com/2026/05/28/us-iran-reach-60-day-ceasefire-extension-trump-must-approve-sources-say/"
+ },
+ {
+  "id": "2026-05-31-cn-pmi",
+  "d": "2026-05-31",
+  "t": "10:30",
+  "country": "CN",
+  "title": "中国5月製造業PMI",
+  "desc": "中国景気の先行指標。50が節目",
+  "impact": 1,
+  "themes": [
+   "steel",
+   "machine",
+   "ship"
+  ],
+  "src": "https://www.stats.gov.cn/english/PressRelease/ReleaseCalendar/202512/t20251226_1962154.html",
+  "tentative": false
+ },
+ {
+  "id": "2026-06-01-us-ism-mfg",
+  "d": "2026-06-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米5月ISM製造業景況指数",
+  "desc": "米製造業の景況感。50が節目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.pnc.com/content/dam/pnc-com/pdf/aboutpnc/EconomicReports/EconomicUpdates/2026/PNC_Economics_Research_ISM_Manufacturing_1_June_2026.pdf"
+ },
+ {
+  "id": "2026-06-03-us-ism-services",
+  "d": "2026-06-03",
+  "t": "23:00",
+  "country": "US",
+  "title": "米5月ISM非製造業景況指数",
+  "desc": "米サービス業の景況感。50が節目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.pnc.com/content/dam/pnc-com/pdf/aboutpnc/EconomicReports/EconomicUpdates/2026/PNC_Economics_Research_ISM_Services_3_June_2026.pdf"
+ },
+ {
+  "id": "2026-06-04-broadcom",
+  "d": "2026-06-04",
+  "t": "05:15",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム決算（Q2 FY26）",
+  "desc": "カスタムAI半導体の需要動向",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/Archives/edgar/data/0001730168/000173016826000051/avgo-05032026x8kxex99.htm",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2026-06-05-us-jobs",
+  "d": "2026-06-05",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（5月分）",
+  "desc": "FRBの利下げ観測を左右する最重要指標",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/empsit.htm"
+ },
+ {
+  "id": "2026-06-09-jp-machine-tool",
+  "d": "2026-06-09",
+  "t": "15:00",
+  "country": "JP",
+  "title": "5月工作機械受注（速報）",
+  "desc": "設備投資・中国需要の先行指標",
+  "impact": 2,
+  "themes": [
+   "machine"
+  ],
+  "src": "https://tradingeconomics.com/japan/machine-tool-orders/news/557552",
+  "tentative": false
+ },
+ {
+  "id": "2026-06-10-tsmc-monthly",
+  "d": "2026-06-10",
+  "t": "14:30",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 月次売上高（5月）",
+  "desc": "世界の半導体需要を占う注目材料",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://pr.tsmc.com/english/news/3320",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2026-06-10-us-cpi",
+  "d": "2026-06-10",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（5月分）",
+  "desc": "インフレ動向。FRBの政策判断の最重要指標",
+  "impact": 3,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/cpi.htm"
+ },
+ {
+  "id": "2026-06-11-ecb",
+  "d": "2026-06-11",
+  "t": "21:15",
+  "country": "EU",
+  "title": "ECB理事会 政策金利発表",
+  "desc": "利上げ観測が焦点。21:45〜ラガルド総裁会見",
+  "impact": 2,
+  "src": "https://pwcplus.de/en/article/255118/president-lagarde-presents-the-latest-monetary-policy-decisions-11-june-2026/",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-06-11-us-ppi",
+  "d": "2026-06-11",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（5月分）",
+  "desc": "生産者物価。CPIの先行指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/ppi.htm"
+ },
+ {
+  "id": "2026-06-12-us-umich-prelim",
+  "d": "2026-06-12",
+  "t": "23:00",
+  "country": "US",
+  "title": "米6月ミシガン大消費者態度指数（速報）",
+  "desc": "米消費者心理と期待インフレ率",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://collisionweek.com/2026/06/15/consumer-sentiment-rebounds-9-preliminary-june-reading/"
+ },
+ {
+  "id": "2026-06-15-us-iran-tentative-deal",
+  "d": "2026-06-15",
+  "country": "GLOBAL",
+  "title": "米イラン 停戦延長・ホルムズ海峡再開で暫定合意",
+  "desc": "原油急落で日経平均5%高。AI・半導体株が急伸",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://www.juneauindependent.com/post/stocks-leap-oil-prices-drop-as-us-and-iran-reach-tentative-deal-on-war"
+ },
+ {
+  "id": "2026-06-16-boj",
+  "d": "2026-06-16",
+  "t": "12:00",
+  "approx": true,
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "6/15-16開催。利上げ観測。15:30〜総裁会見",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/en/mopo/mpmdeci/state_2026/index.htm",
+  "tentative": false
+ },
+ {
+  "id": "2026-06-17-us-retail",
+  "d": "2026-06-17",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（5月分）",
+  "desc": "米個人消費の強さを測る指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.census.gov/retail/release_schedule.html"
+ },
+ {
+  "id": "2026-06-18-fomc",
+  "d": "2026-06-18",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC 結果発表（経済見通し公表）",
+  "desc": "6/16-17開催。ウォーシュ議長初会合。03:30〜会見",
+  "impact": 3,
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-06-19-jp-cpi",
+  "d": "2026-06-19",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（5月分）",
+  "desc": "国内インフレ動向。日銀の追加利上げを占う",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://english.adnkronos.com/2026/06/19/japan-core-consumer-prices-rise-1-4-pct-in-may/",
+  "tentative": false
+ },
+ {
+  "id": "2026-06-19-us-holiday",
+  "d": "2026-06-19",
+  "country": "US",
+  "title": "米国市場休場（ジューンティーンス）",
+  "desc": "米国株は休場。日本市場は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
+  "id": "2026-06-25-mu",
+  "d": "2026-06-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン決算（Q3 FY26）",
+  "desc": "メモリ市況の先行指標。05:30〜説明会",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://www.sec.gov/Archives/edgar/data/0000723125/000072312526000013/a2026q3ex991-pressrelease.htm",
+  "ticker": "MU"
+ },
+ {
+  "id": "2026-06-25-us-pce",
+  "d": "2026-06-25",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCEデフレーター（5月分）",
+  "desc": "FRBが重視する物価指標。個人所得・支出",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bea.gov/news/schedule/full"
+ },
+ {
+  "id": "2026-06-30-cn-pmi",
+  "d": "2026-06-30",
+  "t": "10:30",
+  "country": "CN",
+  "title": "中国6月製造業PMI",
+  "desc": "中国景気の先行指標。50が節目",
+  "impact": 1,
+  "themes": [
+   "steel",
+   "machine",
+   "ship"
+  ],
+  "src": "https://www.stats.gov.cn/english/PressRelease/ReleaseCalendar/202512/t20251226_1962154.html",
+  "tentative": false
+ }
+]

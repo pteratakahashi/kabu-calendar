@@ -195,8 +195,8 @@ def enrich_stocks(stocks: list[dict], topix: dict, themes: list[dict]) -> None:
 def gen_sq(today: dt.date) -> list[dict]:
     """SQ（毎月第2金曜）。3・6・9・12月はメジャーSQ。祝日による前倒しは未対応（稀）。"""
     out = []
-    y, m = today.year, today.month
-    for i in range(-2, 7):
+    y, m = today.year, 1
+    for i in range(0, today.month + 6):
         yy, mm = y + (m - 1 + i) // 12, (m - 1 + i) % 12 + 1
         d = dt.date(yy, mm, 1)
         d += dt.timedelta(days=(4 - d.weekday()) % 7 + 7)  # 第2金曜
@@ -222,6 +222,8 @@ def load_json(path: Path, default):
 
 def entry_key(e: dict) -> tuple:
     # 同じ会社・同じ決算期・同じ区分 = 同一イベント（予定日変更は上書き）
+    if e.get("src") == "yf":  # 過去分の補完は決算期が分からないので日付で区別
+        return (e["c"], e["d"])
     return (e["c"], e.get("fye", ""), e["q"])
 
 
@@ -234,6 +236,15 @@ def merge(previous: list[dict], jpx: list[dict], jq: list[dict]) -> list[dict]:
             merged[entry_key(e)] = e
     for e in jpx:
         merged[entry_key(e)] = e
+    # 過去分の補完（Yahoo）: 同じ銘柄の決算が前後4日以内に既にあれば足さない
+    near: dict[str, list[dt.date]] = {}
+    for e in merged.values():
+        if e.get("d") and e.get("src") != "yf":
+            near.setdefault(e["c"], []).append(dt.date.fromisoformat(e["d"]))
+    for e in load_json(ROOT / "data" / "earnings_backfill.json", []):
+        d = dt.date.fromisoformat(e["d"])
+        if e["d"] >= cutoff and not any(abs((d - x).days) <= 4 for x in near.get(e["c"], [])):
+            merged[entry_key(e)] = e
     # J-Quants は fye を持たないので (code, date) で JPX と突き合わせ、JPX に無いものだけ足す
     have = {(e["c"], e["d"]) for e in merged.values()}
     for e in jq:

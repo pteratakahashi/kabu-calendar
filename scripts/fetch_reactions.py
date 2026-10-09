@@ -25,7 +25,8 @@ DATA = ROOT / "site" / "data"
 OUT = DATA / "reactions.json"
 JST = "Asia/Tokyo"
 
-PRE_MIN, POST_MIN = 60, 180
+PRE_MIN, POST_MIN = 60, 180          # 5分足の窓
+PRE_MIN_H, POST_MIN_H = 180, 360     # 1時間足の窓（60日より前のイベント）
 INTRADAY_DAYS = 58  # 5分足の取得上限(60日)より少し短く
 
 NAMES = {"ES=F": "S&P500先物", "NIY=F": "日経先物", "JPY=X": "ドル円", "^N225": "日経平均"}
@@ -62,34 +63,39 @@ def closes(df: pd.DataFrame, sym: str | None = None) -> pd.Series:
 
 # ------------------------------------------------------------- intraday
 
-_cache: dict[str, pd.Series] = {}
+_cache: dict[tuple, pd.Series] = {}
+YEAR_START = f"{pd.Timestamp.now(tz=JST).year}-01-01"
 
 
-def intraday(sym: str) -> pd.Series:
-    if sym not in _cache:
+def intraday(sym: str, iv: str = "5m") -> pd.Series:
+    """終値の Series。index は「その足の終了時刻」（足の開始時刻 + 足の長さ）に直す。"""
+    key = (sym, iv)
+    if key not in _cache:
         try:
-            df = yf.download(sym, period=f"{INTRADAY_DAYS}d", interval="5m", prepost=True,
-                             progress=False, auto_adjust=False)
+            kw = {"period": f"{INTRADAY_DAYS}d"} if iv == "5m" else {
+                "start": (pd.Timestamp(YEAR_START) - pd.Timedelta(days=7)).strftime("%Y-%m-%d")}
+            df = yf.download(sym, interval=iv, prepost=True, progress=False, auto_adjust=False, **kw)
             s = closes(df, sym)
             if not s.empty:
-                s.index = s.index.tz_convert(JST)
-            _cache[sym] = s
+                s.index = s.index.tz_convert(JST) + pd.Timedelta(iv.replace("m", "min"))
+            _cache[key] = s
         except Exception as e:  # noqa: BLE001
-            log(f"  intraday {sym} failed: {e}")
-            _cache[sym] = pd.Series(dtype=float)
-    return _cache[sym]
+            log(f"  intraday {sym} {iv} failed: {e}")
+            _cache[key] = pd.Series(dtype=float)
+    return _cache[key]
 
 
-def window(sym: str, t: pd.Timestamp) -> dict | None:
-    s = intraday(sym)
+def window(sym: str, t: pd.Timestamp, iv: str = "5m") -> dict | None:
+    s = intraday(sym, iv)
     if s.empty:
         return None
-    before = s[s.index < t]
+    pre, post = (PRE_MIN, POST_MIN) if iv == "5m" else (PRE_MIN_H, POST_MIN_H)
+    before = s[s.index <= t]
     if before.empty or (t - before.index[-1]) > pd.Timedelta("3h"):
         return None  # 発表前の値が無い（休場など）
     base = float(before.iloc[-1])
-    w = s[(s.index >= t - pd.Timedelta(minutes=PRE_MIN)) & (s.index <= t + pd.Timedelta(minutes=POST_MIN))]
-    if len(w) < 6:
+    w = s[(s.index >= t - pd.Timedelta(minutes=pre)) & (s.index <= t + pd.Timedelta(minutes=post))]
+    if len(w) < (6 if iv == "5m" else 4):
         return None
     pts = [[int((i - t).total_seconds() // 60), round((float(v) / base - 1) * 100, 3)] for i, v in w.items()]
     after = [p for p in pts if p[0] >= 0]
@@ -100,8 +106,10 @@ def window(sym: str, t: pd.Timestamp) -> dict | None:
         c = [p for p in after if p[0] <= m]
         return c[-1][1] if c else None
 
+    marks = ([["5分後", at(5)], ["30分後", at(30)], ["1時間後", at(60)], ["3時間後", after[-1][1]]] if iv == "5m"
+             else [["1時間後", at(60)], ["3時間後", at(180)], ["6時間後", after[-1][1]]])
     return {
-        "sym": sym, "name": NAMES.get(sym, sym), "base": round(base, 4),
+        "sym": sym, "name": NAMES.get(sym, sym), "base": round(base, 4), "iv": iv, "marks": marks,
         "m5": at(5), "m30": at(30), "m60": at(60), "end": after[-1][1],
         "hi": max(p[1] for p in after), "lo": min(p[1] for p in after),
         "pts": pts,
@@ -127,7 +135,7 @@ def daily_closes(codes: list[str]) -> dict[str, pd.Series]:
     for i in range(0, len(tick), 100):
         chunk = tick[i:i + 100]
         try:
-            df = yf.download(chunk, period="6mo", interval="1d", progress=False, auto_adjust=False,
+            df = yf.download(chunk, start=(pd.Timestamp(YEAR_START) - pd.Timedelta(days=20)).strftime("%Y-%m-%d"), interval="1d", progress=False, auto_adjust=False,
                              group_by="ticker", threads=True)
         except Exception as e:  # noqa: BLE001
             log(f"  daily chunk failed: {e}")
@@ -162,6 +170,24 @@ def daily_reaction(s: pd.Series, react_day: dt.date) -> dict | None:
     }
 
 
+_idx_cache: dict[str, pd.Series] = {}
+
+
+def index_daily(sym: str, name: str, d: str) -> dict | None:
+    if sym not in _idx_cache:
+        try:
+            df = yf.download(sym, start=(pd.Timestamp(YEAR_START) - pd.Timedelta(days=20)).strftime("%Y-%m-%d"),
+                             interval="1d", progress=False, auto_adjust=False)
+            s = closes(df, sym)
+            s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
+            _idx_cache[sym] = s
+        except Exception as e:  # noqa: BLE001
+            log(f"  index {sym} failed: {e}")
+            _idx_cache[sym] = pd.Series(dtype=float)
+    r = daily_reaction(_idx_cache[sym], dt.date.fromisoformat(d) + dt.timedelta(days=1))
+    return {**r, "sym": sym, "name": name} if r else None
+
+
 def react_day_jp(d: str, t: str | None) -> dt.date:
     day = dt.date.fromisoformat(d)
     if t and t < "15:00":
@@ -186,7 +212,7 @@ def main() -> int:
     # 1) 時刻つきイベントの5分足
     lead_needed: dict[str, list[str]] = {}  # event id -> 関連主力株コード
     for ev in events:
-        if ev.get("auto") or ev.get("code") or ev["d"] < oldest or ev["d"] > now.strftime("%Y-%m-%d"):
+        if ev.get("auto") or ev.get("code") or ev["d"] < YEAR_START or ev["d"] > now.strftime("%Y-%m-%d"):
             continue
         if not ev.get("t") and not ev.get("ticker"):
             continue
@@ -196,11 +222,20 @@ def main() -> int:
         prev = out["events"].get(ev["id"]) or {}
         if prev.get("done"):
             continue
-        # 発表時刻に市場が開いていない銘柄（TSMC月次の米ADR等）は5分足なし → 日本株の反応だけ出す
-        series = [w for sym in instruments(ev) if (w := window(sym, t))] if ev.get("t") else []
+        iv = "5m" if ev["d"] >= oldest else "1h"
+        # 発表時刻に市場が開いていない銘柄（TSMC月次の米ADR等）は足なし → 日本株の反応だけ出す
+        series = [w for sym in instruments(ev) if (w := window(sym, t, iv))] if ev.get("t") else []
         if not series and not ev.get("ticker"):
+            # 休場日（週末の選挙・地政学ニュース等）→ 次の取引日の終値ベースの騰落率
+            jp = [r for sym, nm in (("^N225", "日経平均"), ("^GSPC", "S&P500"), ("JPY=X", "ドル円"))
+                  if (r := index_daily(sym, nm, ev["d"]))]
+            if jp:
+                out["events"][ev["id"]] = {"t": t.isoformat(), "iv": "1d", "series": [], "idx": jp,
+                                           "done": all(r["done"] for r in jp)}
+                log(f"  event {ev['id']}: 休場明けの日足")
             continue
-        rec = {"t": t.isoformat(), "series": series, "done": now >= t + pd.Timedelta(minutes=POST_MIN + 15)}
+        rec = {"t": t.isoformat(), "iv": iv, "series": series,
+               "done": now >= t + pd.Timedelta(minutes=(POST_MIN if iv == "5m" else POST_MIN_H) + 15)}
         out["events"][ev["id"]] = {**prev, **rec}
         if ev.get("ticker"):
             codes = []
@@ -213,7 +248,7 @@ def main() -> int:
     # 2) 国内決算の対象を決める
     targets: dict[str, tuple[str, str, str | None]] = {}  # key -> (code, date, time)
     today = now.strftime("%Y-%m-%d")
-    since = (now - pd.Timedelta(days=150)).strftime("%Y-%m-%d")
+    since = YEAR_START
     theme_codes = {c for t in themes.values() for c in t["codes"]}
     timed = {ev["code"]: ev for ev in events if ev.get("code")}
     for e in earnings:
@@ -226,7 +261,14 @@ def main() -> int:
         if out["earnings"].get(key, {}).get("done"):
             continue
         tev = timed.get(e["c"])
-        targets[key] = (e["c"], e["d"], tev["t"] if tev and tev["d"] == e["d"] else None)
+        targets[key] = (e["c"], e["d"], tev["t"] if tev and tev["d"] == e["d"] else (e.get("t") or None))
+
+    # 時刻つきで登録した国内決算イベントも対象に（Yahoo の決算日とずれていても拾う）
+    for ev in events:
+        if ev.get("code") and since <= ev["d"] <= today:
+            key = f'{ev["code"]}@{ev["d"]}'
+            if not out["earnings"].get(key, {}).get("done"):
+                targets[key] = (ev["code"], ev["d"], ev.get("t"))
 
     codes = sorted({c for c, _, _ in targets.values()} | {c for v in lead_needed.values() for c in v})
     log(f"  daily: {len(codes)} codes")

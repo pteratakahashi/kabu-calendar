@@ -1,4 +1,4 @@
-# progress（最終更新: 2026-10-09 19:02）
+# progress（最終更新: 2026-10-09 19:20）
 
 **公開URL: https://pteratakahashi.github.io/kabu-calendar/** / リポジトリ: https://github.com/pteratakahashi/kabu-calendar
 
@@ -7,7 +7,11 @@
 |---|---|---|
 | 開発手段 | PWA | 将来: Android=TWA / iOS=Capacitor でストア化可能 |
 | 配信 | GitHub Actions(毎日18:30 JST) → GitHub Pages | ユーザー選択。公開URLになる点は「リスク」参照 |
-| 決算日データ | **JPX Excel をメイン**、J-Quants は補助 | JPX Excel が全決算期をカバーすると判明（下記） |
+| 決算日データ | **JPX Excel をメイン**、J-Quants は補助 | JPX Excel が全決算期をカバー |
+| v2: 画面構成 | イベント(週表示) / 決算 / 検索 / ウォッチ の4タブ | 参考: 「来週の主なスケジュール」画像 |
+| v2: 影響度 | ★3段階（★★★相場全体 / ★★セクター / ★参考） | |
+| v2: イベント更新 | **Claude クラウド定期実行で毎日2回（6:30・17:30 JST）** | Claude プラン枠を消費。手順書 `data/EVENTS_GUIDE.md` |
+| v2: 規模・影響度 | JPX TOPIX ウエイトCSV（無料・キー不要）で規模順。Core30/テーマ主力=★★★、Large70/テーマ銘柄=★★ | J-Quants キー登録後に真の時価総額へ置換可 |
 
 ## 調査結果（2026-10-09）
 - J-Quants は V2 API。認証は `x-api-key` ヘッダ（旧トークン方式は廃止）。Base: `https://api.jquants.com/v2`
@@ -26,6 +30,14 @@
 - [x] GitHub リポジトリ作成・push・Pages 有効化。Actions 手動実行で JPX 取得→デプロイ成功を確認（GitHub のサーバーからも JPX 取得 OK）
 - [ ] J-Quants キー登録（任意だが推奨）
 
+## v2 実装状況（2026-10-09 夜）
+- [x] `data/themes.json` 17テーマ（半導体・AI・電線・銀行・商社・自動車・防衛…）。コードは JPX 名と照合済み、上場廃止銘柄除外
+- [x] fetch_data.py: TOPIX ウエイト取込・影響度判定・SQ 自動生成（毎月第2金曜、3/6/9/12月はメジャーSQ ★★★）
+- [x] UI: イベント週表示（曜日色付き・国旗・説明・時刻・★・テーマチップ）、影響度/テーマ絞り込み、決算タブに影響度フィルタ＋並び順（影響度/規模/コード）＋テーマ、テーマ詳細シート（関連銘柄と次回決算・関連イベント）
+- [ ] 初期イベントデータ（10/5〜11/6）調査中（サブエージェント）
+- [ ] Claude 定期実行ルーティン作成
+- [ ] push・デプロイ・実機確認
+
 ## 将来機能の設計メモ（今回は未実装）
 - **決算前日プッシュ通知**: iOS 16.4+ はホーム画面追加済み PWA で Web Push 可。ただし送信側サーバーが必要（購読情報とウォッチリストの保管先）。案: Cloudflare Workers + KV（無料枠）に購読とウォッチを保存し、Actions の日次ジョブ後に Worker から送信。ウォッチリストは今 localStorage のみ → その時点でサーバー同期を追加する。`sw.js` に push ハンドラの差し込み口あり。
 - **TDnet 適時開示速報**: 有料アドオン。上記の通知基盤に相乗り。
@@ -37,8 +49,4 @@
 - APIキーは本番運用開始後にローテーション（ダッシュボードで再発行 → `gh secret set` で差し替え → 旧キー無効化）。
 
 ## 【次のアクション】
-**USER ACTION REQUIRED**
-1. スマホで https://pteratakahashi.github.io/kabu-calendar/ を開き、ホーム画面に追加して使ってみる（iPhone: Safari → 共有 → ホーム画面に追加）。気になる点を伝える
-2. （推奨・後からでも可）J-Quants の APIキーを Secrets に登録する（チャットには貼らない）
-   - https://jpx-jquants.com/ → 新規登録 → Free プラン → ダッシュボードで「APIキー発行」
-   - 自分のターミナルで `gh secret set JQUANTS_API_KEY -R pteratakahashi/kabu-calendar` → プロンプトでキーを貼り付け
+**CLAUDE CODE CONTINUES** — イベント初期データの完成待ち → 定期実行作成 → デプロイ。

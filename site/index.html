@@ -22,35 +22,63 @@
 </header>
 
 <main>
-  <!-- カレンダー -->
-  <section id="view-cal" class="view active">
+  <!-- イベント（週表示） -->
+  <section id="view-events" class="view active">
     <div class="month-nav">
-      <button id="prev" aria-label="前の月">‹</button>
+      <h2 id="week-label"></h2>
+      <button id="wprev" aria-label="前の週">‹</button>
+      <button id="wnext" aria-label="次の週">›</button>
+      <button id="thisweek" class="chip">今週</button>
+    </div>
+    <div class="seg" id="ev-imp" role="group" aria-label="影響度">
+      <button data-v="3">★★★のみ</button>
+      <button data-v="2" class="on">★★以上</button>
+      <button data-v="1">すべて</button>
+    </div>
+    <div class="theme-bar" id="ev-themes"></div>
+    <div id="week"></div>
+  </section>
+
+  <!-- 決算カレンダー -->
+  <section id="view-cal" class="view">
+    <div class="month-nav">
       <h2 id="month-label"></h2>
+      <button id="prev" aria-label="前の月">‹</button>
       <button id="next" aria-label="次の月">›</button>
       <button id="today-btn" class="chip">今日</button>
     </div>
     <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
     <div id="grid" class="grid"></div>
     <div class="legend">
+      <span><i class="dot big"></i>大型決算</span>
       <span><i class="dot watch"></i>ウォッチ</span>
-      <span><i class="dot us"></i>米国</span>
       <span><i class="num-sample">12</i>決算社数</span>
     </div>
-    <div class="day-head">
-      <h3 id="day-label"></h3>
-      <div class="filters" role="group" aria-label="絞り込み">
-        <button class="chip on" data-f="all">全部</button>
-        <button class="chip" data-f="watch">ウォッチ</button>
-        <button class="chip" data-f="prime">プライム</button>
-      </div>
+    <div class="day-head"><h3 id="day-label"></h3></div>
+    <div class="seg" id="cal-imp" role="group" aria-label="絞り込み">
+      <button data-v="3">★★★</button>
+      <button data-v="2" class="on">★★以上</button>
+      <button data-v="1">すべて</button>
+      <button data-v="w">ウォッチ</button>
     </div>
+    <div class="sortbar">
+      <label>並び順
+        <select id="cal-sort">
+          <option value="imp">影響度順</option>
+          <option value="w">規模順（時価総額）</option>
+          <option value="c">コード順</option>
+        </select>
+      </label>
+    </div>
+    <div class="theme-bar" id="cal-themes"></div>
     <ul id="day-list" class="list"></ul>
   </section>
 
   <!-- 検索 -->
   <section id="view-search" class="view">
     <input id="q" type="search" inputmode="search" placeholder="銘柄コード・社名で検索（例: 6323, ローツェ）" autocomplete="off">
+    <h3 class="sec-h">テーマから探す</h3>
+    <div class="theme-grid" id="theme-grid"></div>
     <ul id="search-list" class="list"></ul>
   </section>
 
@@ -60,8 +88,18 @@
   </section>
 </main>
 
+<dialog id="sheet">
+  <div class="sheet-head">
+    <h3 id="sheet-title"></h3>
+    <button id="sheet-close" aria-label="閉じる">✕</button>
+  </div>
+  <p id="sheet-desc" class="sheet-desc"></p>
+  <ul id="sheet-list" class="list"></ul>
+</dialog>
+
 <nav class="tabs">
-  <button data-v="cal" class="on"><span class="ti">📅</span>カレンダー</button>
+  <button data-v="events" class="on"><span class="ti">📰</span>イベント</button>
+  <button data-v="cal"><span class="ti">📅</span>決算</button>
   <button data-v="search"><span class="ti">🔍</span>検索</button>
   <button data-v="watch"><span class="ti">★</span>ウォッチ</button>
 </nav>

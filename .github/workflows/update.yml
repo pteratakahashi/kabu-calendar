@@ -21,9 +21,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
@@ -40,7 +40,8 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add site/data
           git diff --cached --quiet || git commit -m "data: update $(TZ=Asia/Tokyo date +%F)"
-          git push
+          # Claude の定期実行が同時に push している場合に備えて rebase してから push
+          for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done
 
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

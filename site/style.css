@@ -13,6 +13,11 @@
   --sat: #1d6fe0;
   --today: #1d6fe0;
   --sel-bg: #e7f0fd;
+  --big: #7b4ddb;
+  --star: #f0a400;
+  --star-off: #d5dae0;
+  --d1: #fde8ea; --d2: #fdf3dc; --d3: #e3f5e6; --d4: #e1f0fb; --d5: #ece6fa; --d6: #eef0f3; --d0: #fbeaea;
+  --hi: #fff7f7;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -30,12 +35,18 @@
     --sat: #6aa8ff;
     --today: #5aa0ff;
     --sel-bg: #1d2f48;
+    --big: #a98bff; --star: #ffc23d; --star-off: #36404b;
+    --d1: #3a1f26; --d2: #3a3020; --d3: #1d3324; --d4: #1b2d3d; --d5: #2a2340; --d6: #232a33; --d0: #3a2020;
+    --hi: #2a1d22;
   }
 }
 :root[data-theme="dark"] {
   --bg: #0f1419; --surface: #182029; --text: #e8ecf0; --muted: #8b96a3; --line: #26303b;
   --accent: #5aa0ff; --watch: #ffc23d; --watch-bg: #3a2f12; --us: #ff6b6b; --us-bg: #3a1c1f;
   --sun: #ff7b7b; --sat: #6aa8ff; --today: #5aa0ff; --sel-bg: #1d2f48;
+  --big: #a98bff; --star: #ffc23d; --star-off: #36404b;
+  --d1: #3a1f26; --d2: #3a3020; --d3: #1d3324; --d4: #1b2d3d; --d5: #2a2340; --d6: #232a33; --d0: #3a2020;
+  --hi: #2a1d22;
 }
 
 * { box-sizing: border-box; }
@@ -106,7 +117,7 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .cell .marks { display: flex; gap: 3px; position: absolute; bottom: 5px; left: 0; right: 0; justify-content: center; }
 .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; }
 .dot.watch { background: var(--watch); }
-.dot.us { background: var(--us); }
+.dot.big { background: var(--big); }
 .cell.has-watch { box-shadow: inset 0 -3px 0 var(--watch); }
 
 .legend { display: flex; gap: 14px; font-size: 12px; color: var(--muted); padding: 8px 2px 4px; flex-wrap: wrap; }
@@ -130,7 +141,9 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .list .main { flex: 1; min-width: 0; }
 .list .name { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .list .sub { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.list .code { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; width: 3.4em; flex: none; }
+.list .lead { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; width: 3.6em; flex: none; }
+.list .code { font-variant-numeric: tabular-nums; color: var(--muted); font-size: 13px; }
+.chips { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 5px; }
 .list .time { font-variant-numeric: tabular-nums; font-size: 13px; width: 3.4em; flex: none; color: var(--us); font-weight: 600; }
 .list .badge { font-size: 11px; padding: 0 5px; border-radius: 4px; border: 1px solid var(--line); margin-right: 6px; font-weight: 400; color: var(--text); }
 .list .name .badge { margin: 0 0 0 6px; }
@@ -153,3 +166,71 @@ main { max-width: 640px; margin: 0 auto; padding: 0 16px; }
 .tabs button { flex: 1; padding: 8px 0 10px; font-size: 11px; color: var(--muted); display: flex; flex-direction: column; align-items: center; gap: 2px; }
 .tabs button.on { color: var(--accent); }
 .tabs .ti { font-size: 20px; line-height: 1; }
+
+/* ---------- v2: イベント週表示・影響度・テーマ ---------- */
+.stars { font-size: 11px; letter-spacing: -1px; color: var(--star); white-space: nowrap; }
+.stars i { font-style: normal; color: var(--star-off); }
+.badge.size { color: var(--big); border-color: var(--big); }
+.badge.wbadge { color: var(--watch); border-color: var(--watch); margin-left: 6px; }
+.badge.tent { margin-left: 6px; }
+
+.seg { display: flex; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 3px; gap: 2px; margin: 4px 0 8px; }
+.seg button { flex: 1; padding: 6px 4px; border-radius: 7px; font-size: 13px; color: var(--muted); white-space: nowrap; }
+.seg button.on { background: var(--accent); color: #fff; font-weight: 600; }
+
+.theme-bar { display: flex; gap: 6px; overflow-x: auto; padding: 2px 0 10px; scrollbar-width: none; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+.theme-bar::-webkit-scrollbar { display: none; }
+.tchip { flex: none; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--text); white-space: nowrap; }
+.tchip.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+.chips .tchip, .ev-meta .tchip { font-size: 11px; padding: 1px 8px; }
+
+.sortbar { display: flex; justify-content: flex-end; font-size: 13px; color: var(--muted); margin-bottom: 6px; }
+.sortbar select { margin-left: 6px; font: inherit; color: var(--text); background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 4px 6px; }
+
+/* 週表示（画像の「来週の主なスケジュール」風） */
+#week { display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px; }
+.day { display: flex; border-radius: 12px; overflow: hidden; background: var(--surface); border: 1px solid var(--line); }
+.day-date { width: 58px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px 2px; gap: 1px; }
+.day-date b { font-size: 19px; font-variant-numeric: tabular-nums; letter-spacing: -.5px; }
+.day-date span { font-size: 12px; }
+.day-date em { font-style: normal; font-size: 10px; background: var(--today); color: #fff; border-radius: 4px; padding: 0 4px; margin-top: 3px; }
+.wd1 .day-date { background: var(--d1); } .wd2 .day-date { background: var(--d2); } .wd3 .day-date { background: var(--d3); }
+.wd4 .day-date { background: var(--d4); } .wd5 .day-date { background: var(--d5); } .wd6 .day-date { background: var(--d6); color: var(--sat); }
+.wd0 .day-date { background: var(--d0); color: var(--sun); }
+.day.is-today { border-color: var(--today); }
+.day-items { flex: 1; min-width: 0; }
+.ev { display: flex; gap: 8px; padding: 9px 10px; border-top: 1px solid var(--line); align-items: flex-start; }
+.ev:first-child { border-top: 0; }
+.ev.imp3 { background: var(--hi); }
+.ev.watched { box-shadow: inset 3px 0 0 var(--watch); }
+.ev[data-code] { cursor: pointer; }
+.flag { font-size: 18px; line-height: 1.2; flex: none; width: 22px; text-align: center; }
+.ev-main { flex: 1; min-width: 0; }
+.ev-title { font-weight: 700; font-size: 14.5px; line-height: 1.35; }
+.ev.imp1 .ev-title { font-weight: 600; }
+.ev-desc { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+.ev-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; margin-top: 4px; }
+.ev-meta .stars { margin-right: 2px; }
+.ev-time { flex: none; font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; min-width: 3.2em; text-align: right; }
+.ev-time small { font-size: 10px; font-weight: 400; color: var(--muted); }
+.empty-msg { text-align: center; color: var(--muted); padding: 40px 0; }
+
+.list .more { background: none; justify-content: center; }
+.list .more button { color: var(--accent); font-size: 14px; padding: 6px 12px; }
+
+.sec-h { font-size: 13px; color: var(--muted); margin: 4px 0 8px; font-weight: 600; }
+.theme-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 6px; margin-bottom: 12px; }
+.tcard { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 10px 8px; text-align: left; display: flex; flex-direction: column; gap: 2px; }
+.tcard b { font-size: 14px; }
+.tcard span { font-size: 11px; color: var(--muted); }
+
+dialog#sheet {
+  border: 0; padding: 0 16px 16px; margin: auto auto 0; width: 100%; max-width: 640px; max-height: 85vh;
+  border-radius: 16px 16px 0 0; background: var(--bg); color: var(--text);
+}
+dialog#sheet::backdrop { background: rgba(0,0,0,.45); }
+.sheet-head { position: sticky; top: 0; background: var(--bg); display: flex; align-items: center; justify-content: space-between; padding: 14px 0 6px; z-index: 1; }
+.sheet-head h3 { margin: 0; font-size: 17px; }
+.sheet-head button { font-size: 18px; width: 36px; height: 36px; }
+.sheet-desc { font-size: 13px; color: var(--muted); margin: 0 0 10px; line-height: 1.5; }
+.sheet-evs { display: block; margin-top: 6px; color: var(--text); font-size: 12px; border-left: 3px solid var(--us); padding-left: 8px; }

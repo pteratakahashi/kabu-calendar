@@ -1,5 +1,5 @@
 // アプリ本体はキャッシュ優先、data/*.json はネットワーク優先（オフライン時のみキャッシュ）
-const CACHE = "kabucal-v1";
+const CACHE = "kabucal-v2";
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {

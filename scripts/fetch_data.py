@@ -3,18 +3,21 @@
 
 出力 (site/data/):
   earnings.json  決算発表予定 [{d, c, n, q, fye, mkt, src}]  d=YYYY-MM-DD or "" (未定)
-  stocks.json    検索用銘柄一覧 [{c, n, mkt}]
-  events.json    米国等の手入力イベント (data/us_events.json をそのままコピー)
+  stocks.json    銘柄一覧 [{c, n, mkt, w, sz, th, imp}]  w=TOPIXウエイト(%), sz=規模区分, th=テーマid, imp=影響度1-3
+  events.json    イベント = data/events.json（Claude が毎日調査）+ SQ（自動計算）
+  themes.json    テーマ定義 (data/themes.json をコピー)
   meta.json      最終更新日時・件数・各ソースの成否
 
 データ源:
   1. JPX「決算発表予定日」Excel（全決算期。メイン）
   2. J-Quants V2 /equities/earnings-calendar（3・9月期。JPXに無い分の補完）
   3. J-Quants V2 /equities/master（検索用銘柄一覧。Freeは12週遅延）
+  4. JPX TOPIX 構成銘柄ウエイト CSV（規模順・影響度の判定。月次更新）
   J-Quants は環境変数 JQUANTS_API_KEY がある時だけ使う。無ければ JPX のみで動く。
 """
 from __future__ import annotations
 
+import csv
 import datetime as dt
 import io
 import json
@@ -35,6 +38,9 @@ UA = "kabu-calendar/0.1 (personal use)"
 
 JPX_PAGE = "https://www.jpx.co.jp/listing/event-schedules/financial-announcement/index.html"
 JQ_BASE = "https://api.jquants.com/v2"
+TOPIX_CSV = "https://www.jpx.co.jp/automation/markets/indices/topix/files/topixweight_j.csv"
+SIZE = {"TOPIX Core30": "Core30", "TOPIX Large70": "Large70", "TOPIX Mid400": "Mid400",
+        "TOPIX Small 1": "Small1", "TOPIX Small 2": "Small2"}
 
 KEEP_PAST_DAYS = 400  # 過去分はこの日数だけ保持（JPX Excel は直近分しか載らないため蓄積する）
 
@@ -145,6 +151,66 @@ def fetch_jq_master(key: str) -> list[dict]:
     return list(seen.values())
 
 
+# ---------------------------------------------------------------- TOPIX / 影響度
+
+def fetch_topix() -> dict[str, dict]:
+    """コード -> {w: TOPIXウエイト%, sz: 規模区分}。ウエイト≒浮動株時価総額の比率なので規模順に使う。"""
+    text = http_get(TOPIX_CSV).decode("cp932", "replace")
+    out = {}
+    for row in csv.DictReader(io.StringIO(text)):
+        code = (row.get("コード") or "").strip()
+        if not code:
+            continue
+        try:
+            w = float((row.get("TOPIXに占める個別銘柄のウエイト") or "0").rstrip("%"))
+        except ValueError:
+            w = 0.0
+        out[norm_code(code)] = {"w": w, "n": nfkc(row.get("銘柄名")), "sz": SIZE.get((row.get("ニューインデックス区分") or "").strip(), "")}
+    return out
+
+
+def enrich_stocks(stocks: list[dict], topix: dict, themes: list[dict]) -> None:
+    """規模・テーマ・影響度を付ける。
+    影響度 3: Core30 またはテーマの主力株 / 2: Large70 またはテーマ銘柄 / 1: その他"""
+    th_of: dict[str, list[str]] = {}
+    lead: set[str] = set()
+    for t in themes:
+        for c in t["codes"]:
+            th_of.setdefault(c, []).append(t["id"])
+        lead.update(t.get("lead", []))
+    for s in stocks:
+        s["n"] = nfkc(s["n"])
+        tp = topix.get(s["c"], {})
+        s["w"] = tp.get("w", 0.0)
+        s["sz"] = tp.get("sz", "")
+        s["th"] = th_of.get(s["c"], [])
+        if s["sz"] == "Core30" or s["c"] in lead:
+            s["imp"] = 3
+        elif s["sz"] == "Large70" or s["th"]:
+            s["imp"] = 2
+        else:
+            s["imp"] = 1
+
+
+def gen_sq(today: dt.date) -> list[dict]:
+    """SQ（毎月第2金曜）。3・6・9・12月はメジャーSQ。祝日による前倒しは未対応（稀）。"""
+    out = []
+    y, m = today.year, today.month
+    for i in range(-2, 7):
+        yy, mm = y + (m - 1 + i) // 12, (m - 1 + i) % 12 + 1
+        d = dt.date(yy, mm, 1)
+        d += dt.timedelta(days=(4 - d.weekday()) % 7 + 7)  # 第2金曜
+        major = mm in (3, 6, 9, 12)
+        out.append({
+            "id": f"{d.isoformat()}-sq", "d": d.isoformat(), "country": "JP",
+            "title": "メジャーSQ" if major else "オプションSQ",
+            "desc": "先物・オプションの特別清算日。前日〜当日朝は値動きが荒れやすい" if major
+                    else "日経225オプションの特別清算日",
+            "impact": 3 if major else 1, "themes": [], "auto": True,
+        })
+    return out
+
+
 # ---------------------------------------------------------------- merge
 
 def load_json(path: Path, default):
@@ -218,9 +284,28 @@ def main() -> int:
     by_code = {s["c"]: s for s in (stocks or load_json(OUT / "stocks.json", []))}
     for e in earnings:
         by_code.setdefault(e["c"], {"c": e["c"], "n": e["n"], "mkt": e.get("mkt", "")})
+        by_code[e["c"]].setdefault("sec", e.get("sec", ""))
     stocks = sorted(by_code.values(), key=lambda s: s["c"])
 
-    events = load_json(ROOT / "data" / "us_events.json", [])
+    themes = load_json(ROOT / "data" / "themes.json", [])
+    topix: dict = {}
+    try:
+        topix = fetch_topix()
+        meta["sources"]["topix"] = {"ok": True, "count": len(topix)}
+    except Exception as e:  # noqa: BLE001
+        print(f"TOPIX failed: {e}", file=sys.stderr)
+        meta["sources"]["topix"] = {"ok": False, "error": str(e)[:200]}
+        # 失敗時は前回の値を使う
+        topix = {s["c"]: {"w": s.get("w", 0.0), "sz": s.get("sz", "")} for s in load_json(OUT / "stocks.json", [])}
+    for c, tp in topix.items():  # 決算予定に無い TOPIX 銘柄も検索できるように
+        if c not in by_code and tp.get("n"):
+            by_code[c] = {"c": c, "n": tp["n"], "mkt": "プライム"}
+    stocks = sorted(by_code.values(), key=lambda s: s["c"])
+    enrich_stocks(stocks, topix, themes)
+
+    today = dt.datetime.now(JST).date()
+    events = load_json(ROOT / "data" / "events.json", []) + gen_sq(today)
+    events.sort(key=lambda e: (e["d"], e.get("t") or "99:99"))
 
     now = dt.datetime.now(JST)
     meta.update({
@@ -236,6 +321,7 @@ def main() -> int:
     dump("earnings.json", earnings)
     dump("stocks.json", stocks)
     dump("events.json", events)
+    dump("themes.json", themes)
     (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"done: earnings={len(earnings)} stocks={len(stocks)} events={len(events)}")
     return 0

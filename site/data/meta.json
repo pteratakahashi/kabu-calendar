@@ -1,0 +1,16 @@
+{
+ "sources": {
+  "jpx": {
+   "ok": true,
+   "count": 3357
+  },
+  "jquants": {
+   "ok": false,
+   "error": "JQUANTS_API_KEY 未設定"
+  }
+ },
+ "updated_at": "2026-10-09T18:57:00+09:00",
+ "earnings_count": 3357,
+ "stocks_count": 3357,
+ "events_count": 11
+}

@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1419" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f6f7f9" media="(prefers-color-scheme: light)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="株カレンダー">
+<meta name="robots" content="noindex">
+<title>株イベントカレンダー</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>株イベントカレンダー</h1>
+  <div id="updated" class="updated">読み込み中…</div>
+</header>
+
+<main>
+  <!-- カレンダー -->
+  <section id="view-cal" class="view active">
+    <div class="month-nav">
+      <button id="prev" aria-label="前の月">‹</button>
+      <h2 id="month-label"></h2>
+      <button id="next" aria-label="次の月">›</button>
+      <button id="today-btn" class="chip">今日</button>
+    </div>
+    <div class="weekdays"><span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span></div>
+    <div id="grid" class="grid"></div>
+    <div class="legend">
+      <span><i class="dot watch"></i>ウォッチ</span>
+      <span><i class="dot us"></i>米国</span>
+      <span><i class="num-sample">12</i>決算社数</span>
+    </div>
+    <div class="day-head">
+      <h3 id="day-label"></h3>
+      <div class="filters" role="group" aria-label="絞り込み">
+        <button class="chip on" data-f="all">全部</button>
+        <button class="chip" data-f="watch">ウォッチ</button>
+        <button class="chip" data-f="prime">プライム</button>
+      </div>
+    </div>
+    <ul id="day-list" class="list"></ul>
+  </section>
+
+  <!-- 検索 -->
+  <section id="view-search" class="view">
+    <input id="q" type="search" inputmode="search" placeholder="銘柄コード・社名で検索（例: 6323, ローツェ）" autocomplete="off">
+    <ul id="search-list" class="list"></ul>
+  </section>
+
+  <!-- ウォッチ -->
+  <section id="view-watch" class="view">
+    <ul id="watch-list" class="list"></ul>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-v="cal" class="on"><span class="ti">📅</span>カレンダー</button>
+  <button data-v="search"><span class="ti">🔍</span>検索</button>
+  <button data-v="watch"><span class="ti">★</span>ウォッチ</button>
+</nav>
+
+<script src="app.js"></script>
+</body>
+</html>

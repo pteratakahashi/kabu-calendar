@@ -47,8 +47,9 @@ GitHub Actions が毎日 18:30 JST にこれを読み込み、SQ（自動計算�
 
 ## テーマ（themes）の付け方
 影響を受ける日本株テーマを `data/themes.json` の id で付ける。例:
-- TSMC月次・マイクロン・ASML → `semi`
-- NVIDIA → `semi`, `ai`, `wire`
+- テーマ id 一覧は data/themes.json（31テーマ）。細分化テーマ（semiequip 半導体製造装置 / semimat 半導体材料 / physai フィジカルAI / datacenter / quantum / space / autodrive / shipbuild / rareearth / regbank / kokudo / cyber / perovskite / highdiv）も積極的に使う
+- TSMC月次・マイクロン・ASML → `semi`, `semiequip`
+- NVIDIA → `semi`, `ai`, `datacenter`, `wire`
 - 日銀 → `bank`, `realestate`
 - 工作機械受注 → `machine`
 - 中国 PMI/GDP → `steel`, `machine`, `ship`

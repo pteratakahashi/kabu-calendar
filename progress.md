@@ -1,4 +1,6 @@
-# progress（最終更新: 2026-10-09 19:05）
+# progress（最終更新: 2026-10-09 19:02）
+
+**公開URL: https://pteratakahashi.github.io/kabu-calendar/** / リポジトリ: https://github.com/pteratakahashi/kabu-calendar
 
 ## 決定事項
 | 項目 | 決定 | 備考 |
@@ -21,7 +23,7 @@
 - [x] ヘッドレス Edge で動作確認（ライト/ダーク、390px 幅、横スクロール無し、JSエラー無し）
 - [x] GitHub Actions `.github/workflows/update.yml`
 - [x] ローカル git commit（0e18f1e）
-- [ ] GitHub リポジトリ作成・push・Pages 有効化 ← ユーザー承認待ち
+- [x] GitHub リポジトリ作成・push・Pages 有効化。Actions 手動実行で JPX 取得→デプロイ成功を確認（GitHub のサーバーからも JPX 取得 OK）
 - [ ] J-Quants キー登録（任意だが推奨）
 
 ## 将来機能の設計メモ（今回は未実装）
@@ -36,7 +38,7 @@
 
 ## 【次のアクション】
 **USER ACTION REQUIRED**
-1. GitHub に公開リポジトリ `pteratakahashi/kabu-calendar` を作って push し、Pages を有効化してよいか返答する（OK なら Claude Code が gh で実行）
-2. （推奨・後からでも可）J-Quants の APIキーを取得し、自分のターミナルで Secrets に登録する（チャットには貼らない）
+1. スマホで https://pteratakahashi.github.io/kabu-calendar/ を開き、ホーム画面に追加して使ってみる（iPhone: Safari → 共有 → ホーム画面に追加）。気になる点を伝える
+2. （推奨・後からでも可）J-Quants の APIキーを Secrets に登録する（チャットには貼らない）
    - https://jpx-jquants.com/ → 新規登録 → Free プラン → ダッシュボードで「APIキー発行」
-   - リポジトリ作成後に `gh secret set JQUANTS_API_KEY -R pteratakahashi/kabu-calendar` を実行し、プロンプトでキーを貼り付け
+   - 自分のターミナルで `gh secret set JQUANTS_API_KEY -R pteratakahashi/kabu-calendar` → プロンプトでキーを貼り付け

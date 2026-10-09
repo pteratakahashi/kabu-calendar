@@ -1,4 +1,4 @@
-# progress（最終更新: 2026-10-09 19:25）
+# progress（最終更新: 2026-10-09 19:40）
 
 **公開URL: https://pteratakahashi.github.io/kabu-calendar/** / リポジトリ: https://github.com/pteratakahashi/kabu-calendar
 
@@ -38,7 +38,16 @@
 - [x] Claude 定期実行ルーティン作成（毎日 6:30/17:30 JST、Sonnet 5.5、events.json のみ変更→push→Actions が自動デプロイ）: https://claude.ai/code/routines/trig_019wdAhCP9p2QJEyw5HAM8tN
 - [x] イベントと JPX 決算の重複統合（events に `code` を持たせる）
 - [x] push・デプロイ（v2 公開済み）
-- [ ] 定期実行のテスト実行結果確認（push 権限の確認）
+- [x] 定期実行のテスト実行: 正常終了（変更なしのため push は未発生 → 初回の変更時に push 権限を確認する）
+
+## v3 実装状況（2026-10-09 夜）
+- [x] 決定: 株価データは Yahoo Finance（yfinance・非公式。自分用プロト限定、販売前に正式データへ）／騰落色は 上昇=赤・下落=青
+- [x] `scripts/fetch_reactions.py` → `site/data/reactions.json`（蓄積型。5分足は60日しか取れないため毎日実行）
+  - 時刻つき指標: 発表-60分〜+180分の5分足（米国系: S&P500先物/日経先物/ドル円、日本の場中: 日経平均/ドル円）
+  - 国内決算（★2以上・テーマ銘柄）: 反応日（15:00以降の発表は翌営業日）の騰落率＋前後の日足
+  - 海外決算（events の `ticker`）: その銘柄の5分足＋日本の関連テーマ主力株の騰落率
+- [x] UI: イベント行・決算行に騰落率、タップでチャート（発表時刻の縦線・5分/30分/1時間/3時間後の表）、決算タブに「月間まとめ」
+- [x] Actions に 07:00 JST の実行を追加（前夜の米国分を朝に反映）。CI 上でも Yahoo から取得できることを確認
 
 ## 将来機能の設計メモ（今回は未実装）
 - **決算前日プッシュ通知**: iOS 16.4+ はホーム画面追加済み PWA で Web Push 可。ただし送信側サーバーが必要（購読情報とウォッチリストの保管先）。案: Cloudflare Workers + KV（無料枠）に購読とウォッチを保存し、Actions の日次ジョブ後に Worker から送信。ウォッチリストは今 localStorage のみ → その時点でサーバー同期を追加する。`sw.js` に push ハンドラの差し込み口あり。
@@ -46,9 +55,11 @@
 - **推定決算日**: 次の四半期がまだ JPX に載っていない銘柄向けに、前年同期の発表日から推定表示（J-Quants Free の12週遅延データで作れる）。
 
 ## リスク・未解決
+- 株価データ（Yahoo Finance）を公開URLで配信している＝規約上グレー。URLを広めない。販売前に正式な株価データ契約へ切替必須。
 - GitHub Pages 無料枠はリポジトリも公開になる。J-Quants 由来データ（銘柄一覧）も公開状態になるため、自分用の間は URL を広めない。販売前に配信方式を再検討。
 - 販売時: JPX は法人向け有料「決算発表予定日情報提供サービス」を提供しており、JPX Excel の商用再配布はその契約が必要になる見込み。収益化前に要確認。
 - APIキーは本番運用開始後にローテーション（ダッシュボードで再発行 → `gh secret set` で差し替え → 旧キー無効化）。
 
 ## 【次のアクション】
-**CLAUDE CODE CONTINUES** — イベント初期データの完成待ち → 定期実行作成 → デプロイ。
+**USER ACTION REQUIRED** — スマホで v3（反応チャート・月間まとめ）を確認してフィードバック。
+（任意）J-Quants APIキー登録: 自分のターミナルで `gh secret set JQUANTS_API_KEY -R pteratakahashi/kabu-calendar`

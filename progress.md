@@ -1,4 +1,4 @@
-# progress（最終更新: 2026-10-09 19:20）
+# progress（最終更新: 2026-10-09 19:25）
 
 **公開URL: https://pteratakahashi.github.io/kabu-calendar/** / リポジトリ: https://github.com/pteratakahashi/kabu-calendar
 
@@ -34,9 +34,11 @@
 - [x] `data/themes.json` 17テーマ（半導体・AI・電線・銀行・商社・自動車・防衛…）。コードは JPX 名と照合済み、上場廃止銘柄除外
 - [x] fetch_data.py: TOPIX ウエイト取込・影響度判定・SQ 自動生成（毎月第2金曜、3/6/9/12月はメジャーSQ ★★★）
 - [x] UI: イベント週表示（曜日色付き・国旗・説明・時刻・★・テーマチップ）、影響度/テーマ絞り込み、決算タブに影響度フィルタ＋並び順（影響度/規模/コード）＋テーマ、テーマ詳細シート（関連銘柄と次回決算・関連イベント）
-- [ ] 初期イベントデータ（10/5〜11/6）調査中（サブエージェント）
-- [ ] Claude 定期実行ルーティン作成
-- [ ] push・デプロイ・実機確認
+- [x] 初期イベントデータ 57件（10/2〜12/18、★3=11/★2=30/★1=16、予定扱い6件）。`scripts/validate_events.py` で検証
+- [x] Claude 定期実行ルーティン作成（毎日 6:30/17:30 JST、Sonnet 5.5、events.json のみ変更→push→Actions が自動デプロイ）: https://claude.ai/code/routines/trig_019wdAhCP9p2QJEyw5HAM8tN
+- [x] イベントと JPX 決算の重複統合（events に `code` を持たせる）
+- [x] push・デプロイ（v2 公開済み）
+- [ ] 定期実行のテスト実行結果確認（push 権限の確認）
 
 ## 将来機能の設計メモ（今回は未実装）
 - **決算前日プッシュ通知**: iOS 16.4+ はホーム画面追加済み PWA で Web Push 可。ただし送信側サーバーが必要（購読情報とウォッチリストの保管先）。案: Cloudflare Workers + KV（無料枠）に購読とウォッチを保存し、Actions の日次ジョブ後に Worker から送信。ウォッチリストは今 localStorage のみ → その時点でサーバー同期を追加する。`sw.js` に push ハンドラの差し込み口あり。

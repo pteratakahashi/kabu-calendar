@@ -1341,42 +1341,54 @@ function renderBias() {
   const today = todayStr();
   const items = b.items.filter((x) => x.d >= today && state.n225set.has(x.c)
     && (!prefs.biasDir || x.s === Number(prefs.biasDir)) && (!prefs.biasKind || x.k === prefs.biasKind));
-  // 予定ごとにまとめる（自社の決算は日付ごと）
-  const groups = new Map();
+  // 売買する順（日付 → 寄り → 引け）に並べる。入る行（買い・空売り）は1件ずつ、出る行（売り・買い戻し）は予定ごとに1行にまとめる
+  const evTitle = (x) => { const ev = x.k === "ev" ? state.events.find((e) => e.id === x.id) : null; return ev ? seriesName(ev) : "決算"; };
+  const slots = new Map();
+  const slot = (d, t) => { const k = `${d}|${t === "寄り" ? 0 : 1}`; if (!slots.has(k)) slots.set(k, { d, t, ins: [], outs: new Map() }); return slots.get(k); };
   for (const x of items) {
-    const g = x.k === "earn" ? `earn@${x.d}` : x.id;
-    if (!groups.has(g)) groups.set(g, []);
-    groups.get(g).push(x);
+    const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, s: x.s, kind: reactTiming(x.d, x.tm).kind });
+    const p = plan(x.d, x.tm, tm0 || { entry: "prev", exit: "close" }, x.s);
+    const it = { x, p, tm0 };
+    if (p.inD >= today) slot(p.inD, p.inT).ins.push(it);
+    if (p.outD >= today) {
+      const o = slot(p.outD, p.outT).outs, k = `${x.k === "earn" ? "earn" : x.id}|${p.back}|${p.inD}${p.inT}`;
+      if (!o.has(k)) o.set(k, { title: evTitle(x), d: x.d, back: p.back, from: `${fmtMD(p.inD)}${p.inT}`, xs: [] });
+      o.get(k).xs.push(x);
+    }
   }
-  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}回以上のうち${Math.round(b.min_rate * 100)}%以上が同じ向きに動いた日経225銘柄（${items.length}件）</p>`;
-  const LIM = 5;
-  for (const [g, xs] of groups) {
-    const x0 = xs[0];
-    const ev = x0.k === "ev" ? state.events.find((e) => e.id === x0.id) : null;
-    const title = ev ? seriesName(ev) : "決算発表";
-    const nkv = (x0.k === "ev" ? x0.nk || [] : []).filter((v) => v != null);
-    const nk = nkv.length ? `<span class="nk">日経平均は上昇 ${nkv.filter((v) => v > 0).length}/${nkv.length}回</span>` : "";
-    const rt = reactTiming(x0.d, x0.tm);
-    const when = x0.k === "earn" ? "" : ` ${esc(x0.tm || "")}`;
-    html += `<h3 class="sec bias-h"><span>${fmtMD(x0.d)}${when} ${esc(title)}</span>${nk}<span class="nk rday">→ 反応 ${fmtMD(rt.day)}${x0.k === "earn" ? "（引け後に発表の場合）" : ""}</span></h3><ul class="list">`
-      + xs.slice(0, state.biasOpen.has(g) ? xs.length : LIM).map((x) => {
+  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}回以上のうち${Math.round(b.min_rate * 100)}%以上が同じ向きに動いた日経225銘柄（${items.length}件）。売買する順に並べています</p>`;
+  const LIM = 6;
+  for (const k of [...slots.keys()].sort()) {
+    const sl = slots.get(k);
+    const head = sl.t === "寄り" ? "寄り（9:00 前に寄成）" : "引け（15:30 前に引成）";
+    html += `<h3 class="sec bias-h"><span>${fmtMD(sl.d)} ${head}</span></h3>`;
+    if (sl.outs.size) {
+      html += `<ul class="list outs">` + [...sl.outs.values()].map((o) => `<li class="row out"><div class="main">
+        <div class="name"><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span>${esc(o.title)}${o.title === "決算" ? "" : ""}<small class="muted">（${esc(o.from)}に入った分）</small></div>
+        <div class="sub">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}</div></div></li>`).join("") + `</ul>`;
+    }
+    if (sl.ins.length) {
+      sl.ins.sort((a, c) => (a.x.d + (a.x.tm || "")).localeCompare(c.x.d + (c.x.tm || "")) || Math.abs(c.x.t) - Math.abs(a.x.t));
+      const open = state.biasOpen.has(k);
+      html += `<ul class="list">` + sl.ins.slice(0, open ? sl.ins.length : LIM).map(({ x, p, tm0 }) => {
         const held = state.hold.has(x.c);
-        const tmx0 = timing({ r: x.r, g: x.g, w1: x.w1, s: x.s, kind: reactTiming(x.d, x.tm).kind });
-        const tmx = tmx0 && { short: plan(x.d, x.tm, tmx0, x.s).short, fallback: tmx0.fallback };
         const dir = x.s > 0 ? "上昇" : "下落";
+        const ev = `${fmtMD(x.d)}${x.k === "earn" ? "" : " " + esc(x.tm || "")} ${esc(evTitle(x))}`;
         return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
-          <div class="main"><div class="name">${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
+          <div class="main"><div class="name"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span>${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
+          <div class="sub">${ev} → ${p.back} ${fmtMD(p.outD)}${p.outT}${tm0?.fallback || !tm0 ? "（決め手なし）" : ""}</div>
           <div class="sub">${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div>
-          <div class="vline">${tmx ? `<span class="vchip v-time">${esc(tmx.short)}${tmx.fallback ? "（決め手なし）" : ""}</span>` : ""}${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
+          <div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
           <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.r.filter((v) => v != null))}</div>
           <span class="chev">›</span></li>`;
       }).join("") + `</ul>`
-      + (xs.length > LIM && !state.biasOpen.has(g) ? `<button class="btn ghost more" data-bias-more="${esc(g)}">ほか ${xs.length - LIM} 銘柄を表示</button>` : "");
+        + (sl.ins.length > LIM && !open ? `<button class="btn ghost more" data-bias-more="${esc(k)}">ほか ${sl.ins.length - LIM} 銘柄を表示</button>` : "");
+    }
   }
   if (!items.length) html += `<p class="empty-msg">条件に合う銘柄はありません</p>`;
   el.innerHTML = html;
   $("#bias-note").innerHTML = `反応日（発表後に最初に開いた日本の立会日）の終値騰落率で判定。平均の動きが普段の1日の値動きの半分未満、またはばらつきが大きすぎるものは除いています。`
-    + `「日経平均は上昇 ○/10回」が同じ向きに偏っている予定は、個別の傾向というより相場全体の動きです。`
+    + `判定チップが「地合い」のものは、個別の傾向というより相場全体の動きです。`
     + `<br><b>注意:</b> 225銘柄 × 多くの予定を調べると、偶然だけでも一定数の偏りは見つかります。過去の傾向は将来の値動きを保証しません。売買の判断はご自身で。（${esc(b.asof)} 計算）`;
 }
 

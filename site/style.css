@@ -529,3 +529,13 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .list.outs li.row.out { padding-top: 10px; padding-bottom: 10px; }
 .list.outs .name small { font-weight: 400; margin-left: 4px; font-size: 11.5px; }
 .oname { text-decoration: underline; text-decoration-color: var(--line); cursor: pointer; }
+/* v13 ホームの次の売買 */
+.card.slot { padding: 12px 14px; }
+.slot-list { list-style: none; margin: 8px 0 0; padding: 0; }
+.slot-list li { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
+.slot-list li:first-child { border-top: none; }
+.slot-list .tag { flex: none; margin-top: 2px; }
+.slot-list .sl-main { flex: 1; min-width: 0; line-height: 1.45; }
+.slot-list .sl-main small { display: block; color: var(--muted); font-size: 12px; }
+.slot-list .chev { align-self: center; }
+.slot-list .more-li { color: var(--accent); font-size: 13px; justify-content: center; cursor: pointer; }

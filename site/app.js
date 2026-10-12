@@ -1333,6 +1333,25 @@ function spark(vals) {
     + `</svg>`;
 }
 
+// 傾向の各件を「売買する時」（日付 × 寄り/引け）の枠に振り分ける。入る注文 ins と、出る注文 outs（予定ごとにまとめる）
+const biasTitle = (x) => { const ev = x.k === "ev" ? state.events.find((e) => e.id === x.id) : null; return ev ? seriesName(ev) : "決算"; };
+function biasSlots(items, today) {
+  const slots = new Map();
+  const slot = (d, t) => { const k = `${d}|${t === "寄り" ? 0 : 1}`; if (!slots.has(k)) slots.set(k, { k, d, t, ins: [], outs: new Map() }); return slots.get(k); };
+  for (const x of items) {
+    const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, s: x.s, kind: reactTiming(x.d, x.tm).kind });
+    const p = plan(x.d, x.tm, tm0 || { entry: "prev", exit: "close" }, x.s);
+    const it = { x, p, tm0 };
+    if (p.inD >= today) slot(p.inD, p.inT).ins.push(it);
+    if (p.outD >= today) {
+      const o = slot(p.outD, p.outT).outs, k = `${x.k === "earn" ? "earn" : x.id}|${p.back}|${p.inD}${p.inT}`;
+      if (!o.has(k)) o.set(k, { title: biasTitle(x), d: x.d, back: p.back, from: `${fmtMD(p.inD)}${p.inT}`, xs: [] });
+      o.get(k).xs.push(x);
+    }
+  }
+  return [...slots.keys()].sort().map((k) => slots.get(k));
+}
+
 function renderBias() {
   const el = $("#bias-list");
   if (!el) return;
@@ -1342,24 +1361,11 @@ function renderBias() {
   const items = b.items.filter((x) => x.d >= today && state.n225set.has(x.c)
     && (!prefs.biasDir || x.s === Number(prefs.biasDir)) && (!prefs.biasKind || x.k === prefs.biasKind));
   // 売買する順（日付 → 寄り → 引け）に並べる。入る行（買い・空売り）は1件ずつ、出る行（売り・買い戻し）は予定ごとに1行にまとめる
-  const evTitle = (x) => { const ev = x.k === "ev" ? state.events.find((e) => e.id === x.id) : null; return ev ? seriesName(ev) : "決算"; };
-  const slots = new Map();
-  const slot = (d, t) => { const k = `${d}|${t === "寄り" ? 0 : 1}`; if (!slots.has(k)) slots.set(k, { d, t, ins: [], outs: new Map() }); return slots.get(k); };
-  for (const x of items) {
-    const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, s: x.s, kind: reactTiming(x.d, x.tm).kind });
-    const p = plan(x.d, x.tm, tm0 || { entry: "prev", exit: "close" }, x.s);
-    const it = { x, p, tm0 };
-    if (p.inD >= today) slot(p.inD, p.inT).ins.push(it);
-    if (p.outD >= today) {
-      const o = slot(p.outD, p.outT).outs, k = `${x.k === "earn" ? "earn" : x.id}|${p.back}|${p.inD}${p.inT}`;
-      if (!o.has(k)) o.set(k, { title: evTitle(x), d: x.d, back: p.back, from: `${fmtMD(p.inD)}${p.inT}`, xs: [] });
-      o.get(k).xs.push(x);
-    }
-  }
+  const slots = biasSlots(items, today);
   let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}回以上のうち${Math.round(b.min_rate * 100)}%以上が同じ向きに動いた日経225銘柄（${items.length}件）。売買する順に並べています</p>`;
   const LIM = 6;
-  for (const k of [...slots.keys()].sort()) {
-    const sl = slots.get(k);
+  for (const sl of slots) {
+    const k = sl.k;
     const head = sl.t === "寄り" ? "寄り（9:00 前に寄成）" : "引け（15:30 前に引成）";
     html += `<h3 class="sec bias-h"><span>${fmtMD(sl.d)} ${head}</span></h3>`;
     if (sl.outs.size) {
@@ -1373,7 +1379,7 @@ function renderBias() {
       html += `<ul class="list">` + sl.ins.slice(0, open ? sl.ins.length : LIM).map(({ x, p, tm0 }) => {
         const held = state.hold.has(x.c);
         const dir = x.s > 0 ? "上昇" : "下落";
-        const ev = `${fmtMD(x.d)}${x.k === "earn" ? "" : " " + esc(x.tm || "")} ${esc(evTitle(x))}`;
+        const ev = `${fmtMD(x.d)}${x.k === "earn" ? "" : " " + esc(x.tm || "")} ${esc(biasTitle(x))}`;
         return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
           <div class="main"><div class="name"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span>${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
           <div class="sub">${ev} → ${p.back} ${fmtMD(p.outD)}${p.outT}${tm0?.fallback || !tm0 ? "（決め手なし）" : ""}</div>
@@ -1625,6 +1631,24 @@ function renderHome() {
     items.sort((a, b) => (a.t || "99").localeCompare(b.t || "99") || b.impact - a.impact);
     html += `<h3 class="sec">${k === today ? "今日" : fmtMD(k)}の予定</h3>`;
     html += items.length ? `<ul class="list">${items.map(homeRow).join("")}</ul>` : `<p class="hint">大きな予定はありません</p>`;
+  }
+
+  // 傾向: 次の売買（直近2つの枠）
+  if (state.bias?.items?.length && state.n225set.size) {
+    const hm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+    const its = state.bias.items.filter((x) => x.d >= today && state.n225set.has(x.c));
+    const sls = biasSlots(its, today).filter((sl) => sl.d > today || (sl.t === "寄り" ? hm < "09:00" : hm < "15:30")).slice(0, 2);
+    if (sls.length) {
+      html += `<h3 class="sec">次の売買（傾向）<button class="link" data-go="bias">すべて ›</button></h3>`;
+      for (const sl of sls) {
+        const L = 5;
+        html += `<div class="card slot"><div class="card-h"><span>${sl.d === today ? "今日" : fmtMD(sl.d)} ${sl.t === "寄り" ? "寄り（9:00前に寄成）" : "引け（15:30前に引成）"}</span></div><ul class="slot-list">`
+          + [...sl.outs.values()].map((o) => `<li><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span><span class="sl-main">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}<small>${esc(o.title)}（${esc(o.from)}に入った分）</small></span></li>`).join("")
+          + sl.ins.slice(0, L).map(({ x, p }) => `<li data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}" class="has-rx"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span><span class="sl-main"><b>${esc(holdName(x.c))}</b> <span class="ncode">${esc(x.c)}</span><small>${fmtMD(x.d)} ${esc(biasTitle(x))} → ${p.back} ${fmtMD(p.outD)}${p.outT} · ${x.s > 0 ? "上昇" : "下落"} ${x.w}/${x.n}回 ${pct(x.avg)}</small></span><span class="chev">›</span></li>`).join("")
+          + (sl.ins.length > L ? `<li class="more-li" data-go="bias">ほか ${sl.ins.length - L} 銘柄 ›</li>` : "")
+          + `</ul></div>`;
+      }
+    }
   }
 
   // この先2週間の注意（今日・次の日以外）

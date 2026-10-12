@@ -548,3 +548,9 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 /* いつ買って、いつ売る？: 選んだ売買（★）と各セルの補足 */
 .rxtable.mini tr.pick th, .rxtable.mini tr.pick td { color: var(--text); font-weight: 700; background: var(--accent-soft, rgba(80,140,255,.10)); }
 .rxtable.mini td small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 400; }
+
+/* マーケットの指標選び */
+.card-h small .link { margin-left: 8px; font-size: 12.5px; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; font-weight: 600; }
+.mkt-row { gap: 4px; }
+.mkt-row .mv { flex: none; width: 36px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 15px; cursor: pointer; }
+.mkt-row .mv:disabled { opacity: .3; cursor: default; }

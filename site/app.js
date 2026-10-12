@@ -4,6 +4,7 @@
 const WATCH_KEY = "kabucal.watch.v1"; // 旧ウォッチ（v5まで）。保有銘柄へ移行する
 const HOLD_KEY = "kabucal.hold.v1";
 const PREF_KEY = "kabucal.prefs.v1";
+const MKT_KEY = "kabucal.mkt.v1"; // ホームのマーケットに出す指標（ティッカーの並び）。未設定なら market.json の def の指標
 function loadJSON(key, def) {
   try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
 }
@@ -1532,6 +1533,50 @@ async function openBias(v) {
   }
 }
 
+// ---------- マーケットの指標選び ----------
+function mktSel() {
+  const all = state.market?.items || [];
+  const sel = loadJSON(MKT_KEY, null);
+  return Array.isArray(sel) ? sel : all.filter((x) => x.def !== false).map((x) => x.sym);
+}
+function mktShown() {
+  const by = new Map((state.market?.items || []).map((x) => [x.sym, x]));
+  return mktSel().map((s) => by.get(s)).filter(Boolean);
+}
+function mktTile(x) {
+  const dp = x.unit === "bp" ? 2 : x.last >= 1000 ? 0 : x.last < 10 ? 4 : 2;
+  return `<div class="tile"><span>${esc(x.name)}</span><b>${x.last.toLocaleString(undefined, { maximumFractionDigits: dp })}${x.unit === "bp" ? "%" : ""}</b>${x.unit === "bp" ? `<span class="pct ${x.chg > 0 ? "up" : x.chg < 0 ? "down" : "flat"}">${x.chg > 0 ? "+" : ""}${x.chg}bp</span>` : pct(x.chg)}</div>`;
+}
+function openMktEdit() {
+  openSheet("マーケットの指標", "", null);
+  renderMktEdit();
+}
+function renderMktEdit() {
+  const items = state.market?.items || [];
+  const by = new Map(items.map((x) => [x.sym, x]));
+  const sel = mktSel().filter((s) => by.has(s));
+  let html = `<p class="sheet-desc">ホームに出す指標を選びます。タップで追加・外す、↑↓で並べ替え（この端末に保存）</p>
+    <h4 class="mday">表示中（${sel.length}）</h4>`;
+  html += sel.length ? `<ul class="list">${sel.map((s, i) => `<li class="pick on mkt-row"><div class="main"><div class="name">${esc(by.get(s).name)}</div></div>
+      <button class="mv" data-mkt-mv="${esc(s)}|-1" ${i === 0 ? "disabled" : ""} aria-label="上へ">↑</button><button class="mv" data-mkt-mv="${esc(s)}|1" ${i === sel.length - 1 ? "disabled" : ""} aria-label="下へ">↓</button>
+      <button class="mv" data-mkt-tg="${esc(s)}" aria-label="外す">×</button></li>`).join("")}</ul>` : `<p class="hint">まだありません</p>`;
+  let grp = "";
+  for (const x of items) {
+    if (sel.includes(x.sym)) continue;
+    const g = x.grp || "その他";
+    if (g !== grp) { if (grp) html += "</ul>"; grp = g; html += `<h4 class="mday">${esc(g)}</h4><ul class="list">`; }
+    html += `<li class="pick" data-mkt-tg="${esc(x.sym)}"><div class="main"><div class="name">${esc(x.name)}</div></div><span class="ck">＋</span></li>`;
+  }
+  if (grp) html += "</ul>";
+  html += `<button class="btn ghost wide" data-mkt-reset>最初の8つに戻す</button>`;
+  $("#sheet-body").innerHTML = html;
+}
+function mktSave(sel) {
+  saveJSON(MKT_KEY, sel);
+  renderMktEdit();
+  renderHome();
+}
+
 // 銘柄を選ぶ（日経225の業種別リスト）
 function openPicker() {
   const html = `<input id="pick-q" type="search" placeholder="コード・社名で絞り込み" autocomplete="off"><div id="pick-list"></div>`;
@@ -1732,12 +1777,12 @@ function renderHome() {
       <ol>${b.items.map((x) => `<li><b>${esc(x.h)}</b>${x.b ? `<p>${esc(x.b)}</p>` : ""}</li>`).join("")}</ol></div>`;
   }
 
-  // 市場
-  const m = state.market?.items || [];
-  if (m.length) {
-    html += `<div class="card"><div class="card-h"><span>マーケット</span><small>前日比 · 終値ベース</small></div><div class="tiles">`
-      + m.map((x) => `<div class="tile"><span>${esc(x.name)}</span><b>${x.last.toLocaleString(undefined, { maximumFractionDigits: x.unit === "bp" ? 2 : x.last > 1000 ? 0 : 2 })}${x.unit === "bp" ? "%" : ""}</b>${x.unit === "bp" ? `<span class="pct ${x.chg > 0 ? "up" : x.chg < 0 ? "down" : "flat"}">${x.chg > 0 ? "+" : ""}${x.chg}bp</span>` : pct(x.chg)}</div>`).join("")
-      + `</div></div>`;
+  // 市場（表示する指標は「編集」で選べる）
+  if (state.market?.items?.length) {
+    const m = mktShown();
+    html += `<div class="card"><div class="card-h"><span>マーケット</span><small>前日比 · 終値ベース <button class="link" data-mkt-edit>編集</button></small></div>`
+      + (m.length ? `<div class="tiles">${m.map(mktTile).join("")}</div>` : `<p class="hint">表示する指標が選ばれていません。「編集」から選べます</p>`)
+      + `</div>`;
   }
 
   // 保有株
@@ -1836,6 +1881,16 @@ document.addEventListener("click", (ev) => {
   const unh = ev.target.closest("[data-unhold]");
   if (unh) { state.hold.delete(unh.dataset.unhold); saveHold(); $("#sheet").close(); refreshHold(); renderCalendar(); renderDay(); return; }
   if (ev.target.closest("input")) return;
+  if (ev.target.closest("[data-mkt-edit]")) { openMktEdit(); return; }
+  const mtg = ev.target.closest("[data-mkt-tg]");
+  if (mtg) { const s = mtg.dataset.mktTg, sel = mktSel(); mktSave(sel.includes(s) ? sel.filter((x) => x !== s) : [...sel, s]); return; }
+  const mmv = ev.target.closest("[data-mkt-mv]");
+  if (mmv) {
+    const [s, d] = mmv.dataset.mktMv.split("|"), sel = mktSel(), i = sel.indexOf(s), j = i + Number(d);
+    if (i >= 0 && j >= 0 && j < sel.length) { [sel[i], sel[j]] = [sel[j], sel[i]]; mktSave(sel); }
+    return;
+  }
+  if (ev.target.closest("[data-mkt-reset]")) { try { localStorage.removeItem(MKT_KEY); } catch { /* noop */ } renderMktEdit(); renderHome(); return; }
   const ph = ev.target.closest("[data-pick-hold]");
   if (ph) { togglePick(ph.dataset.pickHold); return; }
   if (ev.target.closest("#hold-edit")) { openPicker(); return; }

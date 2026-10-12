@@ -1,5 +1,3627 @@
 [
  {
+  "id": "2023-10-18-asml",
+  "d": "2023-10-18",
+  "t": "14:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2023-10-19-netflix",
+  "d": "2023-10-19",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2023-10-19-tesla",
+  "d": "2023-10-19",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2023-10-19-tsmc-q3",
+  "d": "2023-10-19",
+  "t": "09:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2023-10-25-alphabet",
+  "d": "2023-10-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2023-10-25-microsoft",
+  "d": "2023-10-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2023-10-26-meta",
+  "d": "2023-10-26",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2023-10-27-amazon",
+  "d": "2023-10-27",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2023-10-27-intel",
+  "d": "2023-10-27",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2023-11-01-amd",
+  "d": "2023-11-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2023-11-03-apple",
+  "d": "2023-11-03",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2023-11-22-nvda",
+  "d": "2023-11-22",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2023-12-08-broadcom",
+  "d": "2023-12-08",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2023-12-21-mu",
+  "d": "2023-12-21",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2024-01-18-tsmc-q3",
+  "d": "2024-01-18",
+  "t": "20:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2024-01-24-netflix",
+  "d": "2024-01-24",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2024-01-24-asml",
+  "d": "2024-01-24",
+  "t": "15:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2024-01-25-tesla",
+  "d": "2024-01-25",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2024-01-26-intel",
+  "d": "2024-01-26",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2024-01-31-amd",
+  "d": "2024-01-31",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2024-01-31-alphabet",
+  "d": "2024-01-31",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2024-01-31-microsoft",
+  "d": "2024-01-31",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2024-02-02-apple",
+  "d": "2024-02-02",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2024-02-02-amazon",
+  "d": "2024-02-02",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2024-02-02-meta",
+  "d": "2024-02-02",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2024-02-22-nvda",
+  "d": "2024-02-22",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2024-03-08-broadcom",
+  "d": "2024-03-08",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2024-03-21-mu",
+  "d": "2024-03-21",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2024-04-17-asml",
+  "d": "2024-04-17",
+  "t": "14:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2024-04-18-tsmc-q3",
+  "d": "2024-04-18",
+  "t": "14:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2024-04-19-netflix",
+  "d": "2024-04-19",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2024-04-24-tesla",
+  "d": "2024-04-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2024-04-25-meta",
+  "d": "2024-04-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2024-04-26-alphabet",
+  "d": "2024-04-26",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2024-04-26-intel",
+  "d": "2024-04-26",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2024-04-26-microsoft",
+  "d": "2024-04-26",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2024-05-01-amd",
+  "d": "2024-05-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2024-05-01-amazon",
+  "d": "2024-05-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2024-05-03-apple",
+  "d": "2024-05-03",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2024-05-23-nvda",
+  "d": "2024-05-23",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2024-06-13-broadcom",
+  "d": "2024-06-13",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2024-06-27-mu",
+  "d": "2024-06-27",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2024-07-17-asml",
+  "d": "2024-07-17",
+  "t": "14:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2024-07-18-tsmc-q3",
+  "d": "2024-07-18",
+  "t": "14:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2024-07-19-netflix",
+  "d": "2024-07-19",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2024-07-24-alphabet",
+  "d": "2024-07-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2024-07-24-tesla",
+  "d": "2024-07-24",
+  "t": "09:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2024-07-31-amd",
+  "d": "2024-07-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2024-07-31-microsoft",
+  "d": "2024-07-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2024-08-01-meta",
+  "d": "2024-08-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2024-08-02-amazon",
+  "d": "2024-08-02",
+  "t": "01:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2024-08-02-intel",
+  "d": "2024-08-02",
+  "t": "01:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2024-08-02-apple",
+  "d": "2024-08-02",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2024-08-29-nvda",
+  "d": "2024-08-29",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2024-09-06-broadcom",
+  "d": "2024-09-06",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2024-09-26-mu",
+  "d": "2024-09-26",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2024-10-16-asml",
+  "d": "2024-10-16",
+  "t": "00:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2024-10-17-tsmc-q3",
+  "d": "2024-10-17",
+  "t": "14:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2024-10-18-netflix",
+  "d": "2024-10-18",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2024-10-24-tesla",
+  "d": "2024-10-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2024-10-30-amd",
+  "d": "2024-10-30",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2024-10-30-alphabet",
+  "d": "2024-10-30",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2024-10-31-meta",
+  "d": "2024-10-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2024-10-31-microsoft",
+  "d": "2024-10-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2024-11-01-apple",
+  "d": "2024-11-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2024-11-01-amazon",
+  "d": "2024-11-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2024-11-01-intel",
+  "d": "2024-11-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2024-11-21-nvda",
+  "d": "2024-11-21",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2024-12-13-broadcom",
+  "d": "2024-12-13",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2024-12-19-mu",
+  "d": "2024-12-19",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2025-01-04-us-ism-mfg",
+  "d": "2025-01-04",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（12月分）",
+  "desc": "49.3（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-01-08-us-ism-services",
+  "d": "2025-01-08",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（12月分）",
+  "desc": "54.1（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-01-10-us-jobs",
+  "d": "2025-01-10",
+  "t": "22:30",
+  "country": "US",
+  "title": "米雇用統計（12月分）",
+  "desc": "非農業部門+25.6万人、失業率4.1%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-01-14-us-ppi",
+  "d": "2025-01-14",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PPI（12月分）",
+  "desc": "前月比+0.2%、前年比+3.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-01-15-us-cpi",
+  "d": "2025-01-15",
+  "t": "22:30",
+  "country": "US",
+  "title": "米CPI（12月分）",
+  "desc": "前年比+2.9%、コア+3.2%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-01-16-tsmc-q3",
+  "d": "2025-01-16",
+  "t": "14:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2025-01-16-us-retail",
+  "d": "2025-01-16",
+  "t": "22:30",
+  "country": "US",
+  "title": "米小売売上高（12月分）",
+  "desc": "前月比+0.4%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-01-22-netflix",
+  "d": "2025-01-22",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2025-01-24-jp-cpi",
+  "d": "2025-01-24",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（12月分）",
+  "desc": "コア前年比+3.0%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-01-24-boj",
+  "d": "2025-01-24",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "0.25%利上げ、政策金利0.5%に",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-01-29-asml",
+  "d": "2025-01-29",
+  "t": "20:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2025-01-30-fomc",
+  "d": "2025-01-30",
+  "t": "04:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "政策金利4.25-4.50%で据え置き",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-01-30-meta",
+  "d": "2025-01-30",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2025-01-30-microsoft",
+  "d": "2025-01-30",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2025-01-30-tesla",
+  "d": "2025-01-30",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2025-01-30-ecb",
+  "d": "2025-01-30",
+  "t": "22:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "0.25%利下げ、預金金利2.75%に",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-01-30-us-gdp",
+  "d": "2025-01-30",
+  "t": "22:30",
+  "country": "US",
+  "title": "米GDP（10-12月期・速報）",
+  "desc": "年率+2.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-01-31-apple",
+  "d": "2025-01-31",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2025-01-31-intel",
+  "d": "2025-01-31",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2025-01-31-us-pce",
+  "d": "2025-01-31",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PCE（12月分）",
+  "desc": "PCE前年比+2.6%、コア+2.8%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-02-04-us-ism-mfg",
+  "d": "2025-02-04",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（1月分）",
+  "desc": "50.9（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-02-05-amd",
+  "d": "2025-02-05",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2025-02-05-alphabet",
+  "d": "2025-02-05",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2025-02-06-us-ism-services",
+  "d": "2025-02-06",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（1月分）",
+  "desc": "52.8（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-02-07-amazon",
+  "d": "2025-02-07",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2025-02-07-us-jobs",
+  "d": "2025-02-07",
+  "t": "22:30",
+  "country": "US",
+  "title": "米雇用統計（1月分）",
+  "desc": "非農業部門+14.3万人、失業率4.0%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-02-12-us-cpi",
+  "d": "2025-02-12",
+  "t": "22:30",
+  "country": "US",
+  "title": "米CPI（1月分）",
+  "desc": "前年比+3.0%、コア+3.3%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-02-13-us-ppi",
+  "d": "2025-02-13",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PPI（1月分）",
+  "desc": "前月比+0.4%、前年比+3.5%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-02-14-us-retail",
+  "d": "2025-02-14",
+  "t": "22:30",
+  "country": "US",
+  "title": "米小売売上高（1月分）",
+  "desc": "前月比-0.9%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-02-17-jp-gdp",
+  "d": "2025-02-17",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（10-12月期・1次速報）",
+  "desc": "実質年率+2.8%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-02-21-jp-cpi",
+  "d": "2025-02-21",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（1月分）",
+  "desc": "コア前年比+3.2%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-02-27-nvda",
+  "d": "2025-02-27",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2025-02-27-us-gdp",
+  "d": "2025-02-27",
+  "t": "22:30",
+  "country": "US",
+  "title": "米GDP（10-12月期・改定）",
+  "desc": "年率+2.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-02-28-us-pce",
+  "d": "2025-02-28",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PCE（1月分）",
+  "desc": "PCE前年比+2.5%、コア+2.6%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-03-04-us-ism-mfg",
+  "d": "2025-03-04",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（2月分）",
+  "desc": "50.3（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-03-06-us-ism-services",
+  "d": "2025-03-06",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（2月分）",
+  "desc": "53.5（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-03-06-ecb",
+  "d": "2025-03-06",
+  "t": "22:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "0.25%利下げ、預金金利2.50%に",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-03-07-broadcom",
+  "d": "2025-03-07",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2025-03-07-us-jobs",
+  "d": "2025-03-07",
+  "t": "22:30",
+  "country": "US",
+  "title": "米雇用統計（2月分）",
+  "desc": "非農業部門+15.1万人、失業率4.1%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-03-11-jp-gdp",
+  "d": "2025-03-11",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（10-12月期・2次速報）",
+  "desc": "実質年率+2.2%に下方修正",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-03-12-us-cpi",
+  "d": "2025-03-12",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（2月分）",
+  "desc": "前年比+2.8%、コア+3.1%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-03-13-us-ppi",
+  "d": "2025-03-13",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（2月分）",
+  "desc": "前月比0.0%、前年比+3.2%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-03-17-us-retail",
+  "d": "2025-03-17",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（2月分）",
+  "desc": "前月比+0.2%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-03-19-boj",
+  "d": "2025-03-19",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "政策金利0.5%で据え置き",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-03-20-fomc",
+  "d": "2025-03-20",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "4.25-4.50%で据え置き、QT減速",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-03-21-mu",
+  "d": "2025-03-21",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2025-03-21-jp-cpi",
+  "d": "2025-03-21",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（2月分）",
+  "desc": "コア前年比+3.0%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-03-27-us-gdp",
+  "d": "2025-03-27",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（10-12月期・確報）",
+  "desc": "年率+2.4%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-03-28-us-pce",
+  "d": "2025-03-28",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCE（2月分）",
+  "desc": "PCE前年比+2.5%、コア+2.8%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-04-01-jp-tankan",
+  "d": "2025-04-01",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日銀短観（3月調査）",
+  "desc": "大企業製造業DI+12（4期ぶり悪化）",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.boj.or.jp/statistics/tk/index.htm"
+ },
+ {
+  "id": "2025-04-01-us-ism-mfg",
+  "d": "2025-04-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（3月分）",
+  "desc": "49.0（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-04-03-us-ism-services",
+  "d": "2025-04-03",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（3月分）",
+  "desc": "50.8（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-04-04-us-jobs",
+  "d": "2025-04-04",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（3月分）",
+  "desc": "非農業部門+22.8万人、失業率4.2%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-04-10-us-cpi",
+  "d": "2025-04-10",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（3月分）",
+  "desc": "前年比+2.4%、コア+2.8%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-04-11-us-ppi",
+  "d": "2025-04-11",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（3月分）",
+  "desc": "前月比-0.4%、前年比+2.7%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-04-16-asml",
+  "d": "2025-04-16",
+  "t": "14:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2025-04-16-us-retail",
+  "d": "2025-04-16",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（3月分）",
+  "desc": "前月比+1.4%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-04-17-tsmc-q3",
+  "d": "2025-04-17",
+  "t": "14:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2025-04-17-ecb",
+  "d": "2025-04-17",
+  "t": "21:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "0.25%利下げ、預金金利2.25%に",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-04-18-netflix",
+  "d": "2025-04-18",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2025-04-18-jp-cpi",
+  "d": "2025-04-18",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（3月分）",
+  "desc": "コア前年比+3.2%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-04-23-tesla",
+  "d": "2025-04-23",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2025-04-25-alphabet",
+  "d": "2025-04-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2025-04-25-intel",
+  "d": "2025-04-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2025-04-30-us-gdp",
+  "d": "2025-04-30",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（1-3月期・速報）",
+  "desc": "年率-0.3%、3年ぶりマイナス",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-04-30-us-pce",
+  "d": "2025-04-30",
+  "t": "23:00",
+  "country": "US",
+  "title": "米PCE（3月分）",
+  "desc": "PCE前年比+2.3%、コア+2.6%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-05-01-meta",
+  "d": "2025-05-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2025-05-01-microsoft",
+  "d": "2025-05-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2025-05-01-boj",
+  "d": "2025-05-01",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "0.5%据え置き、成長見通し下方修正",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-05-01-us-ism-mfg",
+  "d": "2025-05-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（4月分）",
+  "desc": "48.7（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-05-02-apple",
+  "d": "2025-05-02",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2025-05-02-amazon",
+  "d": "2025-05-02",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2025-05-02-us-jobs",
+  "d": "2025-05-02",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（4月分）",
+  "desc": "非農業部門+17.7万人、失業率4.2%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-05-05-us-ism-services",
+  "d": "2025-05-05",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（4月分）",
+  "desc": "51.6（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-05-07-amd",
+  "d": "2025-05-07",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2025-05-08-fomc",
+  "d": "2025-05-08",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "4.25-4.50%で据え置き",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-05-13-us-cpi",
+  "d": "2025-05-13",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（4月分）",
+  "desc": "前年比+2.3%、コア+2.8%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-05-15-us-ppi",
+  "d": "2025-05-15",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（4月分）",
+  "desc": "前月比-0.5%、前年比+2.4%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-05-15-us-retail",
+  "d": "2025-05-15",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（4月分）",
+  "desc": "前月比+0.1%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-05-16-jp-gdp",
+  "d": "2025-05-16",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（1-3月期・1次速報）",
+  "desc": "実質年率-0.7%、4期ぶりマイナス",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-05-23-jp-cpi",
+  "d": "2025-05-23",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（4月分）",
+  "desc": "コア前年比+3.5%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-05-29-nvda",
+  "d": "2025-05-29",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2025-05-29-us-gdp",
+  "d": "2025-05-29",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（1-3月期・改定）",
+  "desc": "年率-0.2%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-05-30-us-pce",
+  "d": "2025-05-30",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCE（4月分）",
+  "desc": "PCE前年比+2.1%、コア+2.5%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-06-02-us-ism-mfg",
+  "d": "2025-06-02",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（5月分）",
+  "desc": "48.5（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-06-04-us-ism-services",
+  "d": "2025-06-04",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（5月分）",
+  "desc": "49.9（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-06-05-ecb",
+  "d": "2025-06-05",
+  "t": "21:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "0.25%利下げ、預金金利2.00%に",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-06-06-broadcom",
+  "d": "2025-06-06",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2025-06-06-us-jobs",
+  "d": "2025-06-06",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（5月分）",
+  "desc": "非農業部門+13.9万人、失業率4.2%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-06-09-jp-gdp",
+  "d": "2025-06-09",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（1-3月期・2次速報）",
+  "desc": "実質年率-0.2%に上方修正",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-06-11-us-cpi",
+  "d": "2025-06-11",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（5月分）",
+  "desc": "前年比+2.4%、コア+2.8%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-06-12-us-ppi",
+  "d": "2025-06-12",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（5月分）",
+  "desc": "前月比+0.1%、前年比+2.6%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-06-17-boj",
+  "d": "2025-06-17",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "0.5%据え置き、国債買入減額計画の中間評価",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-06-17-us-retail",
+  "d": "2025-06-17",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（5月分）",
+  "desc": "前月比-0.9%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-06-19-fomc",
+  "d": "2025-06-19",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "4.25-4.50%で据え置き",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-06-20-jp-cpi",
+  "d": "2025-06-20",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（5月分）",
+  "desc": "コア前年比+3.7%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-06-26-mu",
+  "d": "2025-06-26",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2025-06-26-us-gdp",
+  "d": "2025-06-26",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（1-3月期・確報）",
+  "desc": "年率-0.5%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-06-27-us-pce",
+  "d": "2025-06-27",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCE（5月分）",
+  "desc": "PCE前年比+2.3%、コア+2.7%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-07-01-jp-tankan",
+  "d": "2025-07-01",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日銀短観（6月調査）",
+  "desc": "大企業製造業DI+13（改善）",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.boj.or.jp/statistics/tk/index.htm"
+ },
+ {
+  "id": "2025-07-01-us-ism-mfg",
+  "d": "2025-07-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（6月分）",
+  "desc": "49.0（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-07-03-us-jobs",
+  "d": "2025-07-03",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（6月分）",
+  "desc": "非農業部門+14.7万人、失業率4.1%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-07-03-us-ism-services",
+  "d": "2025-07-03",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（6月分）",
+  "desc": "50.8（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-07-15-us-cpi",
+  "d": "2025-07-15",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（6月分）",
+  "desc": "前年比+2.7%、コア+2.9%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-07-16-asml",
+  "d": "2025-07-16",
+  "t": "14:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2025-07-16-us-ppi",
+  "d": "2025-07-16",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（6月分）",
+  "desc": "前月比0.0%、前年比+2.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-07-17-tsmc-q3",
+  "d": "2025-07-17",
+  "t": "15:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2025-07-17-us-retail",
+  "d": "2025-07-17",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（6月分）",
+  "desc": "前月比+0.6%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-07-18-netflix",
+  "d": "2025-07-18",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2025-07-18-jp-cpi",
+  "d": "2025-07-18",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（6月分）",
+  "desc": "コア前年比+3.3%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-07-24-alphabet",
+  "d": "2025-07-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2025-07-24-tesla",
+  "d": "2025-07-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2025-07-24-ecb",
+  "d": "2025-07-24",
+  "t": "21:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "預金金利2.00%で据え置き",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-07-25-intel",
+  "d": "2025-07-25",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2025-07-30-us-gdp",
+  "d": "2025-07-30",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（4-6月期・速報）",
+  "desc": "年率+3.0%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-07-31-fomc",
+  "d": "2025-07-31",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "4.25-4.50%で据え置き、2名反対",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-07-31-meta",
+  "d": "2025-07-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2025-07-31-microsoft",
+  "d": "2025-07-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2025-07-31-boj",
+  "d": "2025-07-31",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "政策金利0.5%で据え置き",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-07-31-us-pce",
+  "d": "2025-07-31",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCE（6月分）",
+  "desc": "PCE前年比+2.6%、コア+2.8%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-08-01-apple",
+  "d": "2025-08-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2025-08-01-amazon",
+  "d": "2025-08-01",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2025-08-01-us-jobs",
+  "d": "2025-08-01",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（7月分）",
+  "desc": "非農業部門+7.3万人、失業率4.2%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-08-01-us-ism-mfg",
+  "d": "2025-08-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（7月分）",
+  "desc": "48.0（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-08-05-us-ism-services",
+  "d": "2025-08-05",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（7月分）",
+  "desc": "50.1（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-08-06-amd",
+  "d": "2025-08-06",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2025-08-12-us-cpi",
+  "d": "2025-08-12",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（7月分）",
+  "desc": "前年比+2.7%、コア+3.1%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-08-14-us-ppi",
+  "d": "2025-08-14",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（7月分）",
+  "desc": "前月比+0.9%、前年比+3.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-08-15-jp-gdp",
+  "d": "2025-08-15",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（4-6月期・1次速報）",
+  "desc": "実質年率+1.0%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-08-15-us-retail",
+  "d": "2025-08-15",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（7月分）",
+  "desc": "前月比+0.5%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-08-22-jp-cpi",
+  "d": "2025-08-22",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（7月分）",
+  "desc": "コア前年比+3.1%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-08-28-nvda",
+  "d": "2025-08-28",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2025-08-28-us-gdp",
+  "d": "2025-08-28",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（4-6月期・改定）",
+  "desc": "年率+3.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-08-29-us-pce",
+  "d": "2025-08-29",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCE（7月分）",
+  "desc": "PCE前年比+2.6%、コア+2.9%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-09-02-us-ism-mfg",
+  "d": "2025-09-02",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（8月分）",
+  "desc": "48.7（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-09-04-us-ism-services",
+  "d": "2025-09-04",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（8月分）",
+  "desc": "52.0（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-09-05-broadcom",
+  "d": "2025-09-05",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2025-09-05-us-jobs",
+  "d": "2025-09-05",
+  "t": "21:30",
+  "country": "US",
+  "title": "米雇用統計（8月分）",
+  "desc": "非農業部門+2.2万人、失業率4.3%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-09-08-jp-gdp",
+  "d": "2025-09-08",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（4-6月期・2次速報）",
+  "desc": "実質年率+2.2%に上方修正",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-09-10-us-ppi",
+  "d": "2025-09-10",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PPI（8月分）",
+  "desc": "前月比-0.1%、前年比+2.6%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-09-11-ecb",
+  "d": "2025-09-11",
+  "t": "21:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "預金金利2.00%で据え置き",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-09-11-us-cpi",
+  "d": "2025-09-11",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（8月分）",
+  "desc": "前年比+2.9%、コア+3.1%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/schedule/2025/home.htm"
+ },
+ {
+  "id": "2025-09-16-us-retail",
+  "d": "2025-09-16",
+  "t": "21:30",
+  "country": "US",
+  "title": "米小売売上高（8月分）",
+  "desc": "前月比+0.6%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-09-18-fomc",
+  "d": "2025-09-18",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "0.25%利下げ、4.00-4.25%に",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-09-19-jp-cpi",
+  "d": "2025-09-19",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（8月分）",
+  "desc": "コア前年比+2.7%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-09-19-boj",
+  "d": "2025-09-19",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "0.5%据え置き、ETF売却開始を決定",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-09-24-mu",
+  "d": "2025-09-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2025-09-25-us-gdp",
+  "d": "2025-09-25",
+  "t": "21:30",
+  "country": "US",
+  "title": "米GDP（4-6月期・確報）",
+  "desc": "年率+3.8%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-09-26-us-pce",
+  "d": "2025-09-26",
+  "t": "21:30",
+  "country": "US",
+  "title": "米PCE（8月分）",
+  "desc": "PCE前年比+2.7%、コア+2.9%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-10-01-jp-tankan",
+  "d": "2025-10-01",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日銀短観（9月調査）",
+  "desc": "大企業製造業DI+14（改善）",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.boj.or.jp/statistics/tk/index.htm"
+ },
+ {
+  "id": "2025-10-01-us-ism-mfg",
+  "d": "2025-10-01",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（9月分）",
+  "desc": "49.1（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-10-03-us-ism-services",
+  "d": "2025-10-03",
+  "t": "23:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（9月分）",
+  "desc": "50.0（50ちょうど）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-10-15-asml",
+  "d": "2025-10-15",
+  "t": "14:00",
+  "approx": true,
+  "country": "GLOBAL",
+  "title": "ASML 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/ASML/",
+  "ticker": "ASML"
+ },
+ {
+  "id": "2025-10-16-tsmc-q3",
+  "d": "2025-10-16",
+  "t": "09:00",
+  "approx": true,
+  "country": "TW",
+  "title": "TSMC 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSM/",
+  "ticker": "TSM"
+ },
+ {
+  "id": "2025-10-22-netflix",
+  "d": "2025-10-22",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
+  "id": "2025-10-23-tesla",
+  "d": "2025-10-23",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "テスラ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/TSLA/",
+  "ticker": "TSLA"
+ },
+ {
+  "id": "2025-10-24-intel",
+  "d": "2025-10-24",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "インテル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/INTC/",
+  "ticker": "INTC"
+ },
+ {
+  "id": "2025-10-24-jp-cpi",
+  "d": "2025-10-24",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（9月分）",
+  "desc": "コア前年比+2.9%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-10-24-us-cpi",
+  "d": "2025-10-24",
+  "t": "21:30",
+  "country": "US",
+  "title": "米CPI（9月分）",
+  "desc": "閉鎖下で特別公表、前年比+3.0%・コア+3.0%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/bls/2025-lapse-revised-release-dates.htm"
+ },
+ {
+  "id": "2025-10-30-fomc",
+  "d": "2025-10-30",
+  "t": "03:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "0.25%利下げ、3.75-4.00%・QT終了決定",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-10-30-alphabet",
+  "d": "2025-10-30",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アルファベット 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/GOOGL/",
+  "ticker": "GOOGL"
+ },
+ {
+  "id": "2025-10-30-meta",
+  "d": "2025-10-30",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/META/",
+  "ticker": "META"
+ },
+ {
+  "id": "2025-10-30-microsoft",
+  "d": "2025-10-30",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロソフト 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MSFT/",
+  "ticker": "MSFT"
+ },
+ {
+  "id": "2025-10-30-boj",
+  "d": "2025-10-30",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "政策金利0.5%で据え置き",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-10-30-ecb",
+  "d": "2025-10-30",
+  "t": "22:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "預金金利2.00%で据え置き",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-10-31-apple",
+  "d": "2025-10-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アップル 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AAPL/",
+  "ticker": "AAPL"
+ },
+ {
+  "id": "2025-10-31-amazon",
+  "d": "2025-10-31",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "アマゾン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "retail"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMZN/",
+  "ticker": "AMZN"
+ },
+ {
+  "id": "2025-11-04-us-ism-mfg",
+  "d": "2025-11-04",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（10月分）",
+  "desc": "48.7（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-11-05-amd",
+  "d": "2025-11-05",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AMD/",
+  "ticker": "AMD"
+ },
+ {
+  "id": "2025-11-06-us-ism-services",
+  "d": "2025-11-06",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（10月分）",
+  "desc": "52.4（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-11-17-jp-gdp",
+  "d": "2025-11-17",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（7-9月期・1次速報）",
+  "desc": "実質年率-1.8%、6期ぶりマイナス",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-11-20-nvda",
+  "d": "2025-11-20",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "エヌビディア 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "wire"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NVDA/",
+  "ticker": "NVDA"
+ },
+ {
+  "id": "2025-11-20-us-jobs",
+  "d": "2025-11-20",
+  "t": "22:30",
+  "country": "US",
+  "title": "米雇用統計（9月分）",
+  "desc": "政府閉鎖で延期、非農業+11.9万人・失業率4.4%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/bls/2025-lapse-revised-release-dates.htm"
+ },
+ {
+  "id": "2025-11-21-jp-cpi",
+  "d": "2025-11-21",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（10月分）",
+  "desc": "コア前年比+3.0%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-11-25-us-ppi",
+  "d": "2025-11-25",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PPI（9月分）",
+  "desc": "閉鎖で延期、前月比+0.3%・前年比+2.7%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bls.gov/bls/2025-lapse-revised-release-dates.htm"
+ },
+ {
+  "id": "2025-11-25-us-retail",
+  "d": "2025-11-25",
+  "t": "22:30",
+  "country": "US",
+  "title": "米小売売上高（9月分）",
+  "desc": "閉鎖で延期、前月比+0.2%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-12-02-us-ism-mfg",
+  "d": "2025-12-02",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM製造業景況指数（11月分）",
+  "desc": "48.2（50割れ）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-12-04-us-ism-services",
+  "d": "2025-12-04",
+  "t": "00:00",
+  "country": "US",
+  "title": "米ISM非製造業景況指数（11月分）",
+  "desc": "52.6（50超）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/ism-pmi-reports/"
+ },
+ {
+  "id": "2025-12-06-us-pce",
+  "d": "2025-12-06",
+  "t": "00:00",
+  "country": "US",
+  "title": "米PCE（9月分）",
+  "desc": "閉鎖で延期、PCE前年比+2.8%・コア+2.8%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
+  "id": "2025-12-08-jp-gdp",
+  "d": "2025-12-08",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（7-9月期・2次速報）",
+  "desc": "実質年率-2.3%に下方修正",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.esri.cao.go.jp/jp/sna/news/2025/index.html"
+ },
+ {
+  "id": "2025-12-11-fomc",
+  "d": "2025-12-11",
+  "t": "04:00",
+  "country": "US",
+  "title": "FOMC結果発表",
+  "desc": "0.25%利下げ、3.50-3.75%に",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm"
+ },
+ {
+  "id": "2025-12-12-broadcom",
+  "d": "2025-12-12",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ブロードコム 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/AVGO/",
+  "ticker": "AVGO"
+ },
+ {
+  "id": "2025-12-15-jp-tankan",
+  "d": "2025-12-15",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日銀短観（12月調査）",
+  "desc": "大企業製造業DI+15（改善）",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.boj.or.jp/statistics/tk/index.htm"
+ },
+ {
+  "id": "2025-12-16-us-jobs",
+  "d": "2025-12-16",
+  "t": "22:30",
+  "country": "US",
+  "title": "米雇用統計（11月分）",
+  "desc": "10月分と合併発表、11月+6.4万人・失業率4.6%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/bls/2025-lapse-revised-release-dates.htm"
+ },
+ {
+  "id": "2025-12-16-us-retail",
+  "d": "2025-12-16",
+  "t": "22:30",
+  "country": "US",
+  "title": "米小売売上高（10月分）",
+  "desc": "閉鎖で延期、前月比0.0%（横ばい）",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.census.gov/economic-indicators/calendar-listview-2025.html"
+ },
+ {
+  "id": "2025-12-18-mu",
+  "d": "2025-12-18",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "マイクロン 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/MU/",
+  "ticker": "MU"
+ },
+ {
+  "id": "2025-12-18-ecb",
+  "d": "2025-12-18",
+  "t": "22:15",
+  "country": "EU",
+  "title": "ECB理事会 結果発表",
+  "desc": "預金金利2.00%で据え置き",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html"
+ },
+ {
+  "id": "2025-12-18-us-cpi",
+  "d": "2025-12-18",
+  "t": "22:30",
+  "country": "US",
+  "title": "米CPI（11月分）",
+  "desc": "10月分は中止、前年比+2.7%・コア+2.6%",
+  "impact": 3,
+  "themes": [],
+  "src": "https://www.bls.gov/bls/2025-lapse-revised-release-dates.htm"
+ },
+ {
+  "id": "2025-12-19-jp-cpi",
+  "d": "2025-12-19",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（11月分）",
+  "desc": "コア前年比+3.0%",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2025-12-19-boj",
+  "d": "2025-12-19",
+  "t": "12:00",
+  "country": "JP",
+  "title": "日銀金融政策決定会合 結果発表",
+  "desc": "0.25%利上げ、政策金利0.75%に",
+  "impact": 3,
+  "themes": [
+   "bank",
+   "realestate"
+  ],
+  "src": "https://www.boj.or.jp/mopo/mpmsche_minu/past.htm",
+  "approx": true
+ },
+ {
+  "id": "2025-12-23-us-gdp",
+  "d": "2025-12-23",
+  "t": "22:30",
+  "country": "US",
+  "title": "米GDP（7-9月期・初回推計）",
+  "desc": "閉鎖で速報中止、初回推計で年率+4.3%",
+  "impact": 2,
+  "themes": [],
+  "src": "https://www.bea.gov/news/schedule/full-2025"
+ },
+ {
   "id": "2026-01-06-us-ism-mfg",
   "d": "2026-01-06",
   "t": "00:00",
@@ -199,6 +3821,22 @@
   "impact": 1,
   "themes": [],
   "src": "https://www.nyse.com/markets/hours-calendars"
+ },
+ {
+  "id": "2026-01-21-netflix",
+  "d": "2026-01-21",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
  },
  {
   "id": "2026-01-21-disco",
@@ -1416,6 +5054,22 @@
   "ticker": "TSM"
  },
  {
+  "id": "2026-04-17-netflix",
+  "d": "2026-04-17",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
+ },
+ {
   "id": "2026-04-21-us-retail",
   "d": "2026-04-21",
   "t": "21:30",
@@ -2552,6 +6206,22 @@
   "impact": 2,
   "themes": [],
   "src": "https://www.census.gov/retail/release_schedule.html"
+ },
+ {
+  "id": "2026-07-17-netflix",
+  "d": "2026-07-17",
+  "t": "05:00",
+  "approx": true,
+  "country": "US",
+  "title": "ネットフリックス 決算",
+  "desc": "過去分（日時は Yahoo Finance の値）",
+  "impact": 1,
+  "themes": [
+   "game"
+  ],
+  "tentative": false,
+  "src": "https://finance.yahoo.com/quote/NFLX/",
+  "ticker": "NFLX"
  },
  {
   "id": "2026-07-17-us-umich-prelim",

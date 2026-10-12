@@ -39,6 +39,15 @@
     <div id="week"></div>
   </section>
 
+  <!-- 予定外ニュース -->
+  <section id="view-news" class="view">
+    <p class="msum news-lead">株価を動かした予定外のニュースと、その後の値動き（反応日・1週間後・1か月後）</p>
+    <div class="theme-bar" id="news-cats"></div>
+    <div id="news-sum"></div>
+    <div id="news-list"></div>
+    <p class="note">騰落率は反応日の前日終値＝0%（日本株は日本時間で次に開く立会日、米国株は米国の次の取引日）。データ: Yahoo Finance</p>
+  </section>
+
   <!-- 決算カレンダー -->
   <section id="view-cal" class="view">
     <div class="month-nav">
@@ -110,6 +119,7 @@
 
 <nav class="tabs">
   <button data-v="events" class="on"><span class="ti">📰</span>イベント</button>
+  <button data-v="news"><span class="ti">🗞️</span>ニュース</button>
   <button data-v="cal"><span class="ti">📅</span>決算</button>
   <button data-v="ipo"><span class="ti">🆕</span>IPO</button>
   <button data-v="search"><span class="ti">🔍</span>検索</button>

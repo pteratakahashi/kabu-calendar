@@ -5,7 +5,7 @@ JPX の決算発表予定日 Excel は直近数か月分しか公開されない
 対象は「今の条件」= ★2以上（Core30/Large70/テーマ主力）とテーマ銘柄。
 Yahoo の決算日時は米国東部時間で返るので日本時間に直す。精度は JPX より劣る（src="yf"）。
 
-使い方: python3 scripts/backfill_earnings.py [開始日 YYYY-MM-DD]（省略時は今年の1/1）
+使い方: python3 scripts/backfill_earnings.py [開始日 YYYY-MM-DD]（省略時は今年の1/1。過去10回の反応用に 2023-10-01 から実行済み）
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ def main() -> int:
 
     for i, c in enumerate(targets):
         try:
-            df = yf.Ticker(f"{c}.T").get_earnings_dates(limit=12)
+            df = yf.Ticker(f"{c}.T").get_earnings_dates(limit=16)
         except Exception as e:  # noqa: BLE001
             print(f"  {c}: {type(e).__name__}", file=sys.stderr)
             continue

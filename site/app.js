@@ -10,7 +10,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -22,7 +22,10 @@ const state = {
   watch: new Set(loadJSON(WATCH_KEY, [])),
   month: null, selected: null, weekStart: null,
   evTheme: "", calTheme: "",
-  rx: { events: {}, earnings: {} }, // 株価の反応（reactions.json）
+  rx: { events: {}, earnings: {}, news: {} }, // 株価の反応（reactions.json）
+  news: [], newsByDate: new Map(),  // 予定外ニュース（news.json、新しい順）
+  series: new Map(),     // 同じ種類のイベント（過去10回用）: key -> [event]（古い順）
+  rxByCode: new Map(),   // 銘柄コード -> [[決算日, reactions のキー]]（古い順）
   ipo: [], ipoByDate: new Map(),    // IPO（ipo.json）
   sheetFn: null,                    // 開いているシートの再描画関数
 };
@@ -97,6 +100,8 @@ async function load() {
     Object.assign(state, { earnings, stocks, events, themes, meta });
     state.rx = await getJSON("reactions.json").catch(() => state.rx);
     state.ipo = await getJSON("ipo.json").catch(() => []);
+    state.news = await getJSON("news.json").catch(() => []);
+    state.rx.news ||= {};
   } catch (e) {
     $("#updated").textContent = "データ取得に失敗しました";
     $("#updated").classList.add("stale");
@@ -134,7 +139,122 @@ function index() {
   for (const ev of state.events) {
     if (!state.evByDate.has(ev.d)) state.evByDate.set(ev.d, []);
     state.evByDate.get(ev.d).push(ev);
+    const k = seriesOf(ev);
+    if (!state.series.has(k)) state.series.set(k, []);
+    state.series.get(k).push(ev);
   }
+  for (const n of state.news) {
+    if (!state.newsByDate.has(n.d)) state.newsByDate.set(n.d, []);
+    state.newsByDate.get(n.d).push(n);
+  }
+  for (const key of Object.keys(state.rx.earnings)) {
+    const [c, d] = key.split("@");
+    if (!state.rxByCode.has(c)) state.rxByCode.set(c, []);
+    state.rxByCode.get(c).push([d, key]);
+  }
+  for (const v of state.rxByCode.values()) v.sort((a, b) => a[0].localeCompare(b[0]));
+}
+
+// ---------- 過去10回 ----------
+// 同じ種類のイベントを束ねるキー。id の日付より後ろ（スラッグ）で判定し、表記ゆれは別名表で吸収する。
+// 海外企業の決算は ticker で束ねる（四半期ごとにスラッグが違うため）
+const SERIES_ALIAS = { "us-ism-svc": "us-ism-services", "us-fomc": "fomc" };
+const NOT_EARN = new Set(["tsmc-monthly", "samsung-prelim"]);
+function seriesOf(ev) {
+  const slug = ev.id.replace(/^\d{4}-\d{2}-\d{2}-/, "");
+  if (ev.ticker && !NOT_EARN.has(slug)) return `earn:${ev.ticker}`;
+  return SERIES_ALIAS[slug] || slug;
+}
+const HIST_N = 10;
+
+// その回までの（その回を含む）反応データのある回。新しい順に最大10回
+function eventHistory(ev) {
+  return (state.series.get(seriesOf(ev)) || []).filter((e) => e.d <= ev.d && state.rx.events[e.id]).slice(-HIST_N).reverse();
+}
+function earnHistory(c, d) {
+  return (state.rxByCode.get(c) || []).filter(([x]) => x <= d).slice(-HIST_N).reverse().map(([, k]) => k);
+}
+
+function stat(vals) {
+  const v = vals.filter((x) => x != null);
+  if (!v.length) return null;
+  const sum = (f) => v.reduce((a, x) => a + f(x), 0);
+  return { n: v.length, up: v.filter((x) => x > 0).length, avg: sum((x) => x) / v.length, abs: sum(Math.abs) / v.length };
+}
+
+// 棒グラフ（左が古い回）
+function barChart(items) {
+  const W = 340, H = 110, L = 6, R = 6, T = 14, B = 18;
+  if (!items.length) return "";
+  const m = Math.max(0.3, ...items.map((x) => Math.abs(x.v ?? 0))) * 1.1;
+  const bw = (W - L - R) / items.length;
+  const Y = (y) => T + ((m - y) / (2 * m)) * (H - T - B);
+  const bars = items.map((x, i) => {
+    if (x.v == null) return "";
+    const cls = x.v > 0 ? "up" : x.v < 0 ? "down" : "flat";
+    const y0 = Y(0), y1 = Y(x.v);
+    const xx = L + i * bw + bw * 0.18;
+    return `<rect class="b ${cls}${x.cur ? " cur" : ""}" x="${xx.toFixed(1)}" y="${Math.min(y0, y1).toFixed(1)}" width="${(bw * 0.64).toFixed(1)}" height="${Math.max(1, Math.abs(y1 - y0)).toFixed(1)}" rx="2"/>`
+      + `<text x="${(xx + bw * 0.32).toFixed(1)}" y="${(x.v >= 0 ? Math.min(y0, y1) - 3 : Math.max(y0, y1) + 10).toFixed(1)}" text-anchor="middle">${x.v > 0 ? "+" : ""}${x.v.toFixed(1)}</text>`;
+  }).join("");
+  const lab = (i, a) => `<text x="${(L + i * bw + bw / 2).toFixed(1)}" y="${H - 4}" text-anchor="${a}">${esc(items[i].label)}</text>`;
+  return `<svg class="chart bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="過去の反応の棒グラフ">
+    <line class="zero" x1="${L}" x2="${W - R}" y1="${Y(0)}" y2="${Y(0)}"/>${bars}
+    ${lab(0, "start")}${items.length > 1 ? lab(items.length - 1, "end") : ""}</svg>`;
+}
+
+// 過去の回の一覧表＋傾向。cols=[{h, f(row)->値}]、rows=[{d, sub, attr, cur}]、main=棒グラフに使う列
+function historyHtml(title, rows, cols, { main = 0, note = "" } = {}) {
+  if (!rows.length) return "";
+  const vals = cols.map((c) => rows.map((r) => c.f(r)));
+  const st = vals.map(stat);
+  const ms = st[main];
+  const fy = (d) => { const x = parse(d); return `${x.getFullYear() % 100}/${x.getMonth() + 1}/${x.getDate()}`; };
+  let html = `<h4 class="sheet-h">${esc(title)}（${rows.length}回）</h4>`;
+  if (ms) {
+    html += `<div class="trend"><span>${esc(cols[main].h)}: 上昇 <b>${ms.up}/${ms.n}回</b></span><span>平均 ${pct(ms.avg)}</span><span>平均の振れ幅 <b>${ms.abs.toFixed(2)}%</b></span></div>`;
+  }
+  html += `<div class="chart-box">${barChart(rows.map((r, i) => ({ v: vals[main][i], cur: r.cur, label: fy(r.d) })).reverse())}</div>`;
+  html += `<table class="rxtable hist"><thead><tr><th></th>${cols.map((c) => `<th>${esc(c.h)}</th>`).join("")}</tr></thead><tbody>`
+    + rows.map((r, i) => `<tr ${r.attr || ""} class="${r.cur ? "cur" : ""}"><th>${fy(r.d)}${r.sub ? `<small>${esc(r.sub)}</small>` : ""}</th>${cols.map((_, j) => `<td>${pct(vals[j][i])}</td>`).join("")}</tr>`).join("")
+    + `</tbody><tfoot>`
+    + `<tr><th>上昇回数</th>${st.map((x) => `<td class="num">${x ? `${x.up}/${x.n}` : "—"}</td>`).join("")}</tr>`
+    + `<tr><th>平均</th>${st.map((x) => `<td>${x ? pct(x.avg) : "—"}</td>`).join("")}</tr>`
+    + `<tr><th>平均の振れ幅</th>${st.map((x) => `<td class="num">${x ? x.abs.toFixed(2) + "%" : "—"}</td>`).join("")}</tr>`
+    + `</tfoot></table>`;
+  return html + (note ? `<p class="note">${note}</p>` : "");
+}
+
+// 発表直後の値（5分足なら30分後、1時間足なら1時間後）
+const quick = (r) => { const x = r?.series?.[0]; return x ? (r.iv === "1h" ? (x.m60 ?? x.end) : (x.m30 ?? x.end)) : null; };
+const jpAvg = (r) => (r?.jp?.length ? r.jp.reduce((a, j) => a + j.r, 0) / r.jp.length : null);
+
+function eventHistoryHtml(ev) {
+  const hist = eventHistory(ev);
+  if (hist.length < 2 && !(hist.length === 1 && hist[0].id !== ev.id)) return "";
+  const rows = hist.map((e) => ({ d: e.d, sub: e.desc, attr: `data-evrx="${esc(e.id)}"`, cur: e.id === ev.id, r: state.rx.events[e.id] }));
+  const isEarn = seriesOf(ev).startsWith("earn:");
+  let cols;
+  if (isEarn) {
+    cols = [{ h: `${ev.ticker} 反応日`, f: (x) => x.r.d1?.tk ?? null }, { h: "日本の関連株", f: (x) => jpAvg(x.r) }, { h: "日経平均", f: (x) => x.r.d1?.nk ?? null }];
+  } else {
+    const nm = hist.map((e) => state.rx.events[e.id].series?.[0]?.name).find(Boolean);
+    cols = [{ h: "日経平均 反応日", f: (x) => x.r.d1?.nk ?? null }];
+    if (nm) cols.push({ h: `${nm} 直後`, f: (x) => quick(x.r) });
+  }
+  return historyHtml("過去の反応", rows, cols, {
+    note: isEarn ? `${esc(ev.ticker)} 反応日 = 決算発表後の最初の取引日の騰落率。日本の関連株 = 関連テーマ主力株の平均。行をタップでその回のチャート`
+      : "日経平均 反応日 = 発表後に最初に開いた日本の立会日の終値騰落率。直後 = 発表30分後（1年以上前は1時間後）。行をタップでその回のチャート",
+  });
+}
+
+function earnHistoryHtml(c, d) {
+  const keys = earnHistory(c, d);
+  if (!keys.length || (keys.length === 1 && keys[0] === `${c}@${d}`)) return "";
+  const rows = keys.map((k) => ({ d: k.split("@")[1], attr: `data-rx="${esc(k)}"`, cur: k === `${c}@${d}`, r: state.rx.earnings[k] }));
+  const wk = (r) => r.pts[r.k + 4]?.[1] ?? null;
+  return historyHtml("過去の決算での反応", rows, [{ h: "反応日", f: (x) => x.r.r }, { h: "1週間後", f: (x) => wk(x.r) }],
+    { note: "反応日 = 決算発表後の最初の立会日（15時以降の発表は翌営業日）の騰落率。1週間後 = 反応日から5営業日目の終値（反応日の前日終値比）。古い決算日は Yahoo Finance の日付のため1日ずれることがあります" });
 }
 
 // 決算エントリに銘柄情報（規模・テーマ・影響度）を足す
@@ -172,10 +292,13 @@ function stockRow(e0, { showDate = false } = {}) {
   const q = e.q ? `<span class="badge">${esc(Q_LABEL[e.q] || e.q)}</span>` : "";
   const when = showDate ? (e.d ? fmtDay(e.d) + (e.d < todayStr() ? " 発表済" : "") : "日付未定") : null;
   const sub = q + sizeBadge(e.sz) + [when, e.sec || e.mkt].filter(Boolean).map(esc).join(" · ");
-  const rxKey = e.d ? `${e.c}@${e.d}` : "";
-  const rx = rxKey && state.rx.earnings[rxKey];
-  const rxb = rx ? `<div class="rxline">${pct(rx.r, { label: rx.day === e.d ? "当日 " : "翌日 " })}<span class="rxhint">チャート ›</span></div>` : "";
-  return `<li class="${watched ? "watch" : ""}${rx ? " has-rx" : ""}" ${rx ? `data-rx="${esc(rxKey)}"` : ""}>
+  const rxKey = e.d ? `${e.c}@${e.d}` : `${e.c}@9999-12-31`;
+  const rx = state.rx.earnings[rxKey];
+  const nh = earnHistory(e.c, rxKey.split("@")[1]).length;
+  const rxb = rx ? `<div class="rxline">${pct(rx.r, { label: rx.day === e.d ? "当日 " : "翌日 " })}<span class="rxhint">${nh > 1 ? `過去${nh}回 · ` : ""}チャート ›</span></div>`
+    : nh ? `<div class="rxline"><span class="lbl">前回 ${pct(state.rx.earnings[earnHistory(e.c, rxKey.split("@")[1])[0]].r)}</span><span class="rxhint">過去${nh}回の反応 ›</span></div>` : "";
+  const tap = rx || nh;
+  return `<li class="${watched ? "watch" : ""}${tap ? " has-rx" : ""}" ${tap ? `data-rx="${esc(rxKey)}"` : ""}>
     <div class="lead"><span class="code">${esc(e.c)}</span>${stars(e.imp)}</div>
     <div class="main"><div class="name">${esc(e.n)}</div><div class="sub">${sub}</div>${rxb}
       ${e.th.length ? `<div class="chips">${themeChips(e.th)}</div>` : ""}</div>
@@ -205,6 +328,7 @@ function weekItems(day) {
     items.push({ kind: "ipo", c: x.c, d: day, t: "09:00", country: "JP", impact: x.imp || 1, themes: [], ipo: x,
       title: `IPO ${x.n}（${x.c}）`, desc: [x.mkt, price, x.size ? `吸収 ${x.size}億円` : ""].filter(Boolean).join(" · ") });
   }
+  for (const n of state.newsByDate.get(day) || []) items.push({ kind: "news", ...n });
   const covered = new Set(items.filter((it) => it.c && it.kind !== "ipo").map((it) => it.c));
   for (const e0 of state.byDate.get(day) || []) {
     if (covered.has(e0.c)) continue;
@@ -228,23 +352,37 @@ function evRow(it) {
   if (it.kind === "ipo") {
     attr = `data-ipo="${esc(it.c)}"`;
     if (it.ipo.first != null) rx = `<div class="rxline">${pct(it.ipo.first_r, { digits: 1, label: "初値 " })}${pct(it.ipo.last_r, { digits: 1, label: "現在 " })}<span class="rxhint">チャート ›</span></div>`;
+  } else if (it.kind === "news") {
+    attr = `data-news="${esc(it.id)}"`;
+    rx = newsRxLine(it.id, true) || `<div class="rxline"><span class="rxhint">詳細 ›</span></div>`;
   } else if (it.kind === "earn" && state.rx.earnings[it.rxKey]) {
     const r = state.rx.earnings[it.rxKey];
     rx = `<div class="rxline">${pct(r.r, { label: r.day === it.d ? "当日 " : "翌日 " })}<span class="rxhint">チャート ›</span></div>`;
     attr = `data-rx="${esc(it.rxKey)}"`;
+  } else if (it.kind === "earn" && earnHistory(it.c, it.d).length) {
+    rx = `<div class="rxline"><span class="rxhint">過去${earnHistory(it.c, it.d).length}回の反応 ›</span></div>`;
+    attr = `data-rx="${esc(it.rxKey)}"`;
+  } else if (it.kind === "ev" && !state.rx.events[it.id] && eventHistory(it).length) {
+    // 発表前（または反応データなし）でも、同じ指標の過去の反応を見られるようにする
+    const h = eventHistory(it), last = state.rx.events[h[0].id];
+    const prev = it.ticker && last.d1?.tk != null && seriesOf(it).startsWith("earn:") ? pct(last.d1.tk, { label: `${it.ticker} ` })
+      : last.d1?.nk != null ? pct(last.d1.nk, { label: "日経 " }) : "";
+    rx = `<div class="rxline">${prev ? `<span class="lbl">前回 ${prev}</span>` : ""}<span class="rxhint">過去${h.length}回の反応 ›</span></div>`;
+    attr = `data-evrx="${esc(it.id)}"`;
   } else if (it.kind === "ev" && state.rx.events[it.id]) {
     const r = state.rx.events[it.id];
     const hourly = r.iv === "1h";
     const parts = r.series.map((x) => pct(hourly ? (x.m60 ?? x.end) : (x.m30 ?? x.end), { label: `${x.name} ` }))
       .concat((r.idx || []).map((x) => pct(x.r, { label: `${x.name} ` })));
     if (r.jp?.length) parts.push(pct(r.jp[0].r, { label: `${r.jp[0].n} ` }));
-    rx = `<div class="rxline">${parts.slice(0, 3).join("")}<span class="rxhint">${r.series.length ? (hourly ? "1時間後" : "30分後") : r.idx ? "休場明け" : "日本株"} · チャート ›</span></div>`;
+    const nh = eventHistory(it).length;
+    rx = `<div class="rxline">${parts.slice(0, 3).join("")}<span class="rxhint">${r.series.length ? (hourly ? "1時間後" : "30分後") : r.idx ? "休場明け" : "日本株"}${nh > 1 ? ` · 過去${nh}回` : ""} · チャート ›</span></div>`;
     attr = `data-evrx="${esc(it.id)}"`;
   }
   return `<div class="ev imp${it.impact}${it.watched ? " watched" : ""}${rx ? " has-rx" : ""}" ${attr}>
-    <span class="flag">${it.kind === "ipo" ? "🆕" : FLAG[it.country] || "🌐"}</span>
+    <span class="flag">${it.kind === "ipo" ? "🆕" : it.kind === "news" ? "🗞️" : FLAG[it.country] || "🌐"}</span>
     <div class="ev-main">
-      <div class="ev-title">${esc(it.title)}${tent}${watch}</div>
+      <div class="ev-title">${it.kind === "news" ? `<span class="cat">${esc(it.cat)}</span>` : ""}${esc(it.title)}${tent}${watch}</div>
       ${it.desc ? `<div class="ev-desc">${esc(it.desc)}</div>` : ""}
       <div class="ev-meta">${stars(it.impact)}${themeChips(it.themes)}</div>
       ${rx}
@@ -473,11 +611,14 @@ function openTheme(id) {
 // イベント（指標・海外決算）の反応チャート
 function openEventRx(id) {
   const ev = state.events.find((e) => e.id === id);
-  const r = state.rx.events[id];
-  if (!ev || !r) return;
-  const t = new Date(r.t);
+  const r = state.rx.events[id] || { series: [], none: true };
+  if (!ev) return;
+  const t = new Date(r.t || `${ev.d}T${ev.t || "00:00"}:00+09:00`);
   const hhmm = `${pad(t.getHours())}:${pad(t.getMinutes())}`;
   let html = `<p class="sheet-desc">${fmtDay(ev.d)} ${esc(ev.t || "")} 発表（日本時間）${ev.desc ? "<br>" + esc(ev.desc) : ""}</p>`;
+  if (r.none) html += `<p class="msum">${ev.d >= todayStr() ? "まだ発表前です。" : "この回の値動きデータはありません。"}同じイベントの過去の反応から傾向を確認できます。</p>`;
+  if (r.d1?.nk != null && !r.idx) html += `<div class="rx-big">${pct(r.d1.nk)}<span>日経平均 ${fmtDay(r.d1.nk_day)}（反応日）の騰落率</span></div>`;
+  html += eventHistoryHtml(ev);
   if (r.series.length) {
     const hourly = r.iv === "1h";
     const marks = (x) => x.marks || [["5分後", x.m5], ["30分後", x.m30], ["1時間後", x.m60], ["3時間後", x.end]];
@@ -506,22 +647,119 @@ function openEventRx(id) {
       + `</ul>`;
   }
   openSheet(ev.title, html, () => openEventRx(id));
+  $("#sheet").scrollTop = 0;
 }
 
 // 国内決算の反応チャート（日足）
 function openEarnRx(key) {
   const r = state.rx.earnings[key];
-  if (!r) return;
   const [c, d] = key.split("@");
   const s = state.stock.get(c) || { n: c };
-  const xl = [[0, r.pts[0][0].replace("-", "/")], [r.k, r.pts[r.k][0].replace("-", "/")], [r.pts.length - 1, r.pts[r.pts.length - 1][0].replace("-", "/")]];
-  const pts = r.pts.map((p, i) => [i, p[1]]);
-  const html = `<div class="rx-big">${pct(r.r)}<span>${r.day === d ? "発表当日" : "発表翌営業日"}（${fmtDay(r.day)}）の騰落率</span></div>
+  let html = "";
+  if (r) {
+    const xl = [[0, r.pts[0][0].replace("-", "/")], [r.k, r.pts[r.k][0].replace("-", "/")], [r.pts.length - 1, r.pts[r.pts.length - 1][0].replace("-", "/")]];
+    const pts = r.pts.map((p, i) => [i, p[1]]);
+    html += `<div class="rx-big">${pct(r.r)}<span>${r.day === d ? "発表当日" : "発表翌営業日"}（${fmtDay(r.day)}）の騰落率</span></div>
     <div class="chart-box"><div class="chart-h"><b>${esc(s.n)}（${esc(c)}）</b><span>決算 ${fmtDay(d)}</span></div>
     ${lineChart(pts, { x0: r.k - 0.5, x0Label: "決算", xLabels: xl })}</div>
-    <p class="note">反応日の前日終値を 0% とした終値の推移（データ: Yahoo Finance）</p>
-    <ul class="list">${stockRow({ ...s, ...(state.nextByCode.get(c) || {}), c, n: s.n }, { showDate: true })}</ul>`;
+    <p class="note">反応日の前日終値を 0% とした終値の推移（データ: Yahoo Finance）</p>`;
+  } else {
+    html += `<p class="msum">${d === "9999-12-31" ? "次の決算日は未定です。" : d >= todayStr() ? `決算は ${fmtDay(d)} 予定（まだ発表前）。` : "この回の値動きデータはありません。"}過去の決算での反応から傾向を確認できます。</p>`;
+  }
+  html += earnHistoryHtml(c, d);
+  html += `<ul class="list">${stockRow({ ...s, ...(state.nextByCode.get(c) || {}), c, n: s.n }, { showDate: true })}</ul>`;
   openSheet(`${s.n} 決算の反応`, html, () => openEarnRx(key));
+  $("#sheet").scrollTop = 0;
+}
+
+// ---------- 予定外ニュース ----------
+const NEWS_CATS = ["AI・半導体", "関税・貿易", "要人発言", "地政学", "金融・市場", "政治", "企業", "その他"];
+
+function newsRxLine(id, compact = false) {
+  const r = state.rx.news[id];
+  const nk = r?.idx?.find((x) => x.sym === "^N225");
+  if (!r || (!nk && !r.theme)) return "";
+  const parts = [];
+  if (nk) parts.push(pct(nk.r1, { label: "日経 " }), pct(nk.r5, { label: "1週 " }));
+  if (nk && !compact) parts.push(pct(nk.r20, { label: "1か月 " }));
+  if (r.theme) parts.push(pct(r.theme.r1, { label: "関連株 " }));
+  return `<div class="rxline">${parts.join("")}<span class="rxhint">チャート ›</span></div>`;
+}
+
+function newsCard(n) {
+  const d = parse(n.d);
+  return `<li class="news-row has-rx" data-news="${esc(n.id)}">
+    <div class="lead"><span class="nd">${d.getMonth() + 1}/${d.getDate()}</span><span class="nt">${n.t ? esc(n.t) + (n.approx ? "頃" : "") : `(${WD[d.getDay()]})`}</span>${stars(n.impact)}</div>
+    <div class="main"><div class="name"><span class="cat">${esc(n.cat)}</span>${FLAG[n.country] || ""} ${esc(n.title)}</div>
+      ${n.desc ? `<div class="desc">${esc(n.desc)}</div>` : ""}
+      ${n.themes?.length ? `<div class="chips">${themeChips(n.themes)}</div>` : ""}
+      ${newsRxLine(n.id)}</div>
+  </li>`;
+}
+
+function renderNews() {
+  const cats = NEWS_CATS.filter((c) => state.news.some((n) => n.cat === c));
+  $("#news-cats").innerHTML = `<button class="tchip ${prefs.newsCat ? "" : "on"}" data-ncat="">すべて（${state.news.length}）</button>`
+    + cats.map((c) => `<button class="tchip ${prefs.newsCat === c ? "on" : ""}" data-ncat="${esc(c)}">${esc(c)}（${state.news.filter((n) => n.cat === c).length}）</button>`).join("");
+  const list = state.news.filter((n) => !prefs.newsCat || n.cat === prefs.newsCat);
+  // 絞り込み中は「このカテゴリのニュースが出たとき日経平均はどう動いたか」の傾向
+  let sum = "";
+  if (prefs.newsCat && list.length) {
+    const nk = (n, k) => state.rx.news[n.id]?.idx?.find((x) => x.sym === "^N225")?.[k] ?? null;
+    const a = stat(list.map((n) => nk(n, "r1"))), b = stat(list.map((n) => nk(n, "r5"))), c = stat(list.map((n) => nk(n, "r20")));
+    if (a) sum = `<div class="chart-box"><div class="trend"><span>「${esc(prefs.newsCat)}」のニュース後の日経平均</span></div>
+      <table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間後</th><th>1か月後</th></tr></thead><tbody>
+      <tr><th>上昇回数</th>${[a, b, c].map((x) => `<td class="num">${x ? `${x.up}/${x.n}` : "—"}</td>`).join("")}</tr>
+      <tr><th>平均</th>${[a, b, c].map((x) => `<td>${x ? pct(x.avg) : "—"}</td>`).join("")}</tr></tbody></table></div>`;
+  }
+  $("#news-sum").innerHTML = sum;
+  let html = "", month = "";
+  for (const n of list) {
+    const m = n.d.slice(0, 7);
+    if (m !== month) {
+      if (month) html += "</ul>";
+      month = m;
+      html += `<h4 class="mday">${Number(m.slice(0, 4))}年${Number(m.slice(5))}月<span>${list.filter((x) => x.d.startsWith(m)).length}件</span></h4><ul class="list">`;
+    }
+    html += newsCard(n);
+  }
+  $("#news-list").innerHTML = html ? html + "</ul>" : `<p class="empty-msg">ニュースはまだありません</p>`;
+}
+
+function openNews(id) {
+  const n = state.news.find((x) => x.id === id);
+  if (!n) return;
+  const r = state.rx.news[id];
+  let html = `<p class="sheet-desc">${fmtDay(n.d)}${n.t ? ` ${esc(n.t)}${n.approx ? "頃" : ""}（日本時間）` : ""} · <span class="cat">${esc(n.cat)}</span>${stars(n.impact)}<br>${esc(n.desc || "")}
+    ${n.src ? `<br><a class="srcl" href="${esc(n.src)}" target="_blank" rel="noopener">出典 ↗</a>` : ""}</p>`;
+  if (n.themes?.length) html += `<div class="chips" style="margin:-4px 0 10px">${themeChips(n.themes)}</div>`;
+  if (r) {
+    const rows = r.idx.map((x) => [x.name + (x.sym === "^GSPC" || x.sym === "^SOX" ? " 🇺🇸" : ""), x]);
+    if (r.theme) rows.push([`関連テーマ主力 ${r.theme.n}社平均`, r.theme]);
+    for (const x of r.stocks || []) rows.push([`${x.n}${x.us ? "" : `（${x.c}）`}`, x]);
+    html += `<table class="rxtable"><thead><tr><th></th><th>反応日</th><th>1週間後</th><th>1か月後</th></tr></thead><tbody>`
+      + rows.map(([nm, x]) => `<tr><th>${esc(nm)}</th><td>${pct(x.r1)}</td><td>${pct(x.r5)}</td><td>${pct(x.r20)}</td></tr>`).join("")
+      + `</tbody></table>`;
+    for (const x of r.idx.filter((i) => i.sym !== "JPY=X")) {
+      const pts = x.pts.map((p, i) => [i, p[1]]);
+      html += `<div class="chart-box"><div class="chart-h"><b>${esc(x.name)}</b><span>${fmtDay(x.day)} から ${pct(x.r20 ?? x.pts[x.pts.length - 1][1])}</span></div>`
+        + lineChart(pts, { x0: x.k - 0.5, x0Label: "ニュース", xLabels: [[0, x.pts[0][0].replace("-", "/")], [x.k, x.pts[x.k][0].replace("-", "/")], [pts.length - 1, x.pts[x.pts.length - 1][0].replace("-", "/")]] })
+        + `</div>`;
+    }
+    html += `<p class="note">反応日の前日終値を 0% とした終値の推移（反応日・5営業日目・20営業日目）。1か月たっていないものは途中経過</p>`;
+  } else {
+    html += `<p class="msum">値動きデータは次回の更新で入ります</p>`;
+  }
+  // 同じカテゴリの過去のニュース
+  const same = state.news.filter((x) => x.cat === n.cat && x.d <= n.d && state.rx.news[x.id]).slice(0, HIST_N);
+  const nk = (x, k) => state.rx.news[x.id]?.idx?.find((i) => i.sym === "^N225")?.[k] ?? null;
+  if (same.length > 1) {
+    html += historyHtml(`同じ「${n.cat}」の過去のニュース`, same.map((x) => ({ d: x.d, sub: x.title, attr: `data-news="${esc(x.id)}"`, cur: x.id === id, x })),
+      [{ h: "日経 反応日", f: (o) => nk(o.x, "r1") }, { h: "1週間後", f: (o) => nk(o.x, "r5") }, { h: "1か月後", f: (o) => nk(o.x, "r20") }],
+      { note: "行をタップでそのニュースへ" });
+  }
+  openSheet(n.title, html, () => openNews(id));
+  $("#sheet").scrollTop = 0;
 }
 
 // ---------- 検索・ウォッチ ----------
@@ -557,7 +795,7 @@ function renderWatch() {
 }
 
 function renderAll() {
-  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderWatch(); renderIpo();
+  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderWatch(); renderIpo(); renderNews();
   renderMonth();
   if ($("#sheet").open && state.sheetFn) state.sheetFn();
 }
@@ -576,6 +814,10 @@ document.addEventListener("click", (ev) => {
     renderAll();
     return;
   }
+  const ncat = ev.target.closest("[data-ncat]");
+  if (ncat) { prefs.newsCat = ncat.dataset.ncat; saveJSON(PREF_KEY, prefs); renderNews(); return; }
+  const nw = ev.target.closest("[data-news]");
+  if (nw && !ev.target.closest("[data-theme]")) { openNews(nw.dataset.news); return; }
   const erx = ev.target.closest("[data-evrx]");
   if (erx && !ev.target.closest("[data-theme]")) { openEventRx(erx.dataset.evrx); return; }
   const rxe = ev.target.closest("[data-rx]");

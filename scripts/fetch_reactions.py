@@ -7,6 +7,10 @@
 - 国内決算（★2以上・テーマ銘柄・時刻つきイベント）: 反応日の騰落率と前後の日足
     15:30 以降（または時刻不明）の発表は翌営業日を反応日とする
 
+- 予定外ニュース（data/news.json）: 反応日・1週間後・1か月後の騰落率（日経平均/S&P500/SOX/関連テーマ主力株/関連銘柄）
+- 「過去10回」用: 指標は前年分まで（1時間足は730日まで取れる）、国内決算は約3年分、
+    全イベントに反応日の日経平均騰落率（d1）を付ける
+
 データ: Yahoo Finance（yfinance, 非公式）。5分足は直近60日しか取れないので毎日実行して蓄積する。
 自分用プロトタイプ限定。販売時は正式なデータ契約に切り替えること。
 """
@@ -64,7 +68,9 @@ def closes(df: pd.DataFrame, sym: str | None = None) -> pd.Series:
 # ------------------------------------------------------------- intraday
 
 _cache: dict[tuple, pd.Series] = {}
-YEAR_START = f"{pd.Timestamp.now(tz=JST).year}-01-01"
+EV_START = (pd.Timestamp.now(tz=JST) - pd.Timedelta(days=720)).strftime("%Y-%m-%d")   # 1時間足の取得上限(730日)の内側
+EARN_START = (pd.Timestamp.now(tz=JST) - pd.Timedelta(days=365 * 3)).strftime("%Y-%m-%d")  # 国内決算の過去10回用
+DAILY_START = (pd.Timestamp(EARN_START) - pd.Timedelta(days=20)).strftime("%Y-%m-%d")
 
 
 def intraday(sym: str, iv: str = "5m") -> pd.Series:
@@ -72,8 +78,7 @@ def intraday(sym: str, iv: str = "5m") -> pd.Series:
     key = (sym, iv)
     if key not in _cache:
         try:
-            kw = {"period": f"{INTRADAY_DAYS}d"} if iv == "5m" else {
-                "start": (pd.Timestamp(YEAR_START) - pd.Timedelta(days=7)).strftime("%Y-%m-%d")}
+            kw = {"period": f"{INTRADAY_DAYS}d"} if iv == "5m" else {"start": EV_START}
             df = yf.download(sym, interval=iv, prepost=True, progress=False, auto_adjust=False, **kw)
             s = closes(df, sym)
             if not s.empty:
@@ -135,7 +140,7 @@ def daily_closes(codes: list[str]) -> dict[str, pd.Series]:
     for i in range(0, len(tick), 100):
         chunk = tick[i:i + 100]
         try:
-            df = yf.download(chunk, start=(pd.Timestamp(YEAR_START) - pd.Timedelta(days=20)).strftime("%Y-%m-%d"), interval="1d", progress=False, auto_adjust=False,
+            df = yf.download(chunk, start=DAILY_START, interval="1d", progress=False, auto_adjust=False,
                              group_by="ticker", threads=True)
         except Exception as e:  # noqa: BLE001
             log(f"  daily chunk failed: {e}")
@@ -173,19 +178,92 @@ def daily_reaction(s: pd.Series, react_day: dt.date) -> dict | None:
 _idx_cache: dict[str, pd.Series] = {}
 
 
-def index_daily(sym: str, name: str, d: str) -> dict | None:
+def dclose(sym: str) -> pd.Series:
+    """指数・海外銘柄の日足終値（index は日付）。"""
     if sym not in _idx_cache:
         try:
-            df = yf.download(sym, start=(pd.Timestamp(YEAR_START) - pd.Timedelta(days=20)).strftime("%Y-%m-%d"),
-                             interval="1d", progress=False, auto_adjust=False)
+            df = yf.download(sym, start=DAILY_START, interval="1d", progress=False, auto_adjust=False)
             s = closes(df, sym)
             s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
             _idx_cache[sym] = s
         except Exception as e:  # noqa: BLE001
-            log(f"  index {sym} failed: {e}")
+            log(f"  daily {sym} failed: {e}")
             _idx_cache[sym] = pd.Series(dtype=float)
-    r = daily_reaction(_idx_cache[sym], dt.date.fromisoformat(d) + dt.timedelta(days=1))
+    return _idx_cache[sym]
+
+
+def index_daily(sym: str, name: str, d: str) -> dict | None:
+    r = daily_reaction(dclose(sym), dt.date.fromisoformat(d) + dt.timedelta(days=1))
     return {**r, "sym": sym, "name": name} if r else None
+
+
+def us_react_day(t: pd.Timestamp) -> dt.date:
+    """米国市場で最初に反応する取引日（米東部 16:00 以降の発表は翌日。休場は daily 側で次に寄る）。"""
+    et = t.tz_convert("America/New_York")
+    return (et + pd.Timedelta(days=1)).date() if et.hour >= 16 else et.date()
+
+
+def path(s: pd.Series | None, react_day: dt.date, pre: int = 5, post: int = 20) -> dict | None:
+    """反応日の前日終値=0% とした、反応日・5営業日目・20営業日目の騰落率と推移。"""
+    if s is None or s.empty:
+        return None
+    idx = s.index
+    after = idx[idx >= pd.Timestamp(react_day)]
+    if after.empty:
+        return None
+    i = idx.get_loc(after[0])
+    if i == 0:
+        return None
+    prev = float(s.iloc[i - 1])
+    rel = lambda j: round((float(s.iloc[j]) / prev - 1) * 100, 2) if j < len(s) else None  # noqa: E731
+    lo, hi = max(0, i - pre), min(len(s), i + post)
+    return {
+        "day": idx[i].strftime("%Y-%m-%d"), "r1": rel(i), "r5": rel(i + 4), "r20": rel(i + 19),
+        "pts": [[d.strftime("%m-%d"), round((float(v) / prev - 1) * 100, 2)] for d, v in s.iloc[lo:hi].items()],
+        "k": i - lo, "done": len(s) > i + 19,
+    }
+
+
+NEWS_IDX = (("^N225", "日経平均"), ("^GSPC", "S&P500"), ("^SOX", "SOX指数"), ("JPY=X", "ドル円"))
+SOX_THEMES = {"semi", "semiequip", "semimat", "ai", "datacenter"}
+
+
+def news_reaction(n: dict, themes: dict, stocks: dict, daily: dict) -> dict | None:
+    t = pd.Timestamp(f'{n["d"]} {n.get("t") or "12:00"}', tz=JST)
+    jp_day = react_day_jp(n["d"], n.get("t") or "12:00")  # 時刻不明は「その日の場中に伝わった」扱い
+    us_day = us_react_day(t)
+    idx = []
+    for sym, name in NEWS_IDX:
+        if sym == "^SOX" and not (set(n.get("themes", [])) & SOX_THEMES):
+            continue
+        p = path(dclose(sym), us_day if sym in ("^GSPC", "^SOX") else jp_day)
+        if p:
+            idx.append({"sym": sym, "name": name, **p})
+    if not idx:
+        return None
+    rec = {"idx": idx}
+    # 関連テーマ主力株の平均
+    lead = []
+    for th in n.get("themes", []):
+        lead += [c for c in themes.get(th, {}).get("lead", []) if c not in lead]
+    lead = lead[:8]
+    ps = [p for c in lead if (p := path(daily.get(c), jp_day))]
+    if ps:
+        def avg(k):
+            v = [p[k] for p in ps if p[k] is not None]
+            return round(sum(v) / len(v), 2) if v else None
+        rec["theme"] = {"n": len(ps), "codes": lead, "r1": avg("r1"), "r5": avg("r5"), "r20": avg("r20")}
+    st = []
+    for c in n.get("codes", []):
+        if (p := path(daily.get(c), jp_day)):
+            st.append({"c": c, "n": stocks.get(c, {}).get("n", c), "r1": p["r1"], "r5": p["r5"], "r20": p["r20"]})
+    for tk in n.get("tickers", []):
+        if (p := path(dclose(tk), us_day)):
+            st.append({"c": tk, "n": tk, "r1": p["r1"], "r5": p["r5"], "r20": p["r20"], "us": True})
+    if st:
+        rec["stocks"] = st
+    rec["done"] = all(x["done"] for x in idx)
+    return rec
 
 
 def react_day_jp(d: str, t: str | None) -> dt.date:
@@ -212,7 +290,8 @@ def main() -> int:
     # 1) 時刻つきイベントの5分足
     lead_needed: dict[str, list[str]] = {}  # event id -> 関連主力株コード
     for ev in events:
-        if ev.get("auto") or ev.get("code") or ev["d"] < YEAR_START or ev["d"] > now.strftime("%Y-%m-%d"):
+        # 海外決算は日足（反応日の騰落率）だけでも過去10回の比較に使えるので3年分を対象にする
+        if ev.get("auto") or ev.get("code") or ev["d"] < (EARN_START if ev.get("ticker") else EV_START) or ev["d"] > now.strftime("%Y-%m-%d"):
             continue
         if not ev.get("t") and not ev.get("ticker"):
             continue
@@ -248,10 +327,18 @@ def main() -> int:
     # 2) 国内決算の対象を決める
     targets: dict[str, tuple[str, str, str | None]] = {}  # key -> (code, date, time)
     today = now.strftime("%Y-%m-%d")
-    since = YEAR_START
+    since = EARN_START
     theme_codes = {c for t in themes.values() for c in t["codes"]}
     timed = {ev["code"]: ev for ev in events if ev.get("code")}
+    # 過去10回の反応用に、アプリには出さない古い決算日（Yahoo 補完分）も対象にする。
+    # 同じ銘柄の決算が前後4日以内に earnings.json にあれば（同じ回の日付ずれ）足さない
+    near: dict[str, list[dt.date]] = {}
     for e in earnings:
+        if e.get("d"):
+            near.setdefault(e["c"], []).append(dt.date.fromisoformat(e["d"]))
+    extra = [e for e in load(ROOT / "data" / "earnings_backfill.json", [])
+             if not any(abs((dt.date.fromisoformat(e["d"]) - x).days) <= 4 for x in near.get(e["c"], []))]
+    for e in earnings + extra:
         if not e.get("d") or not (since <= e["d"] <= today):
             continue
         st = stocks.get(e["c"], {})
@@ -270,7 +357,14 @@ def main() -> int:
             if not out["earnings"].get(key, {}).get("done"):
                 targets[key] = (ev["code"], ev["d"], ev.get("t"))
 
-    codes = sorted({c for c, _, _ in targets.values()} | {c for v in lead_needed.values() for c in v})
+    news = load(DATA / "news.json", [])
+    out.setdefault("news", {})
+    news_codes = set()
+    for n in news:
+        news_codes |= set(n.get("codes", []))
+        for th in n.get("themes", []):
+            news_codes |= set(themes.get(th, {}).get("lead", [])[:8])
+    codes = sorted({c for c, _, _ in targets.values()} | {c for v in lead_needed.values() for c in v} | news_codes)
     log(f"  daily: {len(codes)} codes")
     daily = daily_closes(codes)
 
@@ -296,8 +390,33 @@ def main() -> int:
         if len(leads) < len(cs) or not leads:
             out["events"][eid]["done"] = False
 
+    # 4) 全イベントに「反応日の日経平均」（過去10回の比較用）。海外決算はその銘柄の反応日騰落率も
+    for ev in events:
+        rec = out["events"].get(ev["id"])
+        if not rec or (rec.get("d1") or {}).get("done"):
+            continue
+        t = pd.Timestamp(rec["t"]).tz_convert(JST)
+        d1 = {}
+        if (p := daily_reaction(dclose("^N225"), react_day_jp(ev["d"], t.strftime("%H:%M")))):
+            d1["nk"], d1["nk_day"] = p["r"], p["day"]
+        if ev.get("ticker") and (p := daily_reaction(dclose(ev["ticker"]), us_react_day(t))):
+            d1["tk"], d1["tk_day"] = p["r"], p["day"]
+        if d1:
+            d1["done"] = "nk" in d1 and (pd.Timestamp(d1["nk_day"]) < pd.Timestamp(now.date()))
+            rec["d1"] = d1
+
+    # 5) 予定外ニュース
+    for n in news:
+        if n["d"] > now.strftime("%Y-%m-%d") or out["news"].get(n["id"], {}).get("done"):
+            continue
+        if (rec := news_reaction(n, themes, stocks, daily)):
+            out["news"][n["id"]] = rec
+    # 削除されたニュースの反応は捨てる
+    ids = {n["id"] for n in news}
+    out["news"] = {k: v for k, v in out["news"].items() if k in ids}
+
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
-    log(f"done: events={len(out['events'])} earnings={len(out['earnings'])}")
+    log(f"done: events={len(out['events'])} earnings={len(out['earnings'])} news={len(out['news'])}")
     return 0
 
 

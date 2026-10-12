@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""data/events.json の検証（標準ライブラリのみ）。
+"""data/events.json と data/news.json の検証（標準ライブラリのみ）。
 
 使い方: python3 scripts/validate_events.py
 エラーがあれば一覧を表示して exit 1、問題なければ件数サマリを表示。
@@ -13,12 +13,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 EVENTS = ROOT / "data" / "events.json"
+NEWS = ROOT / "data" / "news.json"
 THEMES = ROOT / "data" / "themes.json"
 
 REQUIRED = ("id", "d", "country", "title", "impact")
 COUNTRIES = {"JP", "US", "TW", "CN", "EU", "KR", "GLOBAL"}
 ALLOWED_KEYS = {"id", "code", "ticker", "d", "t", "approx", "country", "title", "desc",
                 "impact", "themes", "tentative", "src"}
+NEWS_KEYS = {"id", "d", "t", "approx", "country", "cat", "title", "desc", "impact", "themes",
+             "codes", "tickers", "src"}
+NEWS_CATS = {"要人発言", "関税・貿易", "地政学", "企業", "AI・半導体", "金融・市場", "政治", "その他"}
+CODE_RE = re.compile(r"^[0-9][0-9A-Z]{3}$")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 
@@ -32,15 +37,10 @@ def load(path):
         sys.exit(1)
 
 
-def main():
-    events = load(EVENTS)
-    themes = load(THEMES)
-    theme_ids = {t.get("id") for t in themes if isinstance(t, dict)}
+def check(events, theme_ids, allowed, news=False):
     errors = []
-
     if not isinstance(events, list):
-        print("ERROR: events.json はトップレベルが配列である必要があります")
-        sys.exit(1)
+        return ["トップレベルが配列である必要があります"]
 
     seen = set()
     for i, ev in enumerate(events):
@@ -52,7 +52,7 @@ def main():
             if k not in ev or ev[k] in (None, ""):
                 errors.append(f"{tag}: 必須フィールド '{k}' がありません")
         for k in ev:
-            if k not in ALLOWED_KEYS:
+            if k not in allowed:
                 errors.append(f"{tag}: 未知のフィールド '{k}'")
 
         eid = ev.get("id")
@@ -101,7 +101,26 @@ def main():
         for k in ("title", "desc", "src"):
             if k in ev and not isinstance(ev[k], str):
                 errors.append(f"{tag}: {k} は文字列")
+        if news:
+            if ev.get("cat") not in NEWS_CATS:
+                errors.append(f"{tag}: cat '{ev.get('cat')}' は {sorted(NEWS_CATS)} のいずれか")
+            if not ev.get("src"):
+                errors.append(f"{tag}: ニュースは src（根拠URL）必須")
+            for c in ev.get("codes", []):
+                if not isinstance(c, str) or not CODE_RE.match(c):
+                    errors.append(f"{tag}: codes '{c}' は4桁の銘柄コード")
+            if not all(isinstance(x, str) and x for x in ev.get("tickers", [])):
+                errors.append(f"{tag}: tickers は文字列の配列")
+    return errors
 
+
+def main():
+    events = load(EVENTS)
+    themes = load(THEMES)
+    theme_ids = {t.get("id") for t in themes if isinstance(t, dict)}
+    news = load(NEWS) if NEWS.exists() else []
+    errors = [f"events.json {e}" for e in check(events, theme_ids, ALLOWED_KEYS)]
+    errors += [f"news.json {e}" for e in check(news, theme_ids, NEWS_KEYS, news=True)]
     if errors:
         print(f"NG: {len(errors)} 件のエラー")
         for e in errors:
@@ -116,6 +135,7 @@ def main():
     print("  impact: " + ", ".join(f"★{k}={imp[k]}" for k in (3, 2, 1)))
     print("  country: " + ", ".join(f"{k}={v}" for k, v in sorted(cty.items())))
     print(f"  tentative: {tent}")
+    print(f"news: {len(news)} 件" + (f" ({min(n['d'] for n in news)} 〜 {max(n['d'] for n in news)})" if news else ""))
 
 
 if __name__ == "__main__":

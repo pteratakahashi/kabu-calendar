@@ -5,6 +5,7 @@
   earnings.json  決算発表予定 [{d, c, n, q, fye, mkt, src}]  d=YYYY-MM-DD or "" (未定)
   stocks.json    銘柄一覧 [{c, n, mkt, w, sz, th, imp}]  w=TOPIXウエイト(%), sz=規模区分, th=テーマid, imp=影響度1-3
   events.json    イベント = data/events.json（Claude が毎日調査）+ SQ（自動計算）
+  news.json      予定外ニュース = data/news.json（Claude が毎日調査）。新しい順
   themes.json    テーマ定義 (data/themes.json をコピー)
   meta.json      最終更新日時・件数・各ソースの成否
 
@@ -333,6 +334,8 @@ def main() -> int:
     dump("stocks.json", stocks)
     dump("events.json", events)
     dump("themes.json", themes)
+    news = sorted(load_json(ROOT / "data" / "news.json", []), key=lambda n: (n["d"], n.get("t") or "99:99"), reverse=True)
+    dump("news.json", news)
     (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"done: earnings={len(earnings)} stocks={len(stocks)} events={len(events)}")
     return 0

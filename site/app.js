@@ -94,31 +94,41 @@ function fmtDay(s) {
 }
 
 // ---------- data ----------
+// 通信が一瞬切れた・アプリを裏に回して読み込みが中断された等に備えて、少し待って2回まで取り直す。
+// それでもだめなら端末に残っている前回のデータ（Service Worker のキャッシュ）を使う
 async function getJSON(name) {
-  const r = await fetch(`data/${name}`, { cache: "no-cache" });
-  if (!r.ok) throw new Error(`${name}: ${r.status}`);
-  return r.json();
+  let err;
+  for (const wait of [0, 800, 2500]) {
+    if (wait) await new Promise((r) => setTimeout(r, wait));
+    try {
+      const r = await fetch(`data/${name}`, { cache: "no-cache" });
+      if (!r.ok) throw new Error(`${name}: ${r.status}`);
+      return await r.json();
+    } catch (e) { err = e; }
+  }
+  try {
+    const c = await caches.match(`data/${name}`, { ignoreSearch: true });
+    if (c) { state.usedCache = true; return await c.json(); }
+  } catch { /* キャッシュも無い */ }
+  throw err;
 }
 
 async function load() {
-  try {
-    const [earnings, stocks, events, themes, meta] = await Promise.all(
-      ["earnings.json", "stocks.json", "events.json", "themes.json", "meta.json"].map(getJSON));
-    Object.assign(state, { earnings, stocks, events, themes, meta });
-    state.rx = await getJSON("reactions.json").catch(() => state.rx);
-    state.ipo = await getJSON("ipo.json").catch(() => []);
-    state.news = await getJSON("news.json").catch(() => []);
-    state.n225 = await getJSON("n225.json").catch(() => state.n225);
-    state.brief = await getJSON("brief.json").catch(() => null);
-    state.market = await getJSON("market.json").catch(() => null);
-    state.bias = await getJSON("bias.json").catch(() => null);
-    state.n225set = new Set(state.n225.codes.map((x) => x.c));
-    state.rx.news ||= {};
-  } catch (e) {
-    $("#updated").textContent = "データ取得に失敗しました";
-    $("#updated").classList.add("stale");
-    console.error(e);
-  }
+  // すべて並行して読む（以前は順番に読んでいて、スマホ回線だと遅かった）
+  const CORE = ["earnings", "stocks", "events", "themes", "meta"];
+  const OPT = { reactions: "rx", ipo: "ipo", news: "news", n225: "n225", brief: "brief", market: "market", bias: "bias" };
+  const names = [...CORE, ...Object.keys(OPT)];
+  const res = await Promise.allSettled(names.map((n) => getJSON(`${n}.json`)));
+  const failed = [];
+  res.forEach((r, i) => {
+    const n = names[i];
+    if (r.status === "fulfilled") state[OPT[n] || n] = r.value;
+    else { failed.push(n); console.error(r.reason); }
+  });
+  state.rx.news ||= {};
+  state.n225set = new Set((state.n225.codes || []).map((x) => x.c));
+  state.loadFailed = failed.filter((n) => CORE.includes(n));
+  if (failed.length) console.warn("読み込めなかったデータ:", failed.join(", "));
   index();
   renderUpdated();
   const t = todayStr();
@@ -283,6 +293,12 @@ function info(e) {
 
 function renderUpdated() {
   const el = $("#updated");
+  if (state.loadFailed?.length) {
+    // 主要データが読めなかった: タップ（または次にアプリを開いた時・回線が戻った時）に読み直す
+    el.textContent = "読み込みに失敗 · タップで再読み込み";
+    el.classList.add("stale", "retry");
+    return;
+  }
   if (!state.meta?.updated_at) return;
   const u = new Date(state.meta.updated_at);
   el.textContent = `最終更新 ${u.getMonth() + 1}/${u.getDate()} ${pad(u.getHours())}:${pad(u.getMinutes())}`;
@@ -1785,6 +1801,12 @@ function switchTab(v) {
   $("#page-title").textContent = TITLES[v] || "";
   window.scrollTo(0, 0);
 }
+
+// 読み込みに失敗したとき: 表示をタップ、アプリを開き直す、回線が戻る のどれかで読み直す
+const retryLoad = () => { if (state.loadFailed?.length) location.reload(); };
+$("#updated").addEventListener("click", retryLoad);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) retryLoad(); });
+window.addEventListener("online", retryLoad);
 
 $("#sheet-close").onclick = () => $("#sheet").close();
 $("#sheet").addEventListener("close", () => { state.sheetFn = null; renderHold(); });

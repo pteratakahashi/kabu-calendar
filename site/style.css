@@ -539,3 +539,4 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .slot-list .sl-main small { display: block; color: var(--muted); font-size: 12px; }
 .slot-list .chev { align-self: center; }
 .slot-list .more-li { color: var(--accent); font-size: 13px; justify-content: center; cursor: pointer; }
+.updated.retry { cursor: pointer; text-decoration: underline; }

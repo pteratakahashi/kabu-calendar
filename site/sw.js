@@ -1,5 +1,6 @@
 // ネットワーク優先（常に最新を表示）。オフライン時だけキャッシュを使う。
-const CACHE = "kabucal-v15";
+const CACHE = "kabucal-v16";
+const DATA_CACHE = "kabucal-data"; // データはバージョンを上げても消さない（オフライン・取得失敗時に前回の内容を出すため）
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {
@@ -9,7 +10,7 @@ self.addEventListener("install", (e) => {
 self.addEventListener("activate", (e) => {
   e.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE && k !== DATA_CACHE).map((k) => caches.delete(k))))
       .then(() => self.clients.claim()));
 });
 
@@ -17,9 +18,10 @@ self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
   if (e.request.method !== "GET" || url.origin !== location.origin) return;
   e.respondWith(
-    fetch(e.request, { cache: "no-cache" }).then((r) => {
-      if (r.ok) { const copy = r.clone(); caches.open(CACHE).then((c) => c.put(e.request, copy)); }
-      return r;
+    fetch(e.request, { cache: "no-cache" }).then(async (r) => {
+      if (r.ok) { const copy = r.clone(); caches.open(url.pathname.includes("/data/") ? DATA_CACHE : CACHE).then((c) => c.put(e.request, copy)); return r; }
+      // サーバーの一時的なエラー（更新の反映中など）は前回の内容で代用
+      return (await caches.match(e.request, { ignoreSearch: true })) || r;
     }).catch(() => caches.match(e.request, { ignoreSearch: true })));
 });
 

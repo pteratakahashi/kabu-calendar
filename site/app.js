@@ -686,6 +686,10 @@ function openEarnRx(key) {
   }
   html += earnHistoryHtml(c, d);
   html += `<ul class="list">${stockRow({ ...s, ...(state.nextByCode.get(c) || {}), c, n: s.n }, { showDate: true })}</ul>`;
+  if (state.n225set.has(c)) {
+    html += state.hold.has(c) ? `<button class="btn wide" data-hold="${esc(c)}">保有銘柄の詳細を見る</button>`
+      : `<button class="btn wide" data-addhold="${esc(c)}">＋ 保有銘柄に追加</button>`;
+  }
   openSheet(`${s.n} 決算の反応`, html, () => openEarnRx(key));
   $("#sheet").scrollTop = 0;
 }
@@ -1217,6 +1221,7 @@ function renderHome() {
   // 保有株
   const pf = portfolio();
   if (pf) html += pfCard(pf, { link: true });
+  else if (state.hold.size) html += `<div class="card has-rx" data-go="hold"><div class="card-h"><span>保有銘柄 ${state.hold.size}</span><small>株数を入れると評価額と影響額（円）が出ます ›</small></div></div>`;
   else if (!state.hold.size) html += `<div class="empty-card"><b>持っている株を登録しよう</b><p>イベントやニュースで、あなたの株がどう動きやすいかをここに出します</p><button class="btn" data-go="hold">保有銘柄を登録</button></div>`;
 
   // 今日・次の営業日
@@ -1226,7 +1231,7 @@ function renderHome() {
     if (k === today || (d.getDay() % 6 !== 0)) days.push(k);
   }
   for (const k of days) {
-    const items = weekItems(k).filter((it) => it.kind !== "news" && (it.impact >= 2 || it.watched || state.alerts.has(it.id)));
+    const items = weekItems(k).filter((it) => it.kind !== "news" && (it.impact >= 2 || it.watched || state.alerts.has(it.id) || /holiday/.test(it.id || "")));
     for (const a of state.alertList.filter((x) => x.kind === "peer" && x.d === k)) items.push({ kind: "peer", a, d: k, t: a.t, title: a.title, impact: 2 });
     items.sort((a, b) => (a.t || "99").localeCompare(b.t || "99") || b.impact - a.impact);
     html += `<h3 class="sec">${k === today ? "今日" : fmtMD(k)}の予定</h3>`;
@@ -1272,8 +1277,20 @@ function setSeg(el, v) {
 
 document.addEventListener("click", (ev) => {
   const go = ev.target.closest("[data-go]");
-  if (go) { if ($("#sheet").open) $("#sheet").close(); switchTab(go.dataset.go); return; }
+  if (go) {
+    if ($("#sheet").open) $("#sheet").close();
+    switchTab(go.dataset.go);
+    if (go.dataset.go === "hold" && !state.hold.size) openPicker();
+    return;
+  }
   if (ev.target.closest("#hold-edit2")) { openPicker(); return; }
+  const addh = ev.target.closest("[data-addhold]");
+  if (addh) {
+    const c = addh.dataset.addhold;
+    state.hold.add(c); saveHold();
+    loadHold(c).then(() => { refreshHold(); renderCalendar(); renderDay(); openHolding(c); });
+    return;
+  }
   const unh = ev.target.closest("[data-unhold]");
   if (unh) { state.hold.delete(unh.dataset.unhold); saveHold(); $("#sheet").close(); refreshHold(); renderCalendar(); renderDay(); return; }
   if (ev.target.closest("input")) return;

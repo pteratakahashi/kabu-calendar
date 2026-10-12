@@ -461,3 +461,4 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .month-nav .chip { white-space: nowrap; }
 #ev-mode, #cal-mode, #ipo-mode { max-width: 240px; padding: 2px; border-radius: 10px; margin: 0 0 10px; }
 #ev-mode button, #cal-mode button, #ipo-mode button { padding: 4px; font-size: 12.5px; }
+.btn.wide { display: block; width: 100%; margin: 14px 0 6px; text-align: center; }

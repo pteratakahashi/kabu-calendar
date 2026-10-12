@@ -5,7 +5,8 @@ site/data/bias.json に書き出す（アプリの「傾向」一覧用）。
 入力はすべて fetch_reactions.py が作ったファイル（追加のダウンロードはしない）:
   site/data/h/<コード>.json（各イベント反応日の騰落率 ev）、h/index.json、reactions.json（決算の反応）、
   events.json / earnings.json（今後の予定）、n225.json
-過去の回の数え方はアプリと同じ（同じ種類のイベントの直近10回、反応日の終値騰落率）。
+過去の回の数え方はアプリと同じ（同じ種類のイベントの直近20回まで、反応日の終値騰落率）。
+データが20回に満たない種類（FOMC・日銀・ECB は約14回、海外決算・自社決算は約12回）は、ある分だけで判定する。
 
 使い方: python3 scripts/build_bias.py
 """
@@ -20,9 +21,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "site" / "data"
-HIST_N = 10        # 過去何回まで見るか（アプリと同じ）
+HIST_N = 20        # 過去何回まで見るか（アプリと同じ）
 MIN_N = 6          # これより少ない回数しかない組み合わせは出さない
-MIN_RATE = 0.8     # 上昇（下落）した回の割合がこれ以上
+MIN_RATE = 0.8     # 上昇（下落）した回の割合がこれ以上（15回未満のとき。例 8/10）
+MIN_RATE_LONG = 0.75  # 15回以上あるとき（例 15/20）。偶然でこうなる確率は 8/10 より低い
 MIN_T = 1.5        # 平均 ÷ 標準誤差。1〜2回の大きな動きだけで平均が偏っているものを除く
 HORIZON = 35       # 今日から何日先までの予定を対象にするか
 SERIES_ALIAS = {"us-ism-svc": "us-ism-services", "us-fomc": "fomc"}
@@ -50,7 +52,8 @@ def judge(vals: list[float | None], vol: float) -> dict | None:
         return None
     up = sum(x > 0 for x in v)
     down = sum(x < 0 for x in v)
-    side = 1 if up >= MIN_RATE * n else -1 if down >= MIN_RATE * n else 0
+    rate = MIN_RATE_LONG if n >= 15 else MIN_RATE
+    side = 1 if up >= rate * n else -1 if down >= rate * n else 0
     avg = sum(v) / n
     if not side or avg * side <= 0:
         return None
@@ -172,7 +175,8 @@ def main() -> int:
                               "w1": [week(h, ev_day(p["id"])) for p in hist],
                               "nw": [nk_week(ev_day(p["id"])) for p in hist]})
     items.sort(key=lambda i: (i["d"], -abs(i["t"])))
-    out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "items": items}
+    out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "min_rate_long": MIN_RATE_LONG,
+           "hist_n": HIST_N, "items": items}
     (DATA / "bias.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     print(f"bias: {len(items)} 件（決算 {sum(i['k'] == 'earn' for i in items)} / イベント {sum(i['k'] == 'ev' for i in items)}）",
           file=sys.stderr)

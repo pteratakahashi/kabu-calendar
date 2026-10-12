@@ -526,6 +526,11 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .tag.t-buy { background: color-mix(in srgb, var(--up) 14%, transparent); color: var(--up); }
 .tag.t-short { background: color-mix(in srgb, var(--down) 14%, transparent); color: var(--down); }
 .tag.t-sell, .tag.t-cover { background: var(--text); color: var(--bg); }
+.tag.t-chain { background: color-mix(in srgb, var(--accent, #888) 16%, transparent); color: var(--accent, var(--text)); margin-left: 6px; }
+.list .name .tag.t-chain, .slot-list .tag.t-chain { margin-left: 0; }
+.row .sub.leg { cursor: pointer; padding-left: 10px; border-left: 2px solid var(--line, #ccc); margin-top: 3px; }
+.row .sub.clash { color: var(--warn, #c77700); }
+.bias-r .spark + .spark { margin-top: 2px; }
 .list.outs li.row.out { padding-top: 10px; padding-bottom: 10px; }
 .list.outs .name small { font-weight: 400; margin-left: 4px; font-size: 11.5px; }
 .oname { text-decoration: underline; text-decoration-color: var(--line); cursor: pointer; }

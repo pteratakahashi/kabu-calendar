@@ -31,7 +31,7 @@ const state = {
   evTheme: "", calTheme: "",
   rx: { events: {}, earnings: {}, news: {} }, // 株価の反応（reactions.json）
   news: [], newsByDate: new Map(),  // 予定外ニュース（news.json、新しい順）
-  series: new Map(),     // 同じ種類のイベント（過去10回用）: key -> [event]（古い順）
+  series: new Map(),     // 同じ種類のイベント（過去の回用）: key -> [event]（古い順）
   rxByCode: new Map(),   // 銘柄コード -> [[決算日, reactions のキー]]（古い順）
   ipo: [], ipoByDate: new Map(),    // IPO（ipo.json）
   sheetFn: null,                    // 開いているシートの再描画関数
@@ -183,7 +183,7 @@ function index() {
   for (const v of state.rxByCode.values()) v.sort((a, b) => a[0].localeCompare(b[0]));
 }
 
-// ---------- 過去10回 ----------
+// ---------- 過去の回（最大20回） ----------
 // 同じ種類のイベントを束ねるキー。id の日付より後ろ（スラッグ）で判定し、表記ゆれは別名表で吸収する。
 // 海外企業の決算は ticker で束ねる（四半期ごとにスラッグが違うため）
 const SERIES_ALIAS = { "us-ism-svc": "us-ism-services", "us-fomc": "fomc" };
@@ -193,9 +193,11 @@ function seriesOf(ev) {
   if (ev.ticker && !NOT_EARN.has(slug)) return `earn:${ev.ticker}`;
   return SERIES_ALIAS[slug] || slug;
 }
-const HIST_N = 10;
+// 過去何回まで見るか。20回に満たない種類（FOMC・日銀・ECB 約14回、海外決算・自社決算 約12回）はある分だけ
+const HIST_N = 20;
+const NEWS_N = 10; // ニュースの同じカテゴリの過去件数
 
-// その回までの（その回を含む）反応データのある回。新しい順に最大10回
+// その回までの（その回を含む）反応データのある回。新しい順に最大 HIST_N 回
 function eventHistory(ev) {
   return (state.series.get(seriesOf(ev)) || []).filter((e) => e.d <= ev.d && state.rx.events[e.id]).slice(-HIST_N).reverse();
 }
@@ -805,7 +807,7 @@ function openNews(id) {
     html += `<p class="msum">値動きデータは次回の更新で入ります</p>`;
   }
   // 同じカテゴリの過去のニュース
-  const same = state.news.filter((x) => x.cat === n.cat && x.d <= n.d && state.rx.news[x.id]).slice(0, HIST_N);
+  const same = state.news.filter((x) => x.cat === n.cat && x.d <= n.d && state.rx.news[x.id]).slice(0, NEWS_N);
   const nk = (x, k) => state.rx.news[x.id]?.idx?.find((i) => i.sym === "^N225")?.[k] ?? null;
   if (same.length > 1) {
     html += historyHtml(`同じ「${n.cat}」の過去のニュース`, same.map((x) => ({ d: x.d, sub: x.title, attr: `data-news="${esc(x.id)}"`, cur: x.id === id, x })),
@@ -914,7 +916,7 @@ function seriesName(ev) {
   return k.startsWith("earn:") ? `${t} 決算` : t;
 }
 
-// その銘柄の、その種類のイベントでの過去の反応（ev の回まで、最大10回）
+// その銘柄の、その種類のイベントでの過去の反応（ev の回まで、最大 HIST_N 回）
 function holdSeriesStat(h, ev) {
   const hist = eventHistory(ev).filter((e) => e.id !== ev.id || ev.d < todayStr());
   const vals = hist.map((e) => evR(h, e.id));
@@ -1373,7 +1375,7 @@ function timingHtml(d, t, tm, s, { unknownNote = "" } = {}) {
 
 // ---------- 傾向 ----------
 // 日経225 × 今後の予定（自社の決算・指標・海外決算）で、過去の反応が上昇か下落に偏っている組み合わせ。
-// 計算はサーバ側（scripts/build_bias.py → bias.json）。過去の回の数え方は「過去10回」と同じ
+// 計算はサーバ側（scripts/build_bias.py → bias.json）。過去の回の数え方はアプリと同じ（最大20回）
 function spark(vals) {
   // 古い回が左。棒の高さは各回の騰落率
   const v = vals.slice().reverse(), W = 64, H = 26, bw = W / Math.max(v.length, 1);
@@ -1385,22 +1387,85 @@ function spark(vals) {
 
 // 傾向の各件を「売買する時」（日付 × 寄り/引け）の枠に振り分ける。入る注文 ins と、出る注文 outs（予定ごとにまとめる）
 const biasTitle = (x) => { const ev = x.k === "ev" ? state.events.find((e) => e.id === x.id) : null; return ev ? seriesName(ev) : "決算"; };
-function biasSlots(items, today) {
-  const slots = new Map();
-  const slot = (d, t) => { const k = `${d}|${t === "寄り" ? 0 : 1}`; if (!slots.has(k)) slots.set(k, { k, d, t, ins: [], outs: new Map() }); return slots.get(k); };
-  for (const x of items) {
+// 同じ銘柄・同じ向きで、前の売買の出る時と次の売買の入る時が同じ枠（または前の保有期間中）なら1本にまとめる
+// （例: 10/13引けで買い→10/14引けで売り と 10/14引けで買い→10/15引けで売り → 10/13引けで買い→10/15引けで売り）。
+// ins には「まとめた売買」{ c, s, legs: [{x, p, tm0}], p: 全体の入り・出 } が入る。
+// 逆向きの売買と保有期間が重なるものは clash に印をつける（両方は持てないため）
+const biasKey = (x) => `${x.c}|${x.k === "earn" ? `earn@${x.d}` : x.id}`;
+const slotKey = (d, t) => `${d}|${t === "寄り" ? 0 : 1}`;
+function biasChains(items) {
+  const legs = items.map((x) => {
     const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, nk: x.nk, nw: x.nw, s: x.s, d: x.d, t: x.tm });
     const p = plan(x.d, x.tm, tm0 || { entry: "prev", exit: "close" }, x.s);
-    const it = { x, p, tm0 };
-    if (p.inD >= today) slot(p.inD, p.inT).ins.push(it);
+    return { x, p, tm0, inK: slotKey(p.inD, p.inT), outK: slotKey(p.outD, p.outT) };
+  });
+  const byC = new Map();
+  for (const l of legs) { if (!byC.has(l.x.c)) byC.set(l.x.c, []); byC.get(l.x.c).push(l); }
+  const chains = [];
+  for (const ls of byC.values()) {
+    ls.sort((a, b) => a.inK.localeCompare(b.inK) || a.outK.localeCompare(b.outK));
+    const open = { 1: null, [-1]: null }; // 向きごとに、まとめている途中の売買
+    for (const l of ls) {
+      const s = l.x.s, cur = open[s];
+      if (cur && l.inK <= cur.outK) {
+        cur.legs.push(l);
+        if (l.outK > cur.outK) { cur.outK = l.outK; cur.p = { ...cur.p, outD: l.p.outD, outT: l.p.outT }; }
+      } else {
+        open[s] = { c: l.x.c, s, legs: [l], inK: l.inK, outK: l.outK, p: { ...l.p }, clash: null };
+        chains.push(open[s]);
+      }
+    }
+  }
+  // 逆向きの売買と保有期間が重なる（片方の出る前にもう片方に入る）
+  for (const a of chains) for (const b of chains) {
+    if (a !== b && a.c === b.c && a.s !== b.s && a.inK < b.outK && b.inK < a.outK) a.clash = b;
+  }
+  for (const ch of chains) {
+    // 全体の利益の目安: 各予定の平均利益（金利前）の合計 − 通しで持った金利
+    const gross = ch.legs.reduce((a, l) => a + (l.tm0?.P ? l.tm0.P.avg * ch.s : l.x.avg * ch.s), 0);
+    ch.cost = marginCost(ch.s, ch.p.inD, ch.p.outD);
+    ch.net = gross - ch.cost;
+    ch.title = ch.legs.map((l) => biasTitle(l.x)).filter((t, i, a) => a.indexOf(t) === i).join("＋");
+  }
+  return chains;
+}
+
+// keep: 一覧の絞り込み（まとめ方・逆向きの判定は絞り込む前の全件で行う）
+function biasSlots(items, today, keep = () => true) {
+  const slots = new Map();
+  const slot = (d, t) => { const k = slotKey(d, t); if (!slots.has(k)) slots.set(k, { k, d, t, ins: [], outs: new Map(), holds: [] }); return slots.get(k); };
+  state.biasChain = new Map();
+  for (const ch of biasChains(items)) {
+    if (!ch.legs.some((l) => keep(l.x))) continue;
+    const p = ch.p;
+    for (const l of ch.legs) if (ch.legs.length > 1) state.biasChain.set(biasKey(l.x), ch);
+    if (p.inD >= today) slot(p.inD, p.inT).ins.push(ch);
+    // 途中の予定で入る枠: 売らずに持ち越す
+    for (const l of ch.legs.slice(1)) if (l.p.inD >= today && l.inK > ch.inK) slot(l.p.inD, l.p.inT).holds.push({ ch, l });
     if (p.outD >= today) {
-      const o = slot(p.outD, p.outT).outs, k = `${x.k === "earn" ? "earn" : x.id}|${p.back}|${p.inD}${p.inT}`;
-      if (!o.has(k)) o.set(k, { title: biasTitle(x), d: x.d, back: p.back, from: `${fmtMD(p.inD)}${p.inT}`, xs: [] });
-      o.get(k).xs.push(x);
+      const o = slot(p.outD, p.outT).outs, k = `${ch.legs.map((l) => (l.x.k === "earn" ? "earn" : l.x.id)).join("+")}|${p.back}|${p.inD}${p.inT}`;
+      if (!o.has(k)) o.set(k, { title: ch.title, back: p.back, from: `${fmtMD(p.inD)}${p.inT}`, xs: [] });
+      o.get(k).xs.push(ch.legs[ch.legs.length - 1].x);
     }
   }
   return [...slots.keys()].sort().map((k) => slots.get(k));
 }
+
+// 傾向の1行（入る注文）の中身。まとめた売買は予定ごとに1行ずつ
+function chainLegsHtml(ch, { short = false } = {}) {
+  const dir = ch.s > 0 ? "上昇" : "下落";
+  return ch.legs.map(({ x, p, tm0 }) => {
+    const ev = `${fmtMD(x.d)}${x.k === "earn" || short ? "" : " " + esc(x.tm || "")} ${esc(biasTitle(x))}`;
+    const res = tm0 ? `${dir} <b>${tm0.P.same}/${tm0.P.n}回</b> · ${ch.legs.length > 1 ? "平均" : "利益 平均"} <b>${prof(ch.legs.length > 1 ? tm0.P.avg * ch.s : tm0.net)}</b>` : `${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}`;
+    return ch.legs.length > 1
+      ? `<div class="sub leg" data-bias="${esc(biasKey(x))}">${ev} · ${res} ›</div>`
+      : `<div class="sub">${ev} → ${p.back} ${fmtMD(p.outD)}${p.outT}${tm0?.fallback || !tm0 ? "（決め手なし）" : ""}</div><div class="sub">この売買で ${res}${tm0 ? '<small class="muted">（金利後）</small>' : ""}</div>`;
+  }).join("");
+}
+const chainHead = (ch) => (ch.legs.length > 1
+  ? `<div class="sub">${ch.p.act} ${fmtMD(ch.p.inD)}${ch.p.inT} → ${ch.p.back} ${fmtMD(ch.p.outD)}${ch.p.outT}<span class="tag t-chain">${ch.legs.length}つの予定をまとめて保有</span></div>`
+    + `<div class="sub">合計 平均 <b>${prof(ch.net)}</b><small class="muted">（各予定の平均の合計・通しの金利後）</small></div>`
+  : "") + (ch.clash ? `<div class="sub clash">⚠ 保有中の ${fmtMD(ch.clash.p.inD)}${ch.clash.p.inT}〜${fmtMD(ch.clash.p.outD)}${ch.clash.p.outT} に、${esc(ch.clash.title)}で逆向き（${ch.clash.p.act}）の傾向。両方は持てません</div>` : "");
 
 function renderBias() {
   const el = $("#bias-list");
@@ -1408,11 +1473,12 @@ function renderBias() {
   const b = state.bias;
   if (!b?.items?.length) { el.innerHTML = `<p class="empty-msg">データがまだありません（次回の更新で作られます）</p>`; return; }
   const today = todayStr();
-  const items = b.items.filter((x) => x.d >= today && state.n225set.has(x.c)
-    && (!prefs.biasDir || x.s === Number(prefs.biasDir)) && (!prefs.biasKind || x.k === prefs.biasKind));
+  const all = b.items.filter((x) => x.d >= today && state.n225set.has(x.c));
+  const keep = (x) => (!prefs.biasDir || x.s === Number(prefs.biasDir)) && (!prefs.biasKind || x.k === prefs.biasKind);
+  const items = all.filter(keep);
   // 売買する順（日付 → 寄り → 引け）に並べる。入る行（買い・空売り）は1件ずつ、出る行（売り・買い戻し）は予定ごとに1行にまとめる
-  const slots = biasSlots(items, today);
-  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}回以上のうち${Math.round(b.min_rate * 100)}%以上が同じ向きに動いた日経225銘柄（${items.length}件）。売買する順に並べています</p>`;
+  const slots = biasSlots(all, today, keep);
+  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}〜${b.hist_n || 10}回のうち${Math.round(b.min_rate * 100)}%以上${b.min_rate_long ? `（15回以上あるものは${Math.round(b.min_rate_long * 100)}%以上）` : ""}が同じ向きに動いた日経225銘柄（${items.length}件）。売買する順に並べています</p>`;
   const LIM = 6;
   for (const sl of slots) {
     const k = sl.k;
@@ -1423,19 +1489,23 @@ function renderBias() {
         <div class="name"><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span>${esc(o.title)}${o.title === "決算" ? "" : ""}<small class="muted">（${esc(o.from)}に入った分）</small></div>
         <div class="sub">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}</div></div></li>`).join("") + `</ul>`;
     }
+    if (sl.holds.length) {
+      html += `<ul class="list outs"><li class="row out"><div class="main"><div class="name"><span class="tag t-chain">持ち越し</span>売らずにそのまま持つ</div>
+        <div class="sub">${sl.holds.map(({ ch, l }) => `<span class="oname" data-bias="${esc(biasKey(l.x))}">${esc(holdName(ch.c))} ${esc(ch.c)}</span><small class="muted">（次: ${esc(biasTitle(l.x))}）</small>`).join("、")}</div></div></li></ul>`;
+    }
     if (sl.ins.length) {
-      sl.ins.sort((a, c) => (a.x.d + (a.x.tm || "")).localeCompare(c.x.d + (c.x.tm || "")) || Math.abs(c.x.t) - Math.abs(a.x.t));
+      const key0 = (ch) => ch.legs[0].x.d + (ch.legs[0].x.tm || "");
+      sl.ins.sort((a, c) => key0(a).localeCompare(key0(c)) || Math.abs(c.legs[0].x.t) - Math.abs(a.legs[0].x.t));
       const open = state.biasOpen.has(k);
-      html += `<ul class="list">` + sl.ins.slice(0, open ? sl.ins.length : LIM).map(({ x, p, tm0 }) => {
+      html += `<ul class="list">` + sl.ins.slice(0, open ? sl.ins.length : LIM).map((ch) => {
+        const x = ch.legs[0].x;
         const held = state.hold.has(x.c);
         const dir = x.s > 0 ? "上昇" : "下落";
-        const ev = `${fmtMD(x.d)}${x.k === "earn" ? "" : " " + esc(x.tm || "")} ${esc(biasTitle(x))}`;
-        return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
-          <div class="main"><div class="name"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span>${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
-          <div class="sub">${ev} → ${p.back} ${fmtMD(p.outD)}${p.outT}${tm0?.fallback || !tm0 ? "（決め手なし）" : ""}</div>
-          <div class="sub">${tm0 ? `この売買で ${dir} <b>${tm0.P.same}/${tm0.P.n}回</b> · 利益 平均 <b>${prof(tm0.net)}</b><small class="muted">（金利後）</small>` : `${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}`}</div>
-          <div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
-          <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.r.filter((v) => v != null))}</div>
+        return `<li class="row has-rx" data-bias="${esc(biasKey(x))}">
+          <div class="main"><div class="name"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${ch.p.act}</span>${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
+          ${chainHead(ch)}${chainLegsHtml(ch)}
+          ${ch.legs.length > 1 ? "" : `<div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div>`}</div>
+          <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${ch.legs.map((l) => spark(l.x.r.filter((v) => v != null))).join("")}</div>
           <span class="chev">›</span></li>`;
       }).join("") + `</ul>`
         + (sl.ins.length > LIM && !open ? `<button class="btn ghost more" data-bias-more="${esc(k)}">ほか ${sl.ins.length - LIM} 銘柄を表示</button>` : "");
@@ -1451,8 +1521,15 @@ function renderBias() {
 async function openBias(v) {
   const [c, key] = v.split("|");
   await loadHold(c);
-  if (key.startsWith("earn@")) { openEarnRx(`${c}@${key.slice(5)}`); return; }
-  openHoldSeries(c, key);
+  if (key.startsWith("earn@")) openEarnRx(`${c}@${key.slice(5)}`);
+  else openHoldSeries(c, key);
+  // 傾向一覧で前後の予定とまとめた売買なら、シートの先頭にその旨を出す（下の「いつ買って、いつ売る？」はこの予定単独の場合）
+  const ch = state.biasChain?.get(v);
+  if (ch) {
+    $("#sheet-body").insertAdjacentHTML("afterbegin", `<div class="card why chain-note"><div class="why-h">前後の予定とまとめて保有</div>
+      <p class="why-sum">${esc(holdName(c))}は${ch.legs.map((l) => `${fmtMD(l.x.d)} ${esc(biasTitle(l.x))}`).join("、")}の${ch.legs.length}つで同じ向き（${ch.s > 0 ? "上昇" : "下落"}）の傾向があり、売る日と次に買う日が重なるため、一覧では<b>${ch.p.act} ${fmtMD(ch.p.inD)}${ch.p.inT} → ${ch.p.back} ${fmtMD(ch.p.outD)}${ch.p.outT}</b>の1回の売買にまとめています（いったん売ってすぐ同じ値段で買い直すのと同じなので）。</p>
+      <p class="hint">合計の目安 ${prof(ch.net)}（各予定の過去の平均利益の合計から、通しで持った金利を引いた値）。予定どうしの組み合わせで過去に検証したものではありません。下の「いつ買って、いつ売る？」はこの予定だけで売買した場合です。</p></div>`);
+  }
 }
 
 // 銘柄を選ぶ（日経225の業種別リスト）
@@ -1554,7 +1631,7 @@ async function openHolding(c) {
     html += `<h3 class="sec">指標・イベント別（よく動く順）</h3><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th><th>日経</th></tr></thead><tbody>`
       + rows.slice(0, 12).map(({ ev, st }) => `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(seriesName(ev))}<small>過去${st.n}回</small></th>
         <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%</td><td class="num muted">${st.nk ? st.nk.abs.toFixed(1) + "%" : "—"}</td></tr>`).join("")
-      + `</tbody></table><p class="note">各イベントの反応日（発表後に最初に開いた日本の立会日）の騰落率、過去10回まで。振れ幅＝上げ下げを問わない平均の動き。日経＝同じ日の日経平均の振れ幅。同じ日に別のイベントがあった場合はその影響も含みます</p>`;
+      + `</tbody></table><p class="note">各イベントの反応日（発表後に最初に開いた日本の立会日）の騰落率、過去20回まで（それより少ない種類はある分だけ）。振れ幅＝上げ下げを問わない平均の動き。日経＝同じ日の日経平均の振れ幅。同じ日に別のイベントがあった場合はその影響も含みます</p>`;
   }
 
   // 4) ニュース（大きく動いた順）
@@ -1694,7 +1771,9 @@ function renderHome() {
         const L = 5;
         html += `<div class="card slot"><div class="card-h"><span>${sl.d === today ? "今日" : fmtMD(sl.d)} ${sl.t === "寄り" ? "寄り（9:00前に寄成）" : "引け（15:30前に引成）"}</span></div><ul class="slot-list">`
           + [...sl.outs.values()].map((o) => `<li><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span><span class="sl-main">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}<small>${esc(o.title)}（${esc(o.from)}に入った分）</small></span></li>`).join("")
-          + sl.ins.slice(0, L).map(({ x, p, tm0 }) => `<li data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}" class="has-rx"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span><span class="sl-main"><b>${esc(holdName(x.c))}</b> <span class="ncode">${esc(x.c)}</span><small>${fmtMD(x.d)} ${esc(biasTitle(x))} → ${p.back} ${fmtMD(p.outD)}${p.outT} · ${x.s > 0 ? "上昇" : "下落"} ${tm0 ? `${tm0.P.same}/${tm0.P.n}回 利益 ${prof(tm0.net)}` : `${x.w}/${x.n}回 ${pct(x.avg)}`}</small></span><span class="chev">›</span></li>`).join("")
+          + sl.holds.map(({ ch, l }) => `<li data-bias="${esc(biasKey(l.x))}" class="has-rx"><span class="tag t-chain">持ち越し</span><span class="sl-main"><b>${esc(holdName(ch.c))}</b> <span class="ncode">${esc(ch.c)}</span><small>売らずに次の ${esc(biasTitle(l.x))} まで持つ（${ch.p.back} ${fmtMD(ch.p.outD)}${ch.p.outT}）</small></span><span class="chev">›</span></li>`).join("")
+          + sl.ins.slice(0, L).map((ch) => { const { x, tm0 } = ch.legs[0], p = ch.p, many = ch.legs.length > 1;
+            return `<li data-bias="${esc(biasKey(x))}" class="has-rx"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span><span class="sl-main"><b>${esc(holdName(x.c))}</b> <span class="ncode">${esc(x.c)}</span><small>${ch.legs.map((l) => `${fmtMD(l.x.d)} ${esc(biasTitle(l.x))}`).join("＋")} → ${p.back} ${fmtMD(p.outD)}${p.outT} · ${x.s > 0 ? "上昇" : "下落"} ${many ? `${ch.legs.map((l) => (l.tm0 ? `${l.tm0.P.same}/${l.tm0.P.n}` : `${l.x.w}/${l.x.n}`)).join("・")}回 合計 ${prof(ch.net)}` : tm0 ? `${tm0.P.same}/${tm0.P.n}回 利益 ${prof(tm0.net)}` : `${x.w}/${x.n}回 ${pct(x.avg)}`}${ch.clash ? " · ⚠逆向きと重なる" : ""}</small></span><span class="chev">›</span></li>`; }).join("")
           + (sl.ins.length > L ? `<li class="more-li" data-go="bias">ほか ${sl.ins.length - L} 銘柄 ›</li>` : "")
           + `</ul></div>`;
       }

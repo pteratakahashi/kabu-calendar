@@ -1,5 +1,5 @@
 // ネットワーク優先（常に最新を表示）。オフライン時だけキャッシュを使う。
-const CACHE = "kabucal-v10";
+const CACHE = "kabucal-v11";
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 
 self.addEventListener("install", (e) => {

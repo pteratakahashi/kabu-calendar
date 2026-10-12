@@ -86,6 +86,12 @@ def main() -> int:
     hev = {eid: i for i, eid in enumerate(idx["ev"])}
     hday = {d: i for i, d in enumerate(idx["days"])}
     nk_day = lambda d: idx["nk"][hday[d]] if "nk" in idx and d in hday else None  # noqa: E731
+    # 窓（前日終値 → 反応日の始値）。r − g がおおよそ日中の動き
+    gap = lambda h, d: h["g"][hday[d]] if h.get("g") and d in hday else None  # noqa: E731
+
+    def ev_day(eid):
+        r = rx["events"].get(eid) or {}
+        return (r.get("d1") or {}).get("nk_day") or next((x["day"] for x in r.get("idx", []) if x["sym"] == "^N225"), None)
 
     def nk_r(eid):
         r = rx["events"].get(eid) or {}
@@ -132,6 +138,7 @@ def main() -> int:
                 # 根拠を見るための各回の値（新しい順）: 日経平均（同じ反応日）、1週間後、決算日
                 items.append({"k": "earn", "c": c, "d": e["d"], "tm": e.get("t", ""), **j,
                               "r": [r["r"] for _, r in hist], "nk": [nk_day(r["day"]) for _, r in hist],
+                              "g": [gap(h, r["day"]) for _, r in hist],
                               "w1": [p[1] if (p := (r.get("pts") or [])[r["k"] + 4:r["k"] + 5]) and (p := p[0]) else None
                                      for _, r in hist],
                               "ds": [d for d, _ in hist]})
@@ -141,7 +148,8 @@ def main() -> int:
                 k = series_of(ev)
                 items.append({"k": "ev", "c": c, "id": ev["id"], "d": ev["d"], "tm": ev.get("t", ""), **j,
                               "r": vals, "nk": [nk_r(p["id"]) for p in hist],
-                              "dv": [driver(rx["events"][p["id"]], k) for p in hist]})
+                              "dv": [driver(rx["events"][p["id"]], k) for p in hist],
+                              "g": [gap(h, ev_day(p["id"])) for p in hist]})
     items.sort(key=lambda i: (i["d"], -abs(i["t"])))
     out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "items": items}
     (DATA / "bias.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

@@ -686,6 +686,13 @@ function openEarnRx(key) {
   } else {
     html += `<p class="msum">${d === "9999-12-31" ? "次の決算日は未定です。" : d >= todayStr() ? `決算は ${fmtDay(d)} 予定（まだ発表前）。` : "この回の値動きデータはありません。"}過去の決算での反応から傾向を確認できます。</p>`;
   }
+  if (d !== "9999-12-31" && d >= todayStr() && state.h.get(c)) {
+    const a = earnArrays(c, d), h = state.h.get(c), e = state.earnings.find((x) => x.c === c && x.d === d);
+    const av = a.r.filter((v) => v != null), sg = av.length && av.reduce((x, v) => x + v, 0) >= 0 ? 1 : -1;
+    const keys = earnHistory(c, d).filter((k) => k.split("@")[1] < d);
+    html += timingHtml(d, e?.t || "", timing({ r: a.r, g: keys.map((k) => gapOf(h, state.rx.earnings[k]?.day)), s: sg, kind: reactTiming(d, e?.t || "").kind }),
+      { unknownNote: "時刻未定（多くは15時以降）" });
+  }
   html += earnEvidenceHtml(c, d);
   html += earnHistoryHtml(c, d);
   html += `<ul class="list">${stockRow({ ...s, ...(state.nextByCode.get(c) || {}), c, n: s.n }, { showDate: true })}</ul>`;
@@ -1212,6 +1219,70 @@ function earnEvidenceHtml(c, d) {
     <div class="why-rule"><b>一般的な理屈</b><p>${fy ? "4〜5月の本決算では新しい年度の会社予想が出ます。予想を控えめに出す会社は、内容が良くても売られやすい傾向があります。" : "四半期の決算は、会社予想に対する進み具合や、予想の上方・下方修正の有無で動きやすくなります。"}決算の中身（予想との差など）のデータはまだ取り込んでいないため、偏りの理由までは断定できません。</p></div></div>`;
 }
 
+// ---------- いつ仕込む？（発表時刻 × 窓と日中の値動き） ----------
+// 騰落率 r は「反応日の終値 ÷ 前日の終値」。これを 窓（前日の終値 → 反応日の始値）と 日中（始値 → 終値）に分けて、
+// 動きが寄り付きの時点でもう出ているのか、日中に出るのかを見る
+function isJpBiz(d) {
+  const x = parse(d), md = d.slice(5);
+  if (x.getDay() === 0 || x.getDay() === 6 || md === "12-31" || md <= "01-03") return false;
+  return !(state.evByDate.get(d) || []).some((e) => /jp-holiday/.test(e.id));
+}
+function nextJpBiz(d) {
+  const x = parse(d);
+  do { x.setDate(x.getDate() + 1); } while (!isJpBiz(ymd(x)));
+  return ymd(x);
+}
+// 発表（日本時間）→ 日本株の反応日。15時より前の立会日の発表はその日、それ以外は次の立会日（fetch_reactions.py と同じ決め方）
+function reactTiming(d, t) {
+  if (isJpBiz(d) && t && t < "09:00") return { day: d, kind: "pre" };
+  if (isJpBiz(d) && t && t < "15:00") return { day: d, kind: "session" };
+  return { day: nextJpBiz(d), kind: "post", unknown: !t };
+}
+const intra = (r, g) => (r != null && g != null ? ((1 + r / 100) / (1 + g / 100) - 1) * 100 : null);
+const gapOf = (h, d) => (h?.g && state.hday.has(d) ? h.g[state.hday.get(d)] : null);
+const evDay = (id) => { const r = state.rx.events[id]; return r?.d1?.nk_day ?? r?.idx?.find((x) => x.sym === "^N225")?.day ?? null; };
+
+// r・g（各回）と偏りの向き s から、仕込むタイミングの目安
+function timing({ r, g, s, kind }) {
+  const p = r.map((x, i) => [x, g?.[i]]).filter(([x, y]) => x != null && y != null);
+  if (p.length < 4) return null;
+  const gs = p.map(([, y]) => y), is = p.map(([x, y]) => intra(x, y));
+  const st = (v) => ({ n: v.length, same: v.filter((x) => Math.sign(x) === s).length, avg: v.reduce((a, x) => a + x, 0) / v.length });
+  const G = st(gs), I = st(is);
+  const strong = (x) => x.same >= 0.6 * x.n && x.avg * s > 0;
+  const weakOpp = (x) => x.same <= 0.4 * x.n && x.avg * s < 0;
+  const act = s > 0 ? "買い" : "空売り";
+  let code, short, text;
+  if (kind === "session") {
+    // 場中の発表: 発表の反応は日中（寄り→引け）に出る
+    if (strong(I) && strong(G)) { code = "prev"; short = "前日引け"; text = `寄りの時点ですでに${s > 0 ? "上げ" : "下げ"}やすく、発表後の日中も同じ向き。前日の引けで${act}を入れておくのが一番有利でした。`; }
+    else if (strong(I)) { code = "open"; short = "当日の寄り"; text = `動きは主に日中（発表の前後）に出ています。当日の寄りで${act}を入れても間に合う形でした。`; }
+    else { code = "none"; short = "決め手なし"; text = "窓・日中のどちらにも一貫したパターンはありません。"; }
+  } else {
+    // 寄り前・引け後・夜間の発表: 発表の反応は主に寄り付きの窓に出る
+    if (strong(G) && strong(I)) { code = "prev"; short = "前日引け"; text = `寄りで窓を開けて${s > 0 ? "上がり" : "下がり"}、日中もさらに同じ向きに動きやすい。前日の引けで${act}が有利ですが、寄りから入っても日中の分は取れる形でした。`; }
+    else if (strong(G) && weakOpp(I)) { code = "prevx"; short = "前日引け→寄りで手じまい"; text = `寄りで窓を開けたあと、日中は戻しやすい形です。前日の引けで${act}を入れ、寄り付きで手じまうのが有利でした。寄りから入ると逆に動きやすいので注意。`; }
+    else if (strong(G)) { code = "prev"; short = "前日引け"; text = `動きの大半は寄り付きの窓で出ています。寄りの時点ではもう動いた後なので、入るなら前日の引けまでに${act}を入れる必要がありました。`; }
+    else if (strong(I)) { code = "open"; short = "当日の寄り"; text = `窓はまちまちで、動きは主に日中に出ています。当日の寄りで${act}を入れても間に合う形でした。`; }
+    else { code = "none"; short = "決め手なし"; text = "窓・日中のどちらにも一貫したパターンはありません。前日の引けから当日の引けまで持って初めて偏りが出る形です。"; }
+  }
+  return { code, short, text, G, I };
+}
+
+const KIND_TXT = { pre: "寄り前の発表", session: "取引時間中の発表", post: "引け後・夜間の発表" };
+function timingHtml(d, t, tm, { unknownNote = "" } = {}) {
+  const rt = reactTiming(d, t);
+  const when = `${fmtMD(d)}${t ? " " + esc(t) : ""}`;
+  const head = `<div class="tl"><span><small>発表（日本時間）</small><b>${when}</b>${t ? "" : `<small>${unknownNote || "時刻未定"}</small>`}</span><span class="arr">→</span><span><small>日本株の反応日</small><b>${fmtMD(rt.day)}</b></span></div>`;
+  const what = `<p class="why-sum">一覧の騰落率は<b>反応日の終値 ÷ 前日の終値</b>（前日の引けで入り、反応日の引けで手じまった場合）です。${KIND_TXT[rt.kind]}なので、${rt.kind === "session" ? "発表への反応はその日の取引時間中に出ます。" : "発表への反応はまず反応日の寄り付き（窓）に出ます。"}</p>`;
+  if (!tm) return `<div class="card why"><div class="why-h">いつ仕込む？</div>${head}${what}<p class="hint">寄り付きの値段のデータが足りないため、窓と日中の内訳は出せません。</p></div>`;
+  const line = (lbl, x) => `<tr><th>${lbl}</th><td>同じ向き ${x.same}/${x.n}回</td><td>平均 ${pct(x.avg)}</td></tr>`;
+  return `<div class="card why"><div class="why-h">いつ仕込む？ <span class="vchip v-time">${esc(tm.short)}</span></div>${head}${what}
+    <table class="rxtable mini">${line("窓<small>前日引け→寄り</small>", tm.G)}${line("日中<small>寄り→引け</small>", tm.I)}</table>
+    <p class="why-sum"><b>過去の形:</b> ${tm.text}</p>
+    <p class="note">過去の回の始値・終値から見た目安です。今回も同じになるとは限りません。</p></div>`;
+}
+
 // ---------- 傾向 ----------
 // 日経225 × 今後の予定（自社の決算・指標・海外決算）で、過去の反応が上昇か下落に偏っている組み合わせ。
 // 計算はサーバ側（scripts/build_bias.py → bias.json）。過去の回の数え方は「過去10回」と同じ
@@ -1247,14 +1318,17 @@ function renderBias() {
     const title = ev ? seriesName(ev) : "決算発表";
     const nkv = (x0.k === "ev" ? x0.nk || [] : []).filter((v) => v != null);
     const nk = nkv.length ? `<span class="nk">日経平均は上昇 ${nkv.filter((v) => v > 0).length}/${nkv.length}回</span>` : "";
-    html += `<h3 class="sec bias-h"><span>${fmtMD(x0.d)} ${esc(title)}</span>${nk}</h3><ul class="list">`
+    const rt = reactTiming(x0.d, x0.tm);
+    const when = x0.k === "earn" ? "" : ` ${esc(x0.tm || "")}`;
+    html += `<h3 class="sec bias-h"><span>${fmtMD(x0.d)}${when} ${esc(title)}</span>${nk}<span class="nk rday">→ 反応 ${fmtMD(rt.day)}${x0.k === "earn" ? "（引け後に発表の場合）" : ""}</span></h3><ul class="list">`
       + xs.slice(0, state.biasOpen.has(g) ? xs.length : LIM).map((x) => {
         const held = state.hold.has(x.c);
+        const tmx = timing({ r: x.r, g: x.g, s: x.s, kind: reactTiming(x.d, x.tm).kind });
         const dir = x.s > 0 ? "上昇" : "下落";
         return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
-          <div class="main"><div class="name">${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))}</div>
-          <div class="sub">${esc(x.c)} · ${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div>
-          <div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
+          <div class="main"><div class="name">${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
+          <div class="sub">${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div>
+          <div class="vline">${tmx ? `<span class="vchip v-time">仕込み ${esc(tmx.short)}</span>` : ""}${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
           <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.r.filter((v) => v != null))}</div>
           <span class="chev">›</span></li>`;
       }).join("") + `</ul>`
@@ -1269,8 +1343,8 @@ function renderBias() {
 
 async function openBias(v) {
   const [c, key] = v.split("|");
-  if (key.startsWith("earn@")) { openEarnRx(`${c}@${key.slice(5)}`); return; }
   await loadHold(c);
+  if (key.startsWith("earn@")) { openEarnRx(`${c}@${key.slice(5)}`); return; }
   openHoldSeries(c, key);
 }
 
@@ -1416,7 +1490,11 @@ function openHoldSeries(c, key) {
       { h: "日経との差", f: (x) => (evR(h, x.id) != null && nkR(x.id) != null ? evR(h, x.id) - nkR(x.id) : null) }];
     const k = seriesOf(ev), dname = driverName(ev);
     if (rows.some((x) => driverVal(x.id, k) != null)) cols.push({ h: dname === "ドル円" ? "ドル円 1時間後" : dname.replace(/の株価$/, ""), f: (x) => driverVal(x.id, k) });
-    why = evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
+    const nxt = (state.series.get(k) || []).find((e) => e.d >= todayStr()) || ev;
+    const rr = rows.map((x) => evR(h, x.id)), av = rr.filter((v) => v != null);
+    const sg = av.length && av.reduce((a, v) => a + v, 0) >= 0 ? 1 : -1, rk = reactTiming(nxt.d, nxt.t);
+    why = timingHtml(nxt.d, nxt.t, timing({ r: rr, g: rows.map((x) => gapOf(h, evDay(x.id))), s: sg, kind: rk.kind }));
+    why += evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
   }
   const st = stat(rows.map((r) => cols[0].f(r)));
   const html = `<p class="sheet-desc">${desc}</p>`

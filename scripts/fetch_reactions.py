@@ -134,6 +134,9 @@ def instruments(ev: dict) -> list[str]:
 
 # ------------------------------------------------------------- daily (国内株)
 
+OPENS: dict[str, pd.Series] = {}  # 日本株の日足の始値（daily_closes で一緒に取る。寄りでの窓の大きさを見るため）
+
+
 def daily_closes(codes: list[str]) -> dict[str, pd.Series]:
     if not codes:
         return {}
@@ -152,6 +155,12 @@ def daily_closes(codes: list[str]) -> dict[str, pd.Series]:
             if not s.empty:
                 s.index = pd.to_datetime(s.index).tz_localize(None).normalize()
                 out[t[:-2]] = s
+                try:
+                    o = pd.to_numeric((df[t] if isinstance(df.columns, pd.MultiIndex) else df)["Open"], errors="coerce").dropna()
+                    o.index = pd.to_datetime(o.index).tz_localize(None).normalize()
+                    OPENS[t[:-2]] = o
+                except KeyError:
+                    pass
     return out
 
 
@@ -286,6 +295,14 @@ def holding_day_r(s: pd.Series, day: str) -> float | None:
     return round((float(s.iloc[i]) / float(s.iloc[i - 1]) - 1) * 100, 2) if i > 0 else None
 
 
+def gap_series(s: pd.Series, o: pd.Series | None, days: list[str]) -> list[float | None]:
+    if o is None or o.empty:
+        return [None] * len(days)
+    g = (o.reindex(s.index) / s.shift(1) - 1) * 100
+    g = g.reindex(pd.to_datetime(days))
+    return [None if pd.isna(v) or v == float("inf") else round(float(v), 2) for v in g]
+
+
 def build_holdings(out: dict, news: list[dict], daily: dict, n225: list[str]) -> None:
     hdir = DATA / "h"
     hdir.mkdir(exist_ok=True)
@@ -322,6 +339,8 @@ def build_holdings(out: dict, news: list[dict], daily: dict, n225: list[str]) ->
             "vol": round(float(rets.abs().mean()) * 100, 2),  # 普段の1日の値動き（直近250日の平均の振れ幅）
             "px": round(float(s.iloc[-1]), 1), "pd": s.index[-1].strftime("%Y-%m-%d"),  # 直近の終値
             "r": [None if pd.isna(v) else round(float(v), 2) for v in dr],
+            # 窓（前日終値 → その日の始値）の騰落率。r との差が日中（始値 → 終値）の動き
+            "g": gap_series(s, OPENS.get(c), days),
             "ev": [holding_day_r(s, d) for d in ev_days],
             "news": [[p["r1"], p["r5"], p["r20"]] if (p := path(s, dt.date.fromisoformat(d))) else None for _, d in nw],
         }

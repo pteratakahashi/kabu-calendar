@@ -503,3 +503,15 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .rxtable.mini th { white-space: normal; }
 :root[data-theme="dark"] .why .ok { color: #81c784; } :root[data-theme="dark"] .why .ng { color: #ffb74d; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .why .ok { color: #81c784; } :root:not([data-theme="light"]) .why .ng { color: #ffb74d; } }
+
+/* v10 いつ仕込む？ */
+.ncode { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; font-variant-numeric: tabular-nums; }
+.tmx { color: var(--text); font-weight: 600; }
+.bias-h .rday { flex-basis: 100%; }
+.v-time { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+.tl { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; background: var(--bg); border-radius: 10px; padding: 8px 10px; }
+.tl span { display: flex; flex-direction: column; gap: 1px; flex: 1; }
+.tl .arr { flex: none; color: var(--muted); font-size: 18px; }
+.tl small { font-size: 11px; color: var(--muted); }
+.tl b { font-size: 15px; }
+.rxtable.mini th small { display: block; font-size: 10.5px; }

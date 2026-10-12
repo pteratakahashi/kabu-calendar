@@ -540,3 +540,6 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .slot-list .chev { align-self: center; }
 .slot-list .more-li { color: var(--accent); font-size: 13px; justify-content: center; cursor: pointer; }
 .updated.retry { cursor: pointer; text-decoration: underline; }
+/* いつ買って、いつ売る？: 選んだ売買（★）と各セルの補足 */
+.rxtable.mini tr.pick th, .rxtable.mini tr.pick td { color: var(--text); font-weight: 700; background: var(--accent-soft, rgba(80,140,255,.10)); }
+.rxtable.mini td small { display: block; font-size: 10.5px; color: var(--muted); font-weight: 400; }

@@ -706,7 +706,7 @@ function openEarnRx(key) {
     const a = earnArrays(c, d), h = state.h.get(c), e = state.earnings.find((x) => x.c === c && x.d === d);
     const av = a.r.filter((v) => v != null), sg = av.length && av.reduce((x, v) => x + v, 0) >= 0 ? 1 : -1;
     const keys = earnHistory(c, d).filter((k) => k.split("@")[1] < d);
-    html += timingHtml(d, e?.t || "", timing({ r: a.r, g: keys.map((k) => gapOf(h, state.rx.earnings[k]?.day)), w1: a.w1, s: sg, kind: reactTiming(d, e?.t || "").kind }), sg,
+    html += timingHtml(d, e?.t || "", timing({ r: a.r, g: keys.map((k) => gapOf(h, state.rx.earnings[k]?.day)), w1: a.w1, nk: a.nk, nw: keys.map((k) => nkWeek(state.rx.earnings[k]?.day)), s: sg, d, t: e?.t || "" }), sg,
       { unknownNote: "時刻未定（多くは15時以降）" });
   }
   html += earnEvidenceHtml(c, d);
@@ -1256,6 +1256,8 @@ function reactTiming(d, t) {
 }
 const intra = (r, g) => (r != null && g != null ? ((1 + r / 100) / (1 + g / 100) - 1) * 100 : null);
 const gapOf = (h, d) => (h?.g && state.hday.has(d) ? h.g[state.hday.get(d)] : null);
+// 日経平均の反応日から5営業日目の終値（前日終値比 %）
+const nkWeek = (d) => { const nk = state.hidx?.nk; if (!nk || !state.hday.has(d)) return null; const i = state.hday.get(d), v = nk.slice(i, i + 5); return v.length === 5 && v.every((x) => x != null) ? (v.reduce((a, x) => a * (1 + x / 100), 1) - 1) * 100 : null; };
 const evDay = (id) => { const r = state.rx.events[id]; return r?.d1?.nk_day ?? r?.idx?.find((x) => x.sym === "^N225")?.day ?? null; };
 
 function prevJpBiz(d) {
@@ -1265,42 +1267,73 @@ function prevJpBiz(d) {
 }
 function addJpBiz(d, n) { let x = d; for (let i = 0; i < n; i++) x = nextJpBiz(x); return x; }
 
-// 各回の r（前日引け→反応日引け）・g（窓）・w1（前日引け→反応日から5営業日目の引け）と偏りの向き s から、
-// 入る時（前日の引け / 反応日の寄り）と出る時（反応日の寄り / 反応日の引け / 1週間後の引け）の目安
-function timing({ r, g, w1, s, kind }) {
+// 楽天証券の制度信用（ゼロコースで手数料0円）。買いは買方金利、空売りは貸株料（年%）。
+// 新規の受渡日から返済の受渡日まで両端入れの日割り（デイトレでも1日分）
+// 売買で取れた利益（空売りは下落をプラス）。値動きの ▲▼ と混ざらないよう +/− で書く
+const prof = (v) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}%`);
+const MARGIN_RATE = { 1: 2.8, [-1]: 1.1 };
+const marginCost = (s, inD, outD) => MARGIN_RATE[s] * ((parse(addJpBiz(outD, 2)) - parse(addJpBiz(inD, 2))) / 864e5 + 1) / 365;
+// 入る時（前日の引け / 反応日の寄り）× 出る時（反応日の寄り / 反応日の引け / 5営業日目の引け）の5通り
+const ROUTES = [
+  { key: "G", entry: "prev", exit: "open", lbl: "窓", sub: "前日引け→反応日の寄り" },
+  { key: "I", entry: "open", exit: "close", lbl: "日中", sub: "反応日の寄り→引け" },
+  { key: "R", entry: "prev", exit: "close", lbl: "1日", sub: "前日引け→反応日の引け" },
+  { key: "W", entry: "prev", exit: "week", lbl: "1週間", sub: "前日引け→5営業日目の引け" },
+  { key: "OW", entry: "open", exit: "week", lbl: "寄り→1週間", sub: "反応日の寄り→5営業日目の引け" },
+];
+
+// 各回の r（前日引け→反応日引け）・g（窓）・w1（前日引け→反応日から5営業日目の引け）、日経平均の nk（反応日）・nw（同じ1週間）と
+// 偏りの向き s から、5通りの入り方・出方の過去の成績を出し、金利を引いた平均の利益が一番大きいものを選ぶ。
+// 1週間持つ形は、日経平均の分を除いても反応日より伸びている（＝イベントへの反応が続いている）ときだけ候補にする
+function timing({ r, g, w1, nk, nw, s, d, t }) {
   const idx = r.map((x, i) => i).filter((i) => r[i] != null && g?.[i] != null);
   if (idx.length < 4) return null;
-  const st = (v) => { v = v.filter((x) => x != null); return v.length ? { n: v.length, same: v.filter((x) => Math.sign(x) === s).length, avg: v.reduce((a, x) => a + x, 0) / v.length } : null; };
-  const G = st(idx.map((i) => g[i])), I = st(idx.map((i) => intra(r[i], g[i]))), R = st(idx.map((i) => r[i]));
-  const W = st(idx.map((i) => w1?.[i] ?? null));
+  const kind = reactTiming(d, t).kind;
+  const st = (v) => {
+    v = v.filter((x) => x != null);
+    if (!v.length) return null;
+    const n = v.length, avg = v.reduce((a, x) => a + x, 0) / n, sd = n > 1 ? Math.sqrt(v.reduce((a, x) => a + (x - avg) ** 2, 0) / (n - 1)) : 0;
+    return { n, same: v.filter((x) => Math.sign(x) === s).length, avg, t: sd > 0 ? avg / (sd / Math.sqrt(n)) : 99 };
+  };
+  const val = {
+    G: (i) => g[i], I: (i) => intra(r[i], g[i]), R: (i) => r[i],
+    W: (i) => w1?.[i] ?? null, OW: (i) => (w1?.[i] != null ? intra(w1[i], g[i]) : null),
+  };
+  const S = Object.fromEntries(ROUTES.map((x) => [x.key, st(idx.map(val[x.key]))]));
   const strong = (x) => x && x.same >= 0.6 * x.n && x.avg * s > 0;
   const opp = (x) => x && x.same <= 0.4 * x.n && x.avg * s < 0;
-  let entry, exit, why;
   const up = s > 0 ? "上がり" : "下がり";
-  if (kind === "session") {
-    if (strong(I) && strong(G)) { entry = "prev"; exit = "close"; why = `寄りの時点ですでに${up}やすく、発表後の日中も同じ向きでした。`; }
-    else if (strong(I)) { entry = "open"; exit = "close"; why = "動きは主に発表をはさむ日中に出ています。"; }
-    else if (strong(G)) { entry = "prev"; exit = "open"; why = `発表前の寄りの時点で${up}やすく、日中はまちまちでした。`; }
-  } else {
-    if (strong(G) && strong(I)) { entry = "prev"; exit = "close"; why = `寄りで窓を開けて${up}、日中もさらに同じ向きに動きやすい形でした。`; }
-    else if (strong(G) && opp(I)) { entry = "prev"; exit = "open"; why = "寄りで窓を開けたあと、日中は戻しやすい形でした。寄りから入ると逆に動きやすいので注意。"; }
-    else if (strong(G)) { entry = "prev"; exit = "open"; why = "動きの大半は寄り付きの窓で出て、日中はまちまちでした。寄りの時点ではもう動いた後です。"; }
-    else if (strong(I)) { entry = "open"; exit = "close"; why = "窓はまちまちで、動きは主に日中に出ています。"; }
-  }
-  let fallback = false;
-  if (!entry) { entry = "prev"; exit = "close"; fallback = true; why = "窓・日中のどちらにも一貫したパターンはなく、前日の引けから反応日の引けまで持って初めて偏りが出る形でした。"; }
-  // 反応日の引けで出る形のとき、1週間持った方が伸びていたら持ち越し
-  if (exit === "close" && W && W.n >= 5 && W.same >= 0.7 * W.n && W.avg * s > R.avg * s + 0.3) {
-    exit = "week"; why += `さらに1週間持つと、同じ向き ${W.same}/${W.n}回・平均 ${pct(W.avg)} と伸びていました。`;
-  } else if (W && W.n >= 5 && W.same <= 0.4 * W.n) why += "1週間後には戻していることが多いので、持ち越さない方が無難でした。";
-  // この入り方・出方での過去の成績
-  const ret = (i) => {
-    const w = w1?.[i];
-    if (entry === "prev") return exit === "open" ? g[i] : exit === "close" ? r[i] : w;
-    return exit === "close" ? intra(r[i], g[i]) : w != null ? intra(w, g[i]) : null;
-  };
-  const P = st(idx.map(ret));
-  return { entry, exit, why, fallback, G, I, W, R, P };
+  // 動きの形（窓と日中の内訳）
+  let why;
+  if (kind === "session") why = strong(S.G) && strong(S.I) ? `寄りの時点ですでに${up}やすく、発表後の日中も同じ向きでした。`
+    : strong(S.I) ? "動きは主に発表をはさむ日中に出ています。" : strong(S.G) ? `発表前の寄りの時点で${up}やすく、日中はまちまちでした。` : "窓・日中のどちらにも一貫した形はありませんでした。";
+  else why = strong(S.G) && strong(S.I) ? `寄りで窓を開けて${up}、日中もさらに同じ向きに動きやすい形でした。`
+    : strong(S.G) && opp(S.I) ? "寄りで窓を開けたあと、日中は戻しやすい形でした。" : strong(S.G) ? "動きの大半は寄り付きの窓で出て、日中はまちまちでした。"
+    : strong(S.I) ? "窓はまちまちで、動きは主に日中に出ています。" : "窓・日中のどちらにも一貫した形はなく、前日の引けから反応日の引けまで持って初めて偏りが出る形でした。";
+  // 1週間持った分がイベントへの反応か（日経平均との差で見る）
+  const xR = st(idx.map((i) => (nk?.[i] != null ? r[i] - nk[i] : null)));
+  const xW = st(idx.map((i) => (w1?.[i] != null && nw?.[i] != null ? w1[i] - nw[i] : null)));
+  let weekOk = !!(S.W && S.W.n >= 5 && S.W.same >= 0.7 * S.W.n && xW && xW.n >= 5 && xW.same >= 0.7 * xW.n && (!xR || xW.avg * s >= xR.avg * s));
+  let weekNote = "";
+  if (S.W && S.W.n >= 5 && S.W.avg * s > 0 && !weekOk) {
+    weekNote = S.W.same < 0.7 * S.W.n ? `1週間持つと同じ向きは ${S.W.same}/${S.W.n}回とばらつくため、候補から外しました。`
+      : `1週間持つと平均 ${pct(S.W.avg)} でしたが、日経平均の動きを除くと反応日より伸びておらず${xW ? `（日経平均との差 ${pct(xW.avg)}、同じ向き ${xW.same}/${xW.n}回）` : ""}、相場全体の動きの分が大きいため候補から外しました。`;
+  } else if (S.W && S.W.n >= 5 && S.W.same <= 0.4 * S.W.n) weekNote = "1週間後には戻していることが多いので、持ち越さない方が無難でした。";
+  // 候補ごとの成績と金利。いちばん利益の大きいものを選ぶ
+  const C = ROUTES.map((x) => {
+    const p = plan(d, t, x, s), v = S[x.key];
+    const cost = marginCost(s, p.inD, p.outD);
+    // 候補にするのは、同じ向き7割以上で、1〜2回の大きな動きだけで平均が偏っていないもの（一覧の判定と同じ t ≥ 1.5）
+    const no = !v || v.n < 4 ? "回数不足" : v.avg * s <= 0 ? "逆向き" : v.same < 0.7 * v.n ? "7割未満"
+      : v.t * s < 1.5 ? "大きな回頼み" : x.exit === "week" && !weekOk ? (S.W.same < 0.7 * S.W.n ? "1週間後ばらつく" : "地合いの分が大") : "";
+    return { ...x, st: v, cost, net: v ? v.avg * s - cost : null, ok: !no, no };
+  });
+  const ok = C.filter((x) => x.ok).sort((a, b) => b.net - a.net);
+  const fallback = !ok.length;
+  const pick = ok[0] || C.find((x) => x.key === "R");
+  if (fallback) why += "どの入り方・出方も同じ向きが7割に届かないため、前日の引けから反応日の引けまでを目安にしています。";
+  else if (ok.length > 1) why += `5通りのうち、金利を引いた平均の利益が一番大きいのは「${pick.sub}」でした。`;
+  return { entry: pick.entry, exit: pick.exit, key: pick.key, why, weekNote, fallback, C, P: pick.st, cost: pick.cost, net: pick.net };
 }
 
 // 入る日・出る日（具体的な日付）
@@ -1327,14 +1360,15 @@ function timingHtml(d, t, tm, s, { unknownNote = "" } = {}) {
     <span><small>① ${p.act}</small><b>${fmtMD(p.inD)} ${p.inT}</b></span><span class="arr">→</span>
     <span><small>発表</small><b>${when}</b>${t ? "" : `<small>${unknownNote || "時刻未定"}</small>`}</span><span class="arr">→</span>
     <span><small>② ${p.back}</small><b>${fmtMD(p.outD)} ${p.outT}</b></span></div>`;
-  const line = (lbl, x) => (x ? `<tr><th>${lbl}</th><td>同じ向き ${x.same}/${x.n}回</td><td>平均 ${pct(x.avg)}</td></tr>` : "");
+  const line = (x) => (x.st ? `<tr class="${x.key === tm.key ? "pick" : ""}"><th>${x.key === tm.key ? "★ " : ""}${x.lbl}<small>${x.sub}</small></th><td>同じ向き ${x.st.same}/${x.st.n}回${x.no ? `<small>× ${x.no}</small>` : ""}</td><td>利益 ${prof(x.st.avg * s)}<small>金利後 ${prof(x.net)}</small></td></tr>` : "");
   return `<div class="card why"><div class="why-h">いつ買って、いつ売る？${tm.fallback ? ' <span class="vchip v-mkt">決め手なし</span>' : ""}</div>${steps}
-    <p class="why-sum"><b>過去の形:</b> ${tm.why}</p>
-    ${tm.P ? `<p class="why-sum">この入り方・出方だと、過去は<b>同じ向き ${tm.P.same}/${tm.P.n}回・平均 ${pct(tm.P.avg)}</b>${s < 0 ? "（下落＝空売りの利益）" : ""}。</p>` : ""}
+    <p class="why-sum"><b>過去の形:</b> ${tm.why}${tm.weekNote}</p>
+    ${tm.P ? `<p class="why-sum">この入り方・出方だと、過去は<b>同じ向き ${tm.P.same}/${tm.P.n}回・利益 平均 ${prof(tm.P.avg * s)}</b>、金利 ${tm.cost.toFixed(3)}% を引いて<b>${prof(tm.net)}</b>。</p>` : ""}
     ${pre}
-    <table class="rxtable mini">${line("窓<small>前日引け→反応日の寄り</small>", tm.G)}${line("日中<small>反応日の寄り→引け</small>", tm.I)}${line("1日<small>前日引け→反応日の引け</small>", tm.R)}${line("1週間<small>前日引け→5営業日目の引け</small>", tm.W)}</table>
+    <table class="rxtable mini">${tm.C.map(line).join("")}</table>
+    <p class="hint">利益は${s > 0 ? "買い" : "空売り"}で取れた分（${s > 0 ? "上昇" : "下落"}をプラス）。同じ向き7割以上でばらつきの小さい形から、金利後の平均が一番大きいもの（★）を選んでいます。×は候補から外した理由（大きな回頼み＝1〜2回の大きな動きで平均が膨らんでいる、地合いの分が大＝日経平均の動きを除くと伸びていない）。</p>
     <p class="note"><b>注文の出し方:</b>「寄り」は<b>寄成</b>（よりなり＝寄り付きの値段で成行）、「引け」は<b>引成</b>（ひけなり＝大引けの値段で成行）注文に当たり、その日の始値・終値で約定します（上の成績はこの値段で計算）。寄成は9時前、引成は大引け（15:30）の少し前までに出します。締め切りは証券会社ごとに違います。値が大きく飛んで寄り付かない・引けで約定しない日は失効することがあります。空売りは信用取引の口座が必要です。</p>
-    <p class="note">過去の回の始値・終値から見た目安で、売買の推奨ではありません。手数料・空売りの貸株料や、寄り付きで値段がつかない場合などは考えていません。</p></div>`;
+    <p class="note">過去の回の始値・終値から見た目安で、売買の推奨ではありません。金利後は楽天証券の制度信用（ゼロコースで手数料0円、買方金利 年2.80%・貸株料 年1.10%、受渡日ベースの日割り）で計算。逆日歩・配当落調整金・寄り付きで値段がつかない場合などは考えていません。</p></div>`;
 }
 
 // ---------- 傾向 ----------
@@ -1355,7 +1389,7 @@ function biasSlots(items, today) {
   const slots = new Map();
   const slot = (d, t) => { const k = `${d}|${t === "寄り" ? 0 : 1}`; if (!slots.has(k)) slots.set(k, { k, d, t, ins: [], outs: new Map() }); return slots.get(k); };
   for (const x of items) {
-    const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, s: x.s, kind: reactTiming(x.d, x.tm).kind });
+    const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, nk: x.nk, nw: x.nw, s: x.s, d: x.d, t: x.tm });
     const p = plan(x.d, x.tm, tm0 || { entry: "prev", exit: "close" }, x.s);
     const it = { x, p, tm0 };
     if (p.inD >= today) slot(p.inD, p.inT).ins.push(it);
@@ -1399,7 +1433,7 @@ function renderBias() {
         return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
           <div class="main"><div class="name"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span>${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
           <div class="sub">${ev} → ${p.back} ${fmtMD(p.outD)}${p.outT}${tm0?.fallback || !tm0 ? "（決め手なし）" : ""}</div>
-          <div class="sub">${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div>
+          <div class="sub">${tm0 ? `この売買で ${dir} <b>${tm0.P.same}/${tm0.P.n}回</b> · 利益 平均 <b>${prof(tm0.net)}</b><small class="muted">（金利後）</small>` : `${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}`}</div>
           <div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
           <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.r.filter((v) => v != null))}</div>
           <span class="chev">›</span></li>`;
@@ -1567,7 +1601,7 @@ function openHoldSeries(c, key) {
     const rr = rows.map((x) => evR(h, x.id)), av = rr.filter((v) => v != null);
     const sg = av.length && av.reduce((a, v) => a + v, 0) >= 0 ? 1 : -1, rk = reactTiming(nxt.d, nxt.t);
     const wk = (d) => { if (!state.hday.has(d)) return null; const i = state.hday.get(d), v = h.r.slice(i, i + 5); return v.length === 5 && v.every((x) => x != null) ? (v.reduce((a, x) => a * (1 + x / 100), 1) - 1) * 100 : null; };
-    why = timingHtml(nxt.d, nxt.t, timing({ r: rr, g: rows.map((x) => gapOf(h, evDay(x.id))), w1: rows.map((x) => wk(evDay(x.id))), s: sg, kind: rk.kind }), sg);
+    why = timingHtml(nxt.d, nxt.t, timing({ r: rr, g: rows.map((x) => gapOf(h, evDay(x.id))), w1: rows.map((x) => wk(evDay(x.id))), nk: rows.map((x) => nkR(x.id)), nw: rows.map((x) => nkWeek(evDay(x.id))), s: sg, d: nxt.d, t: nxt.t }), sg);
     why += evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
   }
   const st = stat(rows.map((r) => cols[0].f(r)));
@@ -1660,7 +1694,7 @@ function renderHome() {
         const L = 5;
         html += `<div class="card slot"><div class="card-h"><span>${sl.d === today ? "今日" : fmtMD(sl.d)} ${sl.t === "寄り" ? "寄り（9:00前に寄成）" : "引け（15:30前に引成）"}</span></div><ul class="slot-list">`
           + [...sl.outs.values()].map((o) => `<li><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span><span class="sl-main">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}<small>${esc(o.title)}（${esc(o.from)}に入った分）</small></span></li>`).join("")
-          + sl.ins.slice(0, L).map(({ x, p }) => `<li data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}" class="has-rx"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span><span class="sl-main"><b>${esc(holdName(x.c))}</b> <span class="ncode">${esc(x.c)}</span><small>${fmtMD(x.d)} ${esc(biasTitle(x))} → ${p.back} ${fmtMD(p.outD)}${p.outT} · ${x.s > 0 ? "上昇" : "下落"} ${x.w}/${x.n}回 ${pct(x.avg)}</small></span><span class="chev">›</span></li>`).join("")
+          + sl.ins.slice(0, L).map(({ x, p, tm0 }) => `<li data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}" class="has-rx"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span><span class="sl-main"><b>${esc(holdName(x.c))}</b> <span class="ncode">${esc(x.c)}</span><small>${fmtMD(x.d)} ${esc(biasTitle(x))} → ${p.back} ${fmtMD(p.outD)}${p.outT} · ${x.s > 0 ? "上昇" : "下落"} ${tm0 ? `${tm0.P.same}/${tm0.P.n}回 利益 ${prof(tm0.net)}` : `${x.w}/${x.n}回 ${pct(x.avg)}`}</small></span><span class="chev">›</span></li>`).join("")
           + (sl.ins.length > L ? `<li class="more-li" data-go="bias">ほか ${sl.ins.length - L} 銘柄 ›</li>` : "")
           + `</ul></div>`;
       }

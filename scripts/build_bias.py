@@ -98,6 +98,15 @@ def main() -> int:
             return None
         return round((math.prod(1 + x / 100 for x in v) - 1) * 100, 2)
 
+    def nk_week(d):
+        """日経平均の同じ1週間（反応日から5営業日目の終値、前日終値比 %）。1週間持った分が相場全体の動きでないかを見る用"""
+        if "nk" not in idx or d not in hday or hday[d] + 5 > len(idx["nk"]):
+            return None
+        v = idx["nk"][hday[d]:hday[d] + 5]
+        if any(x is None for x in v):
+            return None
+        return round((math.prod(1 + x / 100 for x in v) - 1) * 100, 2)
+
     def ev_day(eid):
         r = rx["events"].get(eid) or {}
         return (r.get("d1") or {}).get("nk_day") or next((x["day"] for x in r.get("idx", []) if x["sym"] == "^N225"), None)
@@ -150,6 +159,7 @@ def main() -> int:
                               "g": [gap(h, r["day"]) for _, r in hist],
                               "w1": [p[1] if (p := (r.get("pts") or [])[r["k"] + 4:r["k"] + 5]) and (p := p[0]) else None
                                      for _, r in hist],
+                              "nw": [nk_week(r.get("day")) for _, r in hist],
                               "ds": [d for d, _ in hist]})
         for ev, hist in upcoming_ev:
             vals = [h["ev"][hev[p["id"]]] for p in hist]
@@ -159,7 +169,8 @@ def main() -> int:
                               "r": vals, "nk": [nk_r(p["id"]) for p in hist],
                               "dv": [driver(rx["events"][p["id"]], k) for p in hist],
                               "g": [gap(h, ev_day(p["id"])) for p in hist],
-                              "w1": [week(h, ev_day(p["id"])) for p in hist]})
+                              "w1": [week(h, ev_day(p["id"])) for p in hist],
+                              "nw": [nk_week(ev_day(p["id"])) for p in hist]})
     items.sort(key=lambda i: (i["d"], -abs(i["t"])))
     out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "items": items}
     (DATA / "bias.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

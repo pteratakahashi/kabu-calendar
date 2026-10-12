@@ -1,5 +1,5 @@
 // ネットワーク優先（常に最新を表示）。オフライン時だけキャッシュを使う。
-const CACHE = "kabucal-v16";
+const CACHE = "kabucal-v17";
 const DATA_CACHE = "kabucal-data"; // データはバージョンを上げても消さない（オフライン・取得失敗時に前回の内容を出すため）
 const SHELL = ["./", "index.html", "style.css", "app.js", "manifest.webmanifest", "icons/icon.svg", "icons/icon-192.png"];
 

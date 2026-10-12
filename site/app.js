@@ -12,7 +12,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events", biasDir: "", biasKind: "" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events", biasOnly: "" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -20,7 +20,6 @@ const state = {
   theme: new Map(),      // id -> theme
   byDate: new Map(),     // "YYYY-MM-DD" -> [earning]
   evByDate: new Map(),   // "YYYY-MM-DD" -> [event]
-  biasOpen: new Set(), // 傾向: 全件表示にした予定
   nextByCode: new Map(), // code -> 直近の今後の決算 (なければ最新)
   hold: new Set(loadJSON(HOLD_KEY, null) ?? loadJSON(WATCH_KEY, [])), // 保有銘柄（日経225採用銘柄から選ぶ・端末内に保存）
   n225: { codes: [], history: [] }, n225set: new Set(),
@@ -705,13 +704,6 @@ function openEarnRx(key) {
   } else {
     html += `<p class="msum">${d === "9999-12-31" ? "次の決算日は未定です。" : d >= todayStr() ? `決算は ${fmtDay(d)} 予定（まだ発表前）。` : "この回の値動きデータはありません。"}過去の決算での反応から傾向を確認できます。</p>`;
   }
-  if (d !== "9999-12-31" && d >= todayStr() && state.h.get(c)) {
-    const a = earnArrays(c, d), h = state.h.get(c), e = state.earnings.find((x) => x.c === c && x.d === d);
-    const av = a.r.filter((v) => v != null), sg = av.length && av.reduce((x, v) => x + v, 0) >= 0 ? 1 : -1;
-    const keys = earnHistory(c, d).filter((k) => k.split("@")[1] < d);
-    html += timingHtml(d, e?.t || "", timing({ r: a.r, g: keys.map((k) => gapOf(h, state.rx.earnings[k]?.day)), w1: a.w1, nk: a.nk, nw: keys.map((k) => nkWeek(state.rx.earnings[k]?.day)), s: sg, d, t: e?.t || "" }), sg,
-      { unknownNote: "時刻未定（多くは15時以降）" });
-  }
   html += earnEvidenceHtml(c, d);
   html += earnHistoryHtml(c, d);
   html += `<ul class="list">${stockRow({ ...s, ...(state.nextByCode.get(c) || {}), c, n: s.n }, { showDate: true })}</ul>`;
@@ -1238,299 +1230,83 @@ function earnEvidenceHtml(c, d) {
     <div class="why-rule"><b>一般的な理屈</b><p>${fy ? "4〜5月の本決算では新しい年度の会社予想が出ます。予想を控えめに出す会社は、内容が良くても売られやすい傾向があります。" : "四半期の決算は、会社予想に対する進み具合や、予想の上方・下方修正の有無で動きやすくなります。"}決算の中身（予想との差など）のデータはまだ取り込んでいないため、偏りの理由までは断定できません。</p></div></div>`;
 }
 
-// ---------- いつ仕込む？（発表時刻 × 窓と日中の値動き） ----------
-// 騰落率 r は「反応日の終値 ÷ 前日の終値」。これを 窓（前日の終値 → 反応日の始値）と 日中（始値 → 終値）に分けて、
-// 動きが寄り付きの時点でもう出ているのか、日中に出るのかを見る
-function isJpBiz(d) {
-  const x = parse(d), md = d.slice(5);
-  if (x.getDay() === 0 || x.getDay() === 6 || md === "12-31" || md <= "01-03") return false;
-  return !(state.evByDate.get(d) || []).some((e) => /jp-holiday/.test(e.id));
-}
-function nextJpBiz(d) {
-  const x = parse(d);
-  do { x.setDate(x.getDate() + 1); } while (!isJpBiz(ymd(x)));
-  return ymd(x);
-}
-// 発表（日本時間）→ 日本株の反応日。15時より前の立会日の発表はその日、それ以外は次の立会日（fetch_reactions.py と同じ決め方）
-function reactTiming(d, t) {
-  if (isJpBiz(d) && t && t < "09:00") return { day: d, kind: "pre" };
-  if (isJpBiz(d) && t && t < "15:00") return { day: d, kind: "session" };
-  return { day: nextJpBiz(d), kind: "post", unknown: !t };
-}
-const intra = (r, g) => (r != null && g != null ? ((1 + r / 100) / (1 + g / 100) - 1) * 100 : null);
-const gapOf = (h, d) => (h?.g && state.hday.has(d) ? h.g[state.hday.get(d)] : null);
-// 日経平均の反応日から5営業日目の終値（前日終値比 %）
-const nkWeek = (d) => { const nk = state.hidx?.nk; if (!nk || !state.hday.has(d)) return null; const i = state.hday.get(d), v = nk.slice(i, i + 5); return v.length === 5 && v.every((x) => x != null) ? (v.reduce((a, x) => a * (1 + x / 100), 1) - 1) * 100 : null; };
-const evDay = (id) => { const r = state.rx.events[id]; return r?.d1?.nk_day ?? r?.idx?.find((x) => x.sym === "^N225")?.day ?? null; };
-
-function prevJpBiz(d) {
-  const x = parse(d);
-  do { x.setDate(x.getDate() - 1); } while (!isJpBiz(ymd(x)));
-  return ymd(x);
-}
-function addJpBiz(d, n) { let x = d; for (let i = 0; i < n; i++) x = nextJpBiz(x); return x; }
-
-// 楽天証券の制度信用（ゼロコースで手数料0円）。買いは買方金利、空売りは貸株料（年%）。
-// 新規の受渡日から返済の受渡日まで両端入れの日割り（デイトレでも1日分）
-// 売買で取れた利益（空売りは下落をプラス）。値動きの ▲▼ と混ざらないよう +/− で書く
-const prof = (v) => (v == null ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(2)}%`);
-const MARGIN_RATE = { 1: 2.8, [-1]: 1.1 };
-const marginCost = (s, inD, outD) => MARGIN_RATE[s] * ((parse(addJpBiz(outD, 2)) - parse(addJpBiz(inD, 2))) / 864e5 + 1) / 365;
-// 入る時（前日の引け / 反応日の寄り）× 出る時（反応日の寄り / 反応日の引け / 5営業日目の引け）の5通り
-const ROUTES = [
-  { key: "G", entry: "prev", exit: "open", lbl: "窓", sub: "前日引け→反応日の寄り" },
-  { key: "I", entry: "open", exit: "close", lbl: "日中", sub: "反応日の寄り→引け" },
-  { key: "R", entry: "prev", exit: "close", lbl: "1日", sub: "前日引け→反応日の引け" },
-  { key: "W", entry: "prev", exit: "week", lbl: "1週間", sub: "前日引け→5営業日目の引け" },
-  { key: "OW", entry: "open", exit: "week", lbl: "寄り→1週間", sub: "反応日の寄り→5営業日目の引け" },
-];
-
-// 各回の r（前日引け→反応日引け）・g（窓）・w1（前日引け→反応日から5営業日目の引け）、日経平均の nk（反応日）・nw（同じ1週間）と
-// 偏りの向き s から、5通りの入り方・出方の過去の成績を出し、金利を引いた平均の利益が一番大きいものを選ぶ。
-// 1週間持つ形は、日経平均の分を除いても反応日より伸びている（＝イベントへの反応が続いている）ときだけ候補にする
-function timing({ r, g, w1, nk, nw, s, d, t }) {
-  const idx = r.map((x, i) => i).filter((i) => r[i] != null && g?.[i] != null);
-  if (idx.length < 4) return null;
-  const kind = reactTiming(d, t).kind;
-  const st = (v) => {
-    v = v.filter((x) => x != null);
-    if (!v.length) return null;
-    const n = v.length, avg = v.reduce((a, x) => a + x, 0) / n, sd = n > 1 ? Math.sqrt(v.reduce((a, x) => a + (x - avg) ** 2, 0) / (n - 1)) : 0;
-    return { n, same: v.filter((x) => Math.sign(x) === s).length, avg, t: sd > 0 ? avg / (sd / Math.sqrt(n)) : 99 };
-  };
-  const val = {
-    G: (i) => g[i], I: (i) => intra(r[i], g[i]), R: (i) => r[i],
-    W: (i) => w1?.[i] ?? null, OW: (i) => (w1?.[i] != null ? intra(w1[i], g[i]) : null),
-  };
-  const S = Object.fromEntries(ROUTES.map((x) => [x.key, st(idx.map(val[x.key]))]));
-  const strong = (x) => x && x.same >= 0.6 * x.n && x.avg * s > 0;
-  const opp = (x) => x && x.same <= 0.4 * x.n && x.avg * s < 0;
-  const up = s > 0 ? "上がり" : "下がり";
-  // 動きの形（窓と日中の内訳）
-  let why;
-  if (kind === "session") why = strong(S.G) && strong(S.I) ? `寄りの時点ですでに${up}やすく、発表後の日中も同じ向きでした。`
-    : strong(S.I) ? "動きは主に発表をはさむ日中に出ています。" : strong(S.G) ? `発表前の寄りの時点で${up}やすく、日中はまちまちでした。` : "窓・日中のどちらにも一貫した形はありませんでした。";
-  else why = strong(S.G) && strong(S.I) ? `寄りで窓を開けて${up}、日中もさらに同じ向きに動きやすい形でした。`
-    : strong(S.G) && opp(S.I) ? "寄りで窓を開けたあと、日中は戻しやすい形でした。" : strong(S.G) ? "動きの大半は寄り付きの窓で出て、日中はまちまちでした。"
-    : strong(S.I) ? "窓はまちまちで、動きは主に日中に出ています。" : "窓・日中のどちらにも一貫した形はなく、前日の引けから反応日の引けまで持って初めて偏りが出る形でした。";
-  // 1週間持った分がイベントへの反応か（日経平均との差で見る）
-  const xR = st(idx.map((i) => (nk?.[i] != null ? r[i] - nk[i] : null)));
-  const xW = st(idx.map((i) => (w1?.[i] != null && nw?.[i] != null ? w1[i] - nw[i] : null)));
-  let weekOk = !!(S.W && S.W.n >= 5 && S.W.same >= 0.7 * S.W.n && xW && xW.n >= 5 && xW.same >= 0.7 * xW.n && (!xR || xW.avg * s >= xR.avg * s));
-  let weekNote = "";
-  if (S.W && S.W.n >= 5 && S.W.avg * s > 0 && !weekOk) {
-    weekNote = S.W.same < 0.7 * S.W.n ? `1週間持つと同じ向きは ${S.W.same}/${S.W.n}回とばらつくため、候補から外しました。`
-      : `1週間持つと平均 ${pct(S.W.avg)} でしたが、日経平均の動きを除くと反応日より伸びておらず${xW ? `（日経平均との差 ${pct(xW.avg)}、同じ向き ${xW.same}/${xW.n}回）` : ""}、相場全体の動きの分が大きいため候補から外しました。`;
-  } else if (S.W && S.W.n >= 5 && S.W.same <= 0.4 * S.W.n) weekNote = "1週間後には戻していることが多いので、持ち越さない方が無難でした。";
-  // 候補ごとの成績と金利。いちばん利益の大きいものを選ぶ
-  const C = ROUTES.map((x) => {
-    const p = plan(d, t, x, s), v = S[x.key];
-    const cost = marginCost(s, p.inD, p.outD);
-    // 候補にするのは、同じ向き7割以上で、1〜2回の大きな動きだけで平均が偏っていないもの（一覧の判定と同じ t ≥ 1.5）
-    const no = !v || v.n < 4 ? "回数不足" : v.avg * s <= 0 ? "逆向き" : v.same < 0.7 * v.n ? "7割未満"
-      : v.t * s < 1.5 ? "大きな回頼み" : x.exit === "week" && !weekOk ? (S.W.same < 0.7 * S.W.n ? "1週間後ばらつく" : "地合いの分が大") : "";
-    return { ...x, st: v, cost, net: v ? v.avg * s - cost : null, ok: !no, no };
-  });
-  const ok = C.filter((x) => x.ok).sort((a, b) => b.net - a.net);
-  const fallback = !ok.length;
-  const pick = ok[0] || C.find((x) => x.key === "R");
-  if (fallback) why += "どの入り方・出方も同じ向きが7割に届かないため、前日の引けから反応日の引けまでを目安にしています。";
-  else if (ok.length > 1) why += `5通りのうち、金利を引いた平均の利益が一番大きいのは「${pick.sub}」でした。`;
-  return { entry: pick.entry, exit: pick.exit, key: pick.key, why, weekNote, fallback, C, P: pick.st, cost: pick.cost, net: pick.net };
-}
-
-// 入る日・出る日（具体的な日付）
-function plan(d, t, tm, s) {
-  const rt = reactTiming(d, t);
-  const inD = tm.entry === "prev" ? prevJpBiz(rt.day) : rt.day;
-  const outD = tm.exit === "week" ? addJpBiz(rt.day, 4) : rt.day;
-  const [act, back] = s > 0 ? ["買い", "売り"] : ["空売り", "買い戻し"];
-  const inT = tm.entry === "prev" ? "引け" : "寄り", outT = tm.exit === "open" ? "寄り" : "引け";
-  return { rt, inD, outD, act, back, inT, outT,
-    short: `${act} ${fmtMD(inD)}${inT} → ${back} ${fmtMD(outD)}${outT}` };
-}
-
-const KIND_TXT = { pre: "寄り前の発表", session: "取引時間中の発表", post: "引け後・夜間の発表" };
-function timingHtml(d, t, tm, s, { unknownNote = "" } = {}) {
-  const rt = reactTiming(d, t);
-  const when = `${fmtMD(d)}${t ? " " + esc(t) : ""}`;
-  const pre = `<p class="why-sum">一覧の騰落率は<b>反応日（${fmtMD(rt.day)}）の終値 ÷ その前の営業日（${fmtMD(prevJpBiz(rt.day))}）の終値</b>です。${KIND_TXT[rt.kind]}${t ? "" : "（時刻未定のため引け後として計算）"}なので、${rt.kind === "session" ? "発表への反応はその日の取引時間中に出ます。" : "発表への反応はまず反応日の寄り付き（窓）に出ます。"}</p>`;
-  if (!tm) return `<div class="card why"><div class="why-h">いつ買って、いつ売る？</div>
-    <div class="tl"><span><small>発表（日本時間）</small><b>${when}</b></span><span class="arr">→</span><span><small>日本株の反応日</small><b>${fmtMD(rt.day)}</b></span></div>${pre}
-    <p class="hint">寄り付きの値段のデータが足りないため、窓と日中の内訳は出せません。</p></div>`;
-  const p = plan(d, t, tm, s);
-  const steps = `<div class="tl3">
-    <span><small>① ${p.act}</small><b>${fmtMD(p.inD)} ${p.inT}</b></span><span class="arr">→</span>
-    <span><small>発表</small><b>${when}</b>${t ? "" : `<small>${unknownNote || "時刻未定"}</small>`}</span><span class="arr">→</span>
-    <span><small>② ${p.back}</small><b>${fmtMD(p.outD)} ${p.outT}</b></span></div>`;
-  const line = (x) => (x.st ? `<tr class="${x.key === tm.key ? "pick" : ""}"><th>${x.key === tm.key ? "★ " : ""}${x.lbl}<small>${x.sub}</small></th><td>同じ向き ${x.st.same}/${x.st.n}回${x.no ? `<small>× ${x.no}</small>` : ""}</td><td>利益 ${prof(x.st.avg * s)}<small>金利後 ${prof(x.net)}</small></td></tr>` : "");
-  return `<div class="card why"><div class="why-h">いつ買って、いつ売る？${tm.fallback ? ' <span class="vchip v-mkt">決め手なし</span>' : ""}</div>${steps}
-    <p class="why-sum"><b>過去の形:</b> ${tm.why}${tm.weekNote}</p>
-    ${tm.P ? `<p class="why-sum">この入り方・出方だと、過去は<b>同じ向き ${tm.P.same}/${tm.P.n}回・利益 平均 ${prof(tm.P.avg * s)}</b>、金利 ${tm.cost.toFixed(3)}% を引いて<b>${prof(tm.net)}</b>。</p>` : ""}
-    ${pre}
-    <table class="rxtable mini">${tm.C.map(line).join("")}</table>
-    <p class="hint">利益は${s > 0 ? "買い" : "空売り"}で取れた分（${s > 0 ? "上昇" : "下落"}をプラス）。同じ向き7割以上でばらつきの小さい形から、金利後の平均が一番大きいもの（★）を選んでいます。×は候補から外した理由（大きな回頼み＝1〜2回の大きな動きで平均が膨らんでいる、地合いの分が大＝日経平均の動きを除くと伸びていない）。</p>
-    <p class="note"><b>注文の出し方:</b>「寄り」は<b>寄成</b>（よりなり＝寄り付きの値段で成行）、「引け」は<b>引成</b>（ひけなり＝大引けの値段で成行）注文に当たり、その日の始値・終値で約定します（上の成績はこの値段で計算）。寄成は9時前、引成は大引け（15:30）の少し前までに出します。締め切りは証券会社ごとに違います。値が大きく飛んで寄り付かない・引けで約定しない日は失効することがあります。空売りは信用取引の口座が必要です。</p>
-    <p class="note">過去の回の始値・終値から見た目安で、売買の推奨ではありません。金利後は楽天証券の制度信用（ゼロコースで手数料0円、買方金利 年2.80%・貸株料 年1.10%、受渡日ベースの日割り）で計算。逆日歩・配当落調整金・寄り付きで値段がつかない場合などは考えていません。</p></div>`;
-}
-
-// ---------- 傾向 ----------
-// 日経225 × 今後の予定（自社の決算・指標・海外決算）で、過去の反応が上昇か下落に偏っている組み合わせ。
-// 計算はサーバ側（scripts/build_bias.py → bias.json）。過去の回の数え方はアプリと同じ（最大20回）
-function spark(vals) {
-  // 古い回が左。棒の高さは各回の騰落率
-  const v = vals.slice().reverse(), W = 64, H = 26, bw = W / Math.max(v.length, 1);
-  const m = Math.max(0.5, ...v.map(Math.abs));
-  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><line x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>`
-    + v.map((x, i) => { const h = Math.max(1, Math.abs(x) / m * (H / 2 - 1)); return `<rect class="${x > 0 ? "up" : "down"}" x="${(i * bw + bw * 0.15).toFixed(1)}" y="${(x > 0 ? H / 2 - h : H / 2).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${h.toFixed(1)}"/>`; }).join("")
-    + `</svg>`;
-}
-
-// 傾向の各件を「売買する時」（日付 × 寄り/引け）の枠に振り分ける。入る注文 ins と、出る注文 outs（予定ごとにまとめる）
-const biasTitle = (x) => { const ev = x.k === "ev" ? state.events.find((e) => e.id === x.id) : null; return ev ? seriesName(ev) : "決算"; };
-// 同じ銘柄・同じ向きで、前の売買の出る時と次の売買の入る時が同じ枠（または前の保有期間中）なら1本にまとめる
-// （例: 10/13引けで買い→10/14引けで売り と 10/14引けで買い→10/15引けで売り → 10/13引けで買い→10/15引けで売り）。
-// ins には「まとめた売買」{ c, s, legs: [{x, p, tm0}], p: 全体の入り・出 } が入る。
-// 逆向きの売買と保有期間が重なるものは clash に印をつける（両方は持てないため）
-const biasKey = (x) => `${x.c}|${x.k === "earn" ? `earn@${x.d}` : x.id}`;
-const slotKey = (d, t) => `${d}|${t === "寄り" ? 0 : 1}`;
-function biasChains(items) {
-  const legs = items.map((x) => {
-    const tm0 = timing({ r: x.r, g: x.g, w1: x.w1, nk: x.nk, nw: x.nw, s: x.s, d: x.d, t: x.tm });
-    const p = plan(x.d, x.tm, tm0 || { entry: "prev", exit: "close" }, x.s);
-    return { x, p, tm0, inK: slotKey(p.inD, p.inT), outK: slotKey(p.outD, p.outT) };
-  });
-  const byC = new Map();
-  for (const l of legs) { if (!byC.has(l.x.c)) byC.set(l.x.c, []); byC.get(l.x.c).push(l); }
-  const chains = [];
-  for (const ls of byC.values()) {
-    ls.sort((a, b) => a.inK.localeCompare(b.inK) || a.outK.localeCompare(b.outK));
-    const open = { 1: null, [-1]: null }; // 向きごとに、まとめている途中の売買
-    for (const l of ls) {
-      const s = l.x.s, cur = open[s];
-      if (cur && l.inK <= cur.outK) {
-        cur.legs.push(l);
-        if (l.outK > cur.outK) { cur.outK = l.outK; cur.p = { ...cur.p, outD: l.p.outD, outT: l.p.outT }; }
-      } else {
-        open[s] = { c: l.x.c, s, legs: [l], inK: l.inK, outK: l.outK, p: { ...l.p }, clash: null };
-        chains.push(open[s]);
-      }
-    }
+// ---------- 傾向（関連性） ----------
+// 今後の予定ごとに、理屈で関係する業種と、その理屈が過去に実際どれだけ当たったか（業種単位）を並べる。
+// 売買の提案はしない: 2026-10-13 の検証で、銘柄ごとの過去の偏りには地合い以上の予測力が無かった（scripts/research/）。
+// 集計はサーバ側（scripts/build_bias.py → bias.json v2）。理屈の文章は REASONS
+const GROUP_NAME = { semi: "半導体", ai: "AI・データセンター", game: "ゲーム・IP", bank: "銀行・保険", realestate: "不動産", auto: "自動車",
+  commodity: "商社・資源・海運", export: "輸出・製造", domestic: "内需", defensive: "医薬・通信など" };
+// 的中率の95%範囲（回単位）で判定。下限が5割超＝裏付けあり、上限が5割未満＝理屈と逆、それ以外＝偶然と区別できない
+const linkVerdict = (g) => (g.n == null ? { code: "vol", label: "向きは結果次第" } : g.lo > 0.5 ? { code: "ok", label: "裏付けあり" }
+  : g.hi < 0.5 ? { code: "ng", label: "理屈と逆" } : { code: "weak", label: "偶然と区別できない" });
+// 「結果が○○なら上がりやすい」の文
+function linkCond(it, g) {
+  const ev = state.events.find((e) => e.id === it.id);
+  if (it.k.startsWith("earn:")) {
+    const co = ev ? seriesName(ev).replace(/ ?決算$/, "") : it.k.slice(5);
+    return g.sign > 0 ? `${co}の株価が上がれば上がりやすい` : `${co}の株価が下がれば上がりやすい（資金の移動）`;
   }
-  // 逆向きの売買と保有期間が重なる（片方の出る前にもう片方に入る）
-  for (const a of chains) for (const b of chains) {
-    if (a !== b && a.c === b.c && a.s !== b.s && a.inK < b.outK && b.inK < a.outK) a.clash = b;
-  }
-  for (const ch of chains) {
-    // 全体の利益の目安: 各予定の平均利益（金利前）の合計 − 通しで持った金利
-    const gross = ch.legs.reduce((a, l) => a + (l.tm0?.P ? l.tm0.P.avg * ch.s : l.x.avg * ch.s), 0);
-    ch.cost = marginCost(ch.s, ch.p.inD, ch.p.outD);
-    ch.net = gross - ch.cost;
-    ch.title = ch.legs.map((l) => biasTitle(l.x)).filter((t, i, a) => a.indexOf(t) === i).join("＋");
-  }
-  return chains;
+  return g.sign > 0 ? "円安（ドル円↑）になれば上がりやすい" : "円高（ドル円↓）になれば上がりやすい";
 }
-
-// keep: 一覧の絞り込み（まとめ方・逆向きの判定は絞り込む前の全件で行う）
-function biasSlots(items, today, keep = () => true) {
-  const slots = new Map();
-  const slot = (d, t) => { const k = slotKey(d, t); if (!slots.has(k)) slots.set(k, { k, d, t, ins: [], outs: new Map(), holds: [] }); return slots.get(k); };
-  state.biasChain = new Map();
-  for (const ch of biasChains(items)) {
-    if (!ch.legs.some((l) => keep(l.x))) continue;
-    const p = ch.p;
-    for (const l of ch.legs) if (ch.legs.length > 1) state.biasChain.set(biasKey(l.x), ch);
-    if (p.inD >= today) slot(p.inD, p.inT).ins.push(ch);
-    // 途中の予定で入る枠: 売らずに持ち越す
-    for (const l of ch.legs.slice(1)) if (l.p.inD >= today && l.inK > ch.inK) slot(l.p.inD, l.p.inT).holds.push({ ch, l });
-    if (p.outD >= today) {
-      const o = slot(p.outD, p.outT).outs, k = `${ch.legs.map((l) => (l.x.k === "earn" ? "earn" : l.x.id)).join("+")}|${p.back}|${p.inD}${p.inT}`;
-      if (!o.has(k)) o.set(k, { title: ch.title, back: p.back, from: `${fmtMD(p.inD)}${p.inT}`, xs: [] });
-      o.get(k).xs.push(ch.legs[ch.legs.length - 1].x);
-    }
-  }
-  return [...slots.keys()].sort().map((k) => slots.get(k));
-}
-
-// 傾向の1行（入る注文）の中身。まとめた売買は予定ごとに1行ずつ
-function chainLegsHtml(ch, { short = false } = {}) {
-  const dir = ch.s > 0 ? "上昇" : "下落";
-  return ch.legs.map(({ x, p, tm0 }) => {
-    const ev = `${fmtMD(x.d)}${x.k === "earn" || short ? "" : " " + esc(x.tm || "")} ${esc(biasTitle(x))}`;
-    const res = tm0 ? `${dir} <b>${tm0.P.same}/${tm0.P.n}回</b> · ${ch.legs.length > 1 ? "平均" : "利益 平均"} <b>${prof(ch.legs.length > 1 ? tm0.P.avg * ch.s : tm0.net)}</b>` : `${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}`;
-    return ch.legs.length > 1
-      ? `<div class="sub leg" data-bias="${esc(biasKey(x))}">${ev} · ${res} ›</div>`
-      : `<div class="sub">${ev} → ${p.back} ${fmtMD(p.outD)}${p.outT}${tm0?.fallback || !tm0 ? "（決め手なし）" : ""}</div><div class="sub">この売買で ${res}${tm0 ? '<small class="muted">（金利後）</small>' : ""}</div>`;
-  }).join("");
-}
-const chainHead = (ch) => (ch.legs.length > 1
-  ? `<div class="sub">${ch.p.act} ${fmtMD(ch.p.inD)}${ch.p.inT} → ${ch.p.back} ${fmtMD(ch.p.outD)}${ch.p.outT}<span class="tag t-chain">${ch.legs.length}つの予定をまとめて保有</span></div>`
-    + `<div class="sub">合計 平均 <b>${prof(ch.net)}</b><small class="muted">（各予定の平均の合計・通しの金利後）</small></div>`
-  : "") + (ch.clash ? `<div class="sub clash">⚠ 保有中の ${fmtMD(ch.clash.p.inD)}${ch.clash.p.inT}〜${fmtMD(ch.clash.p.outD)}${ch.clash.p.outT} に、${esc(ch.clash.title)}で逆向き（${ch.clash.p.act}）の傾向。両方は持てません</div>` : "");
+const groupMembers = (g) => state.n225.codes.filter((x) => stockGroup(x.c) === g);
 
 function renderBias() {
   const el = $("#bias-list");
   if (!el) return;
   const b = state.bias;
-  if (!b?.items?.length) { el.innerHTML = `<p class="empty-msg">データがまだありません（次回の更新で作られます）</p>`; return; }
-  const today = todayStr();
-  const all = b.items.filter((x) => x.d >= today && state.n225set.has(x.c));
-  const keep = (x) => (!prefs.biasDir || x.s === Number(prefs.biasDir)) && (!prefs.biasKind || x.k === prefs.biasKind);
-  const items = all.filter(keep);
-  // 売買する順（日付 → 寄り → 引け）に並べる。入る行（買い・空売り）は1件ずつ、出る行（売り・買い戻し）は予定ごとに1行にまとめる
-  const slots = biasSlots(all, today, keep);
-  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}〜${b.hist_n || 10}回のうち${Math.round(b.min_rate * 100)}%以上${b.min_rate_long ? `（15回以上あるものは${Math.round(b.min_rate_long * 100)}%以上）` : ""}が同じ向きに動いた日経225銘柄（${items.length}件）。売買する順に並べています</p>`;
-  const LIM = 6;
-  for (const sl of slots) {
-    const k = sl.k;
-    const head = sl.t === "寄り" ? "寄り（9:00 前に寄成）" : "引け（15:30 前に引成）";
-    html += `<h3 class="sec bias-h"><span>${fmtMD(sl.d)} ${head}</span></h3>`;
-    if (sl.outs.size) {
-      html += `<ul class="list outs">` + [...sl.outs.values()].map((o) => `<li class="row out"><div class="main">
-        <div class="name"><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span>${esc(o.title)}${o.title === "決算" ? "" : ""}<small class="muted">（${esc(o.from)}に入った分）</small></div>
-        <div class="sub">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}</div></div></li>`).join("") + `</ul>`;
+  if (b?.v !== 2 || !b.items?.length) { el.innerHTML = `<p class="empty-msg">データがまだありません（次回の更新で作られます）</p>`; return; }
+  const today = todayStr(), only = prefs.biasOnly === "ok";
+  let html = `<p class="hint">今後${b.horizon}日の予定ごとに、「この結果ならこの業種が上がりやすい」という一般的な理屈と、それが過去に<b>実際に当たった割合</b>を出しています。結果は発表まで分からないため、売買のタイミングの提案ではありません。</p>`;
+  let cnt = 0;
+  for (const it of b.items.filter((x) => x.d >= today)) {
+    const gs = it.groups.map((g) => ({ g, v: linkVerdict(g) })).filter((x) => !only || x.v.code === "ok")
+      .sort((a, c) => "okweakngvol".indexOf(a.v.code) - "okweakngvol".indexOf(c.v.code) || (c.g.n ? c.g.hit / c.g.n : 0) - (a.g.n ? a.g.hit / a.g.n : 0));
+    if (!gs.length) continue;
+    const ev = state.events.find((e) => e.id === it.id);
+    html += `<h3 class="sec"><span>${fmtMD(it.d)}${it.t ? " " + esc(it.t) : ""} ${esc(ev ? seriesName(ev) : it.k)}</span></h3><ul class="list">`;
+    for (const { g, v } of gs) {
+      const r = REASONS[`${it.ec}:${g.g}`];
+      cnt++;
+      html += `<li class="row has-rx" data-link="${esc(it.id)}|${esc(g.g)}"><div class="main">
+        <div class="name">${esc(GROUP_NAME[g.g] || g.g)}<span class="vchip v-${v.code === "ok" ? "link" : v.code === "ng" ? "weak" : "mkt"}">${v.label}</span>${r ? `<span class="vtag">${esc(r.tag)}</span>` : ""}</div>
+        <div class="sub">${g.n != null ? `${esc(linkCond(it, g))} → 過去 <b>${Math.round(g.hit / g.n * 100)}%</b> がそのとおり（${g.nev}回）` : `振れ幅 普段の${g.ab?.toFixed(1) ?? "—"}倍（${g.ev}回の平均）`}</div></div>
+        <span class="chev">›</span></li>`;
     }
-    if (sl.holds.length) {
-      html += `<ul class="list outs"><li class="row out"><div class="main"><div class="name"><span class="tag t-chain">持ち越し</span>売らずにそのまま持つ</div>
-        <div class="sub">${sl.holds.map(({ ch, l }) => `<span class="oname" data-bias="${esc(biasKey(l.x))}">${esc(holdName(ch.c))} ${esc(ch.c)}</span><small class="muted">（次: ${esc(biasTitle(l.x))}）</small>`).join("、")}</div></div></li></ul>`;
-    }
-    if (sl.ins.length) {
-      const key0 = (ch) => ch.legs[0].x.d + (ch.legs[0].x.tm || "");
-      sl.ins.sort((a, c) => key0(a).localeCompare(key0(c)) || Math.abs(c.legs[0].x.t) - Math.abs(a.legs[0].x.t));
-      const open = state.biasOpen.has(k);
-      html += `<ul class="list">` + sl.ins.slice(0, open ? sl.ins.length : LIM).map((ch) => {
-        const x = ch.legs[0].x;
-        const held = state.hold.has(x.c);
-        const dir = x.s > 0 ? "上昇" : "下落";
-        return `<li class="row has-rx" data-bias="${esc(biasKey(x))}">
-          <div class="main"><div class="name"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${ch.p.act}</span>${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
-          ${chainHead(ch)}${chainLegsHtml(ch)}
-          ${ch.legs.length > 1 ? "" : `<div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div>`}</div>
-          <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${ch.legs.map((l) => spark(l.x.r.filter((v) => v != null))).join("")}</div>
-          <span class="chev">›</span></li>`;
-      }).join("") + `</ul>`
-        + (sl.ins.length > LIM && !open ? `<button class="btn ghost more" data-bias-more="${esc(k)}">ほか ${sl.ins.length - LIM} 銘柄を表示</button>` : "");
-    }
+    html += `</ul>`;
   }
-  if (!items.length) html += `<p class="empty-msg">条件に合う銘柄はありません</p>`;
+  if (!cnt) html += `<p class="empty-msg">${only ? "今後の予定で裏付けのある関連性はありません" : "対象の予定はありません"}</p>`;
   el.innerHTML = html;
-  $("#bias-note").innerHTML = `反応日（発表後に最初に開いた日本の立会日）の終値騰落率で判定。平均の動きが普段の1日の値動きの半分未満、またはばらつきが大きすぎるものは除いています。`
-    + `判定チップが「地合い」のものは、個別の傾向というより相場全体の動きです。`
-    + `<br><b>注意:</b> 225銘柄 × 多くの予定を調べると、偶然だけでも一定数の偏りは見つかります。過去の傾向は将来の値動きを保証しません。売買の判断はご自身で。（${esc(b.asof)} 計算）`;
+  $("#bias-note").innerHTML = `当たった割合＝その予定の種類の過去の各回で、結果（指標は発表1時間後のドル円、海外決算はその会社の株価の反応）の向きに対して、業種の日経225銘柄が理屈どおりの向きに動いた割合（反応日の終値）。`
+    + `同じ回の銘柄は一緒に動くので、回の数で95%の範囲を出し、下限が5割を超えたものだけ「裏付けあり」としています。`
+    + `<br>以前の「上がりやすい銘柄」の一覧と売買のタイミングは、過去にさかのぼって検証したところ勝率が約48%（コイン投げと区別できない）だったため廃止しました。（${esc(b.asof)} 計算）`;
 }
 
-async function openBias(v) {
-  const [c, key] = v.split("|");
-  await loadHold(c);
-  if (key.startsWith("earn@")) openEarnRx(`${c}@${key.slice(5)}`);
-  else openHoldSeries(c, key);
-  // 傾向一覧で前後の予定とまとめた売買なら、シートの先頭にその旨を出す（下の「いつ買って、いつ売る？」はこの予定単独の場合）
-  const ch = state.biasChain?.get(v);
-  if (ch) {
-    $("#sheet-body").insertAdjacentHTML("afterbegin", `<div class="card why chain-note"><div class="why-h">前後の予定とまとめて保有</div>
-      <p class="why-sum">${esc(holdName(c))}は${ch.legs.map((l) => `${fmtMD(l.x.d)} ${esc(biasTitle(l.x))}`).join("、")}の${ch.legs.length}つで同じ向き（${ch.s > 0 ? "上昇" : "下落"}）の傾向があり、売る日と次に買う日が重なるため、一覧では<b>${ch.p.act} ${fmtMD(ch.p.inD)}${ch.p.inT} → ${ch.p.back} ${fmtMD(ch.p.outD)}${ch.p.outT}</b>の1回の売買にまとめています（いったん売ってすぐ同じ値段で買い直すのと同じなので）。</p>
-      <p class="hint">合計の目安 ${prof(ch.net)}（各予定の過去の平均利益の合計から、通しで持った金利を引いた値）。予定どうしの組み合わせで過去に検証したものではありません。下の「いつ買って、いつ売る？」はこの予定だけで売買した場合です。</p></div>`);
+// 業種の詳細: 理屈・検証の数字・銘柄（タップでその銘柄 × この予定の過去の反応）
+async function openLink(v) {
+  const [id, g] = v.split("|");
+  const it = state.bias?.items?.find((x) => x.id === id), gr = it?.groups.find((x) => x.g === g);
+  if (!gr) return;
+  const ev = state.events.find((e) => e.id === id), r = REASONS[`${it.ec}:${g}`], vd = linkVerdict(gr);
+  const name = ev ? seriesName(ev) : it.k;
+  let html = `<p class="sheet-desc">${fmtMD(it.d)}${it.t ? " " + esc(it.t) : ""} ${esc(name)} × ${esc(GROUP_NAME[g] || g)}（日経225のうち${gr.m}銘柄）</p>`;
+  html += `<div class="card why"><div class="why-h">一般的な理屈 <span class="vchip v-${vd.code === "ok" ? "link" : vd.code === "ng" ? "weak" : "mkt"}">${vd.label}</span></div>
+    ${r ? `<p class="why-sum"><b>${esc(r.tag)}</b>: ${esc(r.why)}</p>` : ""}`;
+  if (gr.n != null) {
+    const p = Math.round(gr.hit / gr.n * 100);
+    html += `<p class="why-sum">理屈: <b>${esc(linkCond(it, gr))}</b></p>
+      <p class="why-sum">過去${gr.nev}回 × この業種の銘柄（のべ${gr.n}件）のうち、<b>${p}%</b> が理屈どおりの向きに動きました。回ごとのばらつきを考えた95%の範囲は <b>${Math.round(gr.lo * 100)}〜${Math.round(gr.hi * 100)}%</b>。</p>
+      <p class="hint">${vd.code === "ok" ? "範囲の下限が5割を超えているので、偶然ではなく理屈どおりの関係がありそうです。ただし結果（" + (it.k.startsWith("earn:") ? "その会社の株価の反応" : "ドル円の動き") + "）は発表まで分からないので、事前に向きを当てる材料にはなりません。"
+        : vd.code === "ng" ? "理屈とは逆の向きに動くことの方が多く、この理屈は当てはまっていません。"
+        : "5割をはさんでいるので、偶然と区別できません。この理屈どおりに動くとは言えません。"}</p>`;
+  } else {
+    html += `<p class="why-sum">この理屈は向きが決まらない（結果しだいで上にも下にも動く）ため、動きの大きさだけ集計しています: 反応日の振れ幅は普段の1日の値動きの <b>${gr.ab?.toFixed(1) ?? "—"}倍</b>（${gr.ev}回の平均、同じ日の日経平均の振れ幅 ${gr.nkab?.toFixed(1) ?? "—"}%）。</p>`;
   }
+  html += `</div><h3 class="sec">この業種の銘柄</h3><ul class="list">`
+    + groupMembers(g).map((x) => `<li class="row has-rx" data-hser="${esc(x.c)}|${esc(id)}"><div class="main"><div class="name">${state.hold.has(x.c) ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div><div class="sub">${esc(x.sec)}</div></div><span class="chev">›</span></li>`).join("")
+    + `</ul><p class="note">銘柄をタップすると、この予定の過去の各回でその銘柄がどう動いたかを見られます。</p>`;
+  for (const x of groupMembers(g)) loadHold(x.c);
+  openSheet(`${name} × ${GROUP_NAME[g] || g}`, html, () => openLink(v));
+  $("#sheet").scrollTop = 0;
 }
 
 // ---------- マーケットの指標選び ----------
@@ -1719,12 +1495,7 @@ function openHoldSeries(c, key) {
       { h: "日経との差", f: (x) => (evR(h, x.id) != null && nkR(x.id) != null ? evR(h, x.id) - nkR(x.id) : null) }];
     const k = seriesOf(ev), dname = driverName(ev);
     if (rows.some((x) => driverVal(x.id, k) != null)) cols.push({ h: dname === "ドル円" ? "ドル円 1時間後" : dname.replace(/の株価$/, ""), f: (x) => driverVal(x.id, k) });
-    const nxt = (state.series.get(k) || []).find((e) => e.d >= todayStr()) || ev;
-    const rr = rows.map((x) => evR(h, x.id)), av = rr.filter((v) => v != null);
-    const sg = av.length && av.reduce((a, v) => a + v, 0) >= 0 ? 1 : -1, rk = reactTiming(nxt.d, nxt.t);
-    const wk = (d) => { if (!state.hday.has(d)) return null; const i = state.hday.get(d), v = h.r.slice(i, i + 5); return v.length === 5 && v.every((x) => x != null) ? (v.reduce((a, x) => a * (1 + x / 100), 1) - 1) * 100 : null; };
-    why = timingHtml(nxt.d, nxt.t, timing({ r: rr, g: rows.map((x) => gapOf(h, evDay(x.id))), w1: rows.map((x) => wk(evDay(x.id))), nk: rows.map((x) => nkR(x.id)), nw: rows.map((x) => nkWeek(evDay(x.id))), s: sg, d: nxt.d, t: nxt.t }), sg);
-    why += evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
+    why = evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
   }
   const st = stat(rows.map((r) => cols[0].f(r)));
   const html = `<p class="sheet-desc">${desc}</p>`
@@ -1805,23 +1576,15 @@ function renderHome() {
     html += items.length ? `<ul class="list">${items.map(homeRow).join("")}</ul>` : `<p class="hint">大きな予定はありません</p>`;
   }
 
-  // 傾向: 次の売買（直近2つの枠）
-  if (state.bias?.items?.length && state.n225set.size) {
-    const hm = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-    const its = state.bias.items.filter((x) => x.d >= today && state.n225set.has(x.c));
-    const sls = biasSlots(its, today).filter((sl) => sl.d > today || (sl.t === "寄り" ? hm < "09:00" : hm < "15:30")).slice(0, 2);
-    if (sls.length) {
-      html += `<h3 class="sec">次の売買（傾向）<button class="link" data-go="bias">すべて ›</button></h3>`;
-      for (const sl of sls) {
-        const L = 5;
-        html += `<div class="card slot"><div class="card-h"><span>${sl.d === today ? "今日" : fmtMD(sl.d)} ${sl.t === "寄り" ? "寄り（9:00前に寄成）" : "引け（15:30前に引成）"}</span></div><ul class="slot-list">`
-          + [...sl.outs.values()].map((o) => `<li><span class="tag ${o.back === "売り" ? "t-sell" : "t-cover"}">${o.back}</span><span class="sl-main">${o.xs.map((x) => `<span class="oname" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">${esc(holdName(x.c))} ${esc(x.c)}</span>`).join("、")}<small>${esc(o.title)}（${esc(o.from)}に入った分）</small></span></li>`).join("")
-          + sl.holds.map(({ ch, l }) => `<li data-bias="${esc(biasKey(l.x))}" class="has-rx"><span class="tag t-chain">持ち越し</span><span class="sl-main"><b>${esc(holdName(ch.c))}</b> <span class="ncode">${esc(ch.c)}</span><small>売らずに次の ${esc(biasTitle(l.x))} まで持つ（${ch.p.back} ${fmtMD(ch.p.outD)}${ch.p.outT}）</small></span><span class="chev">›</span></li>`).join("")
-          + sl.ins.slice(0, L).map((ch) => { const { x, tm0 } = ch.legs[0], p = ch.p, many = ch.legs.length > 1;
-            return `<li data-bias="${esc(biasKey(x))}" class="has-rx"><span class="tag ${x.s > 0 ? "t-buy" : "t-short"}">${p.act}</span><span class="sl-main"><b>${esc(holdName(x.c))}</b> <span class="ncode">${esc(x.c)}</span><small>${ch.legs.map((l) => `${fmtMD(l.x.d)} ${esc(biasTitle(l.x))}`).join("＋")} → ${p.back} ${fmtMD(p.outD)}${p.outT} · ${x.s > 0 ? "上昇" : "下落"} ${many ? `${ch.legs.map((l) => (l.tm0 ? `${l.tm0.P.same}/${l.tm0.P.n}` : `${l.x.w}/${l.x.n}`)).join("・")}回 合計 ${prof(ch.net)}` : tm0 ? `${tm0.P.same}/${tm0.P.n}回 利益 ${prof(tm0.net)}` : `${x.w}/${x.n}回 ${pct(x.avg)}`}${ch.clash ? " · ⚠逆向きと重なる" : ""}</small></span><span class="chev">›</span></li>`; }).join("")
-          + (sl.ins.length > L ? `<li class="more-li" data-go="bias">ほか ${sl.ins.length - L} 銘柄 ›</li>` : "")
-          + `</ul></div>`;
-      }
+  // 傾向: 今後2週間の予定で、裏付けのある関連性
+  if (state.bias?.v === 2) {
+    const lim = new Date(); lim.setDate(lim.getDate() + 14);
+    const ok = state.bias.items.filter((x) => x.d >= today && x.d <= ymd(lim)).flatMap((it) => it.groups.filter((g) => linkVerdict(g).code === "ok").map((g) => ({ it, g })));
+    if (ok.length) {
+      html += `<h3 class="sec">予定と関係する業種（裏付けあり）<button class="link" data-go="bias">すべて ›</button></h3><ul class="list">`
+        + ok.slice(0, 5).map(({ it, g }) => { const ev = state.events.find((e) => e.id === it.id);
+          return `<li class="row has-rx" data-link="${esc(it.id)}|${esc(g.g)}"><div class="main"><div class="name">${fmtMD(it.d)} ${esc(ev ? seriesName(ev) : it.k)} → ${esc(GROUP_NAME[g.g] || g.g)}</div><div class="sub">${esc(linkCond(it, g))}（過去 ${Math.round(g.hit / g.n * 100)}%）</div></div><span class="chev">›</span></li>`; }).join("")
+        + `</ul>`;
     }
   }
 
@@ -1894,10 +1657,8 @@ document.addEventListener("click", (ev) => {
   const ph = ev.target.closest("[data-pick-hold]");
   if (ph) { togglePick(ph.dataset.pickHold); return; }
   if (ev.target.closest("#hold-edit")) { openPicker(); return; }
-  const bm = ev.target.closest("[data-bias-more]");
-  if (bm) { state.biasOpen.add(bm.dataset.biasMore); renderBias(); return; }
-  const bi = ev.target.closest("[data-bias]");
-  if (bi) { openBias(bi.dataset.bias); return; }
+  const lk = ev.target.closest("[data-link]");
+  if (lk) { openLink(lk.dataset.link); return; }
   const hs = ev.target.closest("[data-hser]");
   if (hs) { const [c, id] = hs.dataset.hser.split("|"); openHoldSeries(c, id); return; }
   const hev = ev.target.closest("[data-hev]");
@@ -1929,8 +1690,7 @@ document.addEventListener("click", (ev) => {
     setSeg(box, seg.dataset.v);
     if (box.id === "plan-seg") { switchTab(seg.dataset.v); return; }
     if (box.id === "ipo-mode") { prefs.ipoMode = seg.dataset.v; renderIpo(); }
-    else if (box.id === "bias-dir") { prefs.biasDir = seg.dataset.v; renderBias(); }
-    else if (box.id === "bias-kind") { prefs.biasKind = seg.dataset.v; renderBias(); }
+    else if (box.id === "bias-only") { prefs.biasOnly = seg.dataset.v; renderBias(); }
     else if (box.id === "ev-mode") {
       prefs.evMode = seg.dataset.v;
       if (prefs.evMode === "week") state.weekStart = mondayOf(state.weekStart);
@@ -2002,8 +1762,7 @@ document.addEventListener("change", (e) => {
 $("#cal-sort").value = prefs.calSort;
 $("#cal-sort").addEventListener("change", (e) => { prefs.calSort = e.target.value; saveJSON(PREF_KEY, prefs); renderDay(); renderMonth(); });
 setSeg($("#ipo-mode"), prefs.ipoMode);
-setSeg($("#bias-dir"), prefs.biasDir);
-setSeg($("#bias-kind"), prefs.biasKind);
+setSeg($("#bias-only"), prefs.biasOnly);
 setSeg($("#ev-mode"), prefs.evMode);
 setSeg($("#cal-mode"), prefs.calMode);
 applyCalMode();

@@ -464,16 +464,6 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .btn.wide { display: block; width: 100%; margin: 14px 0 6px; text-align: center; }
 
 /* v8 傾向 */
-#bias-kind { margin-top: -2px; }
-.bias-h { flex-wrap: wrap; gap: 2px 8px; }
-.bias-h .nk { font-size: 11.5px; font-weight: 500; color: var(--muted); }
-.bias-r { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; }
-.bias-badge { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 5px; }
-.bias-badge.up { color: var(--up); background: color-mix(in srgb, var(--up) 12%, transparent); }
-.bias-badge.down { color: var(--down); background: color-mix(in srgb, var(--down) 12%, transparent); }
-.spark { width: 64px; height: 26px; display: block; }
-.spark line { stroke: var(--line); }
-.spark .up { fill: var(--up); } .spark .down { fill: var(--down); }
 .btn.more { display: block; margin: 6px auto 0; font-size: 13px; }
 
 /* v9 なぜ動く？ */
@@ -507,7 +497,6 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 /* v10 いつ仕込む？ */
 .ncode { font-size: 12px; font-weight: 500; color: var(--muted); margin-left: 2px; font-variant-numeric: tabular-nums; }
 .tmx { color: var(--text); font-weight: 600; }
-.bias-h .rday { flex-basis: 100%; }
 .v-time { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
 .tl { display: flex; align-items: center; gap: 10px; margin: 10px 0 4px; background: var(--bg); border-radius: 10px; padding: 8px 10px; }
 .tl span { display: flex; flex-direction: column; gap: 1px; flex: 1; }
@@ -515,35 +504,6 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .tl small { font-size: 11px; color: var(--muted); }
 .tl b { font-size: 15px; }
 .rxtable.mini th small { display: block; font-size: 10.5px; }
-.tl3 { display: flex; align-items: center; gap: 6px; margin: 10px 0 4px; background: var(--bg); border-radius: 10px; padding: 8px 10px; }
-.tl3 span { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
-.tl3 .arr { flex: none; color: var(--muted); }
-.tl3 small { font-size: 10.5px; color: var(--muted); }
-.tl3 b { font-size: 13.5px; }
-.vline .v-time { white-space: normal; line-height: 1.5; }
-.list li.row .main { min-width: 0; }
-/* v12 売買する順 */
-.tag.t-buy { background: color-mix(in srgb, var(--up) 14%, transparent); color: var(--up); }
-.tag.t-short { background: color-mix(in srgb, var(--down) 14%, transparent); color: var(--down); }
-.tag.t-sell, .tag.t-cover { background: var(--text); color: var(--bg); }
-.tag.t-chain { background: color-mix(in srgb, var(--accent, #888) 16%, transparent); color: var(--accent, var(--text)); margin-left: 6px; }
-.list .name .tag.t-chain, .slot-list .tag.t-chain { margin-left: 0; }
-.row .sub.leg { cursor: pointer; padding-left: 10px; border-left: 2px solid var(--line, #ccc); margin-top: 3px; }
-.row .sub.clash { color: var(--warn, #c77700); }
-.bias-r .spark + .spark { margin-top: 2px; }
-.list.outs li.row.out { padding-top: 10px; padding-bottom: 10px; }
-.list.outs .name small { font-weight: 400; margin-left: 4px; font-size: 11.5px; }
-.oname { text-decoration: underline; text-decoration-color: var(--line); cursor: pointer; }
-/* v13 ホームの次の売買 */
-.card.slot { padding: 12px 14px; }
-.slot-list { list-style: none; margin: 8px 0 0; padding: 0; }
-.slot-list li { display: flex; align-items: flex-start; gap: 8px; padding: 8px 0; border-top: 1px solid var(--line); font-size: 14px; }
-.slot-list li:first-child { border-top: none; }
-.slot-list .tag { flex: none; margin-top: 2px; }
-.slot-list .sl-main { flex: 1; min-width: 0; line-height: 1.45; }
-.slot-list .sl-main small { display: block; color: var(--muted); font-size: 12px; }
-.slot-list .chev { align-self: center; }
-.slot-list .more-li { color: var(--accent); font-size: 13px; justify-content: center; cursor: pointer; }
 .updated.retry { cursor: pointer; text-decoration: underline; }
 /* いつ買って、いつ売る？: 選んだ売買（★）と各セルの補足 */
 .rxtable.mini tr.pick th, .rxtable.mini tr.pick td { color: var(--text); font-weight: 700; background: var(--accent-soft, rgba(80,140,255,.10)); }
@@ -554,3 +514,5 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .mkt-row { gap: 4px; }
 .mkt-row .mv { flex: none; width: 36px; height: 32px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); font-size: 15px; cursor: pointer; }
 .mkt-row .mv:disabled { opacity: .3; cursor: default; }
+.list .name .vchip { margin-left: 6px; vertical-align: 1px; }
+.list .name .vtag { margin-left: 6px; font-weight: 400; }

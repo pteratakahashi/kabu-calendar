@@ -462,3 +462,16 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 #ev-mode, #cal-mode, #ipo-mode { max-width: 240px; padding: 2px; border-radius: 10px; margin: 0 0 10px; }
 #ev-mode button, #cal-mode button, #ipo-mode button { padding: 4px; font-size: 12.5px; }
 .btn.wide { display: block; width: 100%; margin: 14px 0 6px; text-align: center; }
+
+/* v8 傾向 */
+#bias-kind { margin-top: -2px; }
+.bias-h { flex-wrap: wrap; gap: 2px 8px; }
+.bias-h .nk { font-size: 11.5px; font-weight: 500; color: var(--muted); }
+.bias-r { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; flex: none; }
+.bias-badge { font-size: 11px; font-weight: 700; padding: 1px 6px; border-radius: 5px; }
+.bias-badge.up { color: var(--up); background: color-mix(in srgb, var(--up) 12%, transparent); }
+.bias-badge.down { color: var(--down); background: color-mix(in srgb, var(--down) 12%, transparent); }
+.spark { width: 64px; height: 26px; display: block; }
+.spark line { stroke: var(--line); }
+.spark .up { fill: var(--up); } .spark .down { fill: var(--down); }
+.btn.more { display: block; margin: 6px auto 0; font-size: 13px; }

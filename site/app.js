@@ -11,7 +11,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events", biasDir: "", biasKind: "" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -19,6 +19,7 @@ const state = {
   theme: new Map(),      // id -> theme
   byDate: new Map(),     // "YYYY-MM-DD" -> [earning]
   evByDate: new Map(),   // "YYYY-MM-DD" -> [event]
+  biasOpen: new Set(), // 傾向: 全件表示にした予定
   nextByCode: new Map(), // code -> 直近の今後の決算 (なければ最新)
   hold: new Set(loadJSON(HOLD_KEY, null) ?? loadJSON(WATCH_KEY, [])), // 保有銘柄（日経225採用銘柄から選ぶ・端末内に保存）
   n225: { codes: [], history: [] }, n225set: new Set(),
@@ -110,6 +111,7 @@ async function load() {
     state.n225 = await getJSON("n225.json").catch(() => state.n225);
     state.brief = await getJSON("brief.json").catch(() => null);
     state.market = await getJSON("market.json").catch(() => null);
+    state.bias = await getJSON("bias.json").catch(() => null);
     state.n225set = new Set(state.n225.codes.map((x) => x.c));
     state.rx.news ||= {};
   } catch (e) {
@@ -1020,6 +1022,66 @@ function renderHold() {
   }).join("") + `</ul>`;
 }
 
+// ---------- 傾向 ----------
+// 日経225 × 今後の予定（自社の決算・指標・海外決算）で、過去の反応が上昇か下落に偏っている組み合わせ。
+// 計算はサーバ側（scripts/build_bias.py → bias.json）。過去の回の数え方は「過去10回」と同じ
+function spark(vals) {
+  // 古い回が左。棒の高さは各回の騰落率
+  const v = vals.slice().reverse(), W = 64, H = 26, bw = W / Math.max(v.length, 1);
+  const m = Math.max(0.5, ...v.map(Math.abs));
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><line x1="0" x2="${W}" y1="${H / 2}" y2="${H / 2}"/>`
+    + v.map((x, i) => { const h = Math.max(1, Math.abs(x) / m * (H / 2 - 1)); return `<rect class="${x > 0 ? "up" : "down"}" x="${(i * bw + bw * 0.15).toFixed(1)}" y="${(x > 0 ? H / 2 - h : H / 2).toFixed(1)}" width="${(bw * 0.7).toFixed(1)}" height="${h.toFixed(1)}"/>`; }).join("")
+    + `</svg>`;
+}
+
+function renderBias() {
+  const el = $("#bias-list");
+  if (!el) return;
+  const b = state.bias;
+  if (!b?.items?.length) { el.innerHTML = `<p class="empty-msg">データがまだありません（次回の更新で作られます）</p>`; return; }
+  const today = todayStr();
+  const items = b.items.filter((x) => x.d >= today && state.n225set.has(x.c)
+    && (!prefs.biasDir || x.s === Number(prefs.biasDir)) && (!prefs.biasKind || x.k === prefs.biasKind));
+  // 予定ごとにまとめる（自社の決算は日付ごと）
+  const groups = new Map();
+  for (const x of items) {
+    const g = x.k === "earn" ? `earn@${x.d}` : x.id;
+    if (!groups.has(g)) groups.set(g, []);
+    groups.get(g).push(x);
+  }
+  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}回以上のうち${Math.round(b.min_rate * 100)}%以上が同じ向きに動いた日経225銘柄（${items.length}件）</p>`;
+  const LIM = 5;
+  for (const [g, xs] of groups) {
+    const x0 = xs[0];
+    const ev = x0.k === "ev" ? state.events.find((e) => e.id === x0.id) : null;
+    const title = ev ? seriesName(ev) : "決算発表";
+    const nk = x0.nk ? `<span class="nk">日経平均は上昇 ${x0.nk[0]}/${x0.nk[1]}回</span>` : "";
+    html += `<h3 class="sec bias-h"><span>${fmtMD(x0.d)} ${esc(title)}</span>${nk}</h3><ul class="list">`
+      + xs.slice(0, state.biasOpen.has(g) ? xs.length : LIM).map((x) => {
+        const held = state.hold.has(x.c);
+        const dir = x.s > 0 ? "上昇" : "下落";
+        return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
+          <div class="main"><div class="name">${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))}</div>
+          <div class="sub">${esc(x.c)} · ${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div></div>
+          <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.last)}</div>
+          <span class="chev">›</span></li>`;
+      }).join("") + `</ul>`
+      + (xs.length > LIM && !state.biasOpen.has(g) ? `<button class="btn ghost more" data-bias-more="${esc(g)}">ほか ${xs.length - LIM} 銘柄を表示</button>` : "");
+  }
+  if (!items.length) html += `<p class="empty-msg">条件に合う銘柄はありません</p>`;
+  el.innerHTML = html;
+  $("#bias-note").innerHTML = `反応日（発表後に最初に開いた日本の立会日）の終値騰落率で判定。平均の動きが普段の1日の値動きの半分未満、またはばらつきが大きすぎるものは除いています。`
+    + `「日経平均は上昇 ○/10回」が同じ向きに偏っている予定は、個別の傾向というより相場全体の動きです。`
+    + `<br><b>注意:</b> 225銘柄 × 多くの予定を調べると、偶然だけでも一定数の偏りは見つかります。過去の傾向は将来の値動きを保証しません。売買の判断はご自身で。（${esc(b.asof)} 計算）`;
+}
+
+async function openBias(v) {
+  const [c, key] = v.split("|");
+  if (key.startsWith("earn@")) { openEarnRx(`${c}@${key.slice(5)}`); return; }
+  await loadHold(c);
+  openHoldSeries(c, key);
+}
+
 // 銘柄を選ぶ（日経225の業種別リスト）
 function openPicker() {
   const html = `<input id="pick-q" type="search" placeholder="コード・社名で絞り込み" autocomplete="off"><div id="pick-list"></div>`;
@@ -1164,7 +1226,8 @@ function openHoldSeries(c, key) {
   const st = stat(rows.map((r) => cols[0].f(r)));
   const html = `<p class="sheet-desc">${desc}</p>`
     + (q && st ? `<p class="msum">今の株数（${q.toLocaleString()}株）なら、平均 ±${yen(value(c) * st.abs / 100)} の値動き</p>` : "")
-    + historyHtml(`${holdName(c)} の反応`, rows, cols, { note: "反応日の終値騰落率。行をタップでその回の詳細" });
+    + historyHtml(`${holdName(c)} の反応`, rows, cols, { note: "反応日の終値騰落率。行をタップでその回の詳細" })
+    + (!state.hold.has(c) && state.n225set.has(c) ? `<button class="btn wide" data-addhold="${esc(c)}">＋ 保有銘柄に追加</button>` : "");
   openSheet(title, html, () => openHoldSeries(c, key));
   $("#sheet").scrollTop = 0;
 }
@@ -1265,7 +1328,7 @@ function homeRow(it) {
 }
 
 function renderAll() {
-  renderHome(); renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderHold(); renderIpo(); renderNews();
+  renderHome(); renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderHold(); renderIpo(); renderNews(); renderBias();
   renderMonth();
   if ($("#sheet").open && state.sheetFn) state.sheetFn();
 }
@@ -1297,6 +1360,10 @@ document.addEventListener("click", (ev) => {
   const ph = ev.target.closest("[data-pick-hold]");
   if (ph) { togglePick(ph.dataset.pickHold); return; }
   if (ev.target.closest("#hold-edit")) { openPicker(); return; }
+  const bm = ev.target.closest("[data-bias-more]");
+  if (bm) { state.biasOpen.add(bm.dataset.biasMore); renderBias(); return; }
+  const bi = ev.target.closest("[data-bias]");
+  if (bi) { openBias(bi.dataset.bias); return; }
   const hs = ev.target.closest("[data-hser]");
   if (hs) { const [c, id] = hs.dataset.hser.split("|"); openHoldSeries(c, id); return; }
   const hev = ev.target.closest("[data-hev]");
@@ -1328,6 +1395,8 @@ document.addEventListener("click", (ev) => {
     setSeg(box, seg.dataset.v);
     if (box.id === "plan-seg") { switchTab(seg.dataset.v); return; }
     if (box.id === "ipo-mode") { prefs.ipoMode = seg.dataset.v; renderIpo(); }
+    else if (box.id === "bias-dir") { prefs.biasDir = seg.dataset.v; renderBias(); }
+    else if (box.id === "bias-kind") { prefs.biasKind = seg.dataset.v; renderBias(); }
     else if (box.id === "ev-mode") {
       prefs.evMode = seg.dataset.v;
       if (prefs.evMode === "week") state.weekStart = mondayOf(state.weekStart);
@@ -1354,7 +1423,7 @@ document.addEventListener("click", (ev) => {
 });
 
 // 下のタブ: ホーム / 予定（イベント・決算・IPO を上の切り替えで）/ ニュース / 保有 / 検索
-const PLAN = ["events", "cal", "ipo"];
+const PLAN = ["events", "cal", "ipo", "bias"];
 const TITLES = { home: "ホーム", plan: "予定", news: "ニュース", hold: "保有銘柄", search: "検索" };
 function switchTab(v) {
   if (PLAN.includes(v)) { prefs.plan = v; saveJSON(PREF_KEY, prefs); v = "plan"; }
@@ -1393,6 +1462,8 @@ document.addEventListener("change", (e) => {
 $("#cal-sort").value = prefs.calSort;
 $("#cal-sort").addEventListener("change", (e) => { prefs.calSort = e.target.value; saveJSON(PREF_KEY, prefs); renderDay(); renderMonth(); });
 setSeg($("#ipo-mode"), prefs.ipoMode);
+setSeg($("#bias-dir"), prefs.biasDir);
+setSeg($("#bias-kind"), prefs.biasKind);
 setSeg($("#ev-mode"), prefs.evMode);
 setSeg($("#cal-mode"), prefs.calMode);
 applyCalMode();

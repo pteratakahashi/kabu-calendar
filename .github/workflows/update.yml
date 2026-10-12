@@ -51,6 +51,10 @@ jobs:
         continue-on-error: true   # Yahoo 側の不調で全体を止めない
         run: python scripts/fetch_reactions.py
 
+      - name: Build bias list
+        continue-on-error: true
+        run: python scripts/build_bias.py
+
       - name: Commit data
         run: |
           git config user.name "github-actions[bot]"

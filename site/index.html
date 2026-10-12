@@ -32,6 +32,7 @@
     <button data-v="events" class="on">イベント</button>
     <button data-v="cal">決算</button>
     <button data-v="ipo">IPO</button>
+    <button data-v="bias">傾向</button>
   </div>
 
   <!-- イベント（週表示） -->
@@ -105,6 +106,22 @@
     </div>
     <div id="ipo-list"></div>
     <p class="note">出典: JPX 新規上場会社情報。初値・騰落率は公開価格比（データ: Yahoo Finance）</p>
+  </section>
+
+  <!-- 傾向（日経225 × 今後の予定で、過去の反応が上昇・下落に偏っている銘柄） -->
+  <section id="view-bias" class="view">
+    <div class="seg" id="bias-dir" role="group" aria-label="上昇・下落">
+      <button data-v="" class="on">すべて</button>
+      <button data-v="1">上がりやすい</button>
+      <button data-v="-1">下がりやすい</button>
+    </div>
+    <div class="seg" id="bias-kind" role="group" aria-label="予定の種類">
+      <button data-v="" class="on">すべて</button>
+      <button data-v="earn">自社の決算</button>
+      <button data-v="ev">指標・海外決算</button>
+    </div>
+    <div id="bias-list"></div>
+    <p class="note" id="bias-note"></p>
   </section>
 
   <!-- 検索 -->

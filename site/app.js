@@ -690,7 +690,7 @@ function openEarnRx(key) {
     const a = earnArrays(c, d), h = state.h.get(c), e = state.earnings.find((x) => x.c === c && x.d === d);
     const av = a.r.filter((v) => v != null), sg = av.length && av.reduce((x, v) => x + v, 0) >= 0 ? 1 : -1;
     const keys = earnHistory(c, d).filter((k) => k.split("@")[1] < d);
-    html += timingHtml(d, e?.t || "", timing({ r: a.r, g: keys.map((k) => gapOf(h, state.rx.earnings[k]?.day)), s: sg, kind: reactTiming(d, e?.t || "").kind }),
+    html += timingHtml(d, e?.t || "", timing({ r: a.r, g: keys.map((k) => gapOf(h, state.rx.earnings[k]?.day)), w1: a.w1, s: sg, kind: reactTiming(d, e?.t || "").kind }), sg,
       { unknownNote: "時刻未定（多くは15時以降）" });
   }
   html += earnEvidenceHtml(c, d);
@@ -1242,45 +1242,82 @@ const intra = (r, g) => (r != null && g != null ? ((1 + r / 100) / (1 + g / 100)
 const gapOf = (h, d) => (h?.g && state.hday.has(d) ? h.g[state.hday.get(d)] : null);
 const evDay = (id) => { const r = state.rx.events[id]; return r?.d1?.nk_day ?? r?.idx?.find((x) => x.sym === "^N225")?.day ?? null; };
 
-// r・g（各回）と偏りの向き s から、仕込むタイミングの目安
-function timing({ r, g, s, kind }) {
-  const p = r.map((x, i) => [x, g?.[i]]).filter(([x, y]) => x != null && y != null);
-  if (p.length < 4) return null;
-  const gs = p.map(([, y]) => y), is = p.map(([x, y]) => intra(x, y));
-  const st = (v) => ({ n: v.length, same: v.filter((x) => Math.sign(x) === s).length, avg: v.reduce((a, x) => a + x, 0) / v.length });
-  const G = st(gs), I = st(is);
-  const strong = (x) => x.same >= 0.6 * x.n && x.avg * s > 0;
-  const weakOpp = (x) => x.same <= 0.4 * x.n && x.avg * s < 0;
-  const act = s > 0 ? "買い" : "空売り";
-  let code, short, text;
+function prevJpBiz(d) {
+  const x = parse(d);
+  do { x.setDate(x.getDate() - 1); } while (!isJpBiz(ymd(x)));
+  return ymd(x);
+}
+function addJpBiz(d, n) { let x = d; for (let i = 0; i < n; i++) x = nextJpBiz(x); return x; }
+
+// 各回の r（前日引け→反応日引け）・g（窓）・w1（前日引け→反応日から5営業日目の引け）と偏りの向き s から、
+// 入る時（前日の引け / 反応日の寄り）と出る時（反応日の寄り / 反応日の引け / 1週間後の引け）の目安
+function timing({ r, g, w1, s, kind }) {
+  const idx = r.map((x, i) => i).filter((i) => r[i] != null && g?.[i] != null);
+  if (idx.length < 4) return null;
+  const st = (v) => { v = v.filter((x) => x != null); return v.length ? { n: v.length, same: v.filter((x) => Math.sign(x) === s).length, avg: v.reduce((a, x) => a + x, 0) / v.length } : null; };
+  const G = st(idx.map((i) => g[i])), I = st(idx.map((i) => intra(r[i], g[i]))), R = st(idx.map((i) => r[i]));
+  const W = st(idx.map((i) => w1?.[i] ?? null));
+  const strong = (x) => x && x.same >= 0.6 * x.n && x.avg * s > 0;
+  const opp = (x) => x && x.same <= 0.4 * x.n && x.avg * s < 0;
+  let entry, exit, why;
+  const up = s > 0 ? "上がり" : "下がり";
   if (kind === "session") {
-    // 場中の発表: 発表の反応は日中（寄り→引け）に出る
-    if (strong(I) && strong(G)) { code = "prev"; short = "前日引け"; text = `寄りの時点ですでに${s > 0 ? "上げ" : "下げ"}やすく、発表後の日中も同じ向き。前日の引けで${act}を入れておくのが一番有利でした。`; }
-    else if (strong(I)) { code = "open"; short = "当日の寄り"; text = `動きは主に日中（発表の前後）に出ています。当日の寄りで${act}を入れても間に合う形でした。`; }
-    else { code = "none"; short = "決め手なし"; text = "窓・日中のどちらにも一貫したパターンはありません。"; }
+    if (strong(I) && strong(G)) { entry = "prev"; exit = "close"; why = `寄りの時点ですでに${up}やすく、発表後の日中も同じ向きでした。`; }
+    else if (strong(I)) { entry = "open"; exit = "close"; why = "動きは主に発表をはさむ日中に出ています。"; }
+    else if (strong(G)) { entry = "prev"; exit = "open"; why = `発表前の寄りの時点で${up}やすく、日中はまちまちでした。`; }
   } else {
-    // 寄り前・引け後・夜間の発表: 発表の反応は主に寄り付きの窓に出る
-    if (strong(G) && strong(I)) { code = "prev"; short = "前日引け"; text = `寄りで窓を開けて${s > 0 ? "上がり" : "下がり"}、日中もさらに同じ向きに動きやすい。前日の引けで${act}が有利ですが、寄りから入っても日中の分は取れる形でした。`; }
-    else if (strong(G) && weakOpp(I)) { code = "prevx"; short = "前日引け→寄りで手じまい"; text = `寄りで窓を開けたあと、日中は戻しやすい形です。前日の引けで${act}を入れ、寄り付きで手じまうのが有利でした。寄りから入ると逆に動きやすいので注意。`; }
-    else if (strong(G)) { code = "prev"; short = "前日引け"; text = `動きの大半は寄り付きの窓で出ています。寄りの時点ではもう動いた後なので、入るなら前日の引けまでに${act}を入れる必要がありました。`; }
-    else if (strong(I)) { code = "open"; short = "当日の寄り"; text = `窓はまちまちで、動きは主に日中に出ています。当日の寄りで${act}を入れても間に合う形でした。`; }
-    else { code = "none"; short = "決め手なし"; text = "窓・日中のどちらにも一貫したパターンはありません。前日の引けから当日の引けまで持って初めて偏りが出る形です。"; }
+    if (strong(G) && strong(I)) { entry = "prev"; exit = "close"; why = `寄りで窓を開けて${up}、日中もさらに同じ向きに動きやすい形でした。`; }
+    else if (strong(G) && opp(I)) { entry = "prev"; exit = "open"; why = "寄りで窓を開けたあと、日中は戻しやすい形でした。寄りから入ると逆に動きやすいので注意。"; }
+    else if (strong(G)) { entry = "prev"; exit = "open"; why = "動きの大半は寄り付きの窓で出て、日中はまちまちでした。寄りの時点ではもう動いた後です。"; }
+    else if (strong(I)) { entry = "open"; exit = "close"; why = "窓はまちまちで、動きは主に日中に出ています。"; }
   }
-  return { code, short, text, G, I };
+  let fallback = false;
+  if (!entry) { entry = "prev"; exit = "close"; fallback = true; why = "窓・日中のどちらにも一貫したパターンはなく、前日の引けから反応日の引けまで持って初めて偏りが出る形でした。"; }
+  // 反応日の引けで出る形のとき、1週間持った方が伸びていたら持ち越し
+  if (exit === "close" && W && W.n >= 5 && W.same >= 0.7 * W.n && W.avg * s > R.avg * s + 0.3) {
+    exit = "week"; why += `さらに1週間持つと、同じ向き ${W.same}/${W.n}回・平均 ${pct(W.avg)} と伸びていました。`;
+  } else if (W && W.n >= 5 && W.same <= 0.4 * W.n) why += "1週間後には戻していることが多いので、持ち越さない方が無難でした。";
+  // この入り方・出方での過去の成績
+  const ret = (i) => {
+    const w = w1?.[i];
+    if (entry === "prev") return exit === "open" ? g[i] : exit === "close" ? r[i] : w;
+    return exit === "close" ? intra(r[i], g[i]) : w != null ? intra(w, g[i]) : null;
+  };
+  const P = st(idx.map(ret));
+  return { entry, exit, why, fallback, G, I, W, R, P };
+}
+
+// 入る日・出る日（具体的な日付）
+function plan(d, t, tm, s) {
+  const rt = reactTiming(d, t);
+  const inD = tm.entry === "prev" ? prevJpBiz(rt.day) : rt.day;
+  const outD = tm.exit === "week" ? addJpBiz(rt.day, 4) : rt.day;
+  const [act, back] = s > 0 ? ["買い", "売り"] : ["空売り", "買い戻し"];
+  const inT = tm.entry === "prev" ? "引け" : "寄り", outT = tm.exit === "open" ? "寄り" : "引け";
+  return { rt, inD, outD, act, back, inT, outT,
+    short: `${act} ${fmtMD(inD)}${inT} → ${back} ${fmtMD(outD)}${outT}` };
 }
 
 const KIND_TXT = { pre: "寄り前の発表", session: "取引時間中の発表", post: "引け後・夜間の発表" };
-function timingHtml(d, t, tm, { unknownNote = "" } = {}) {
+function timingHtml(d, t, tm, s, { unknownNote = "" } = {}) {
   const rt = reactTiming(d, t);
   const when = `${fmtMD(d)}${t ? " " + esc(t) : ""}`;
-  const head = `<div class="tl"><span><small>発表（日本時間）</small><b>${when}</b>${t ? "" : `<small>${unknownNote || "時刻未定"}</small>`}</span><span class="arr">→</span><span><small>日本株の反応日</small><b>${fmtMD(rt.day)}</b></span></div>`;
-  const what = `<p class="why-sum">一覧の騰落率は<b>反応日の終値 ÷ 前日の終値</b>（前日の引けで入り、反応日の引けで手じまった場合）です。${KIND_TXT[rt.kind]}なので、${rt.kind === "session" ? "発表への反応はその日の取引時間中に出ます。" : "発表への反応はまず反応日の寄り付き（窓）に出ます。"}</p>`;
-  if (!tm) return `<div class="card why"><div class="why-h">いつ仕込む？</div>${head}${what}<p class="hint">寄り付きの値段のデータが足りないため、窓と日中の内訳は出せません。</p></div>`;
-  const line = (lbl, x) => `<tr><th>${lbl}</th><td>同じ向き ${x.same}/${x.n}回</td><td>平均 ${pct(x.avg)}</td></tr>`;
-  return `<div class="card why"><div class="why-h">いつ仕込む？ <span class="vchip v-time">${esc(tm.short)}</span></div>${head}${what}
-    <table class="rxtable mini">${line("窓<small>前日引け→寄り</small>", tm.G)}${line("日中<small>寄り→引け</small>", tm.I)}</table>
-    <p class="why-sum"><b>過去の形:</b> ${tm.text}</p>
-    <p class="note">過去の回の始値・終値から見た目安です。今回も同じになるとは限りません。</p></div>`;
+  const pre = `<p class="why-sum">一覧の騰落率は<b>反応日（${fmtMD(rt.day)}）の終値 ÷ その前の営業日（${fmtMD(prevJpBiz(rt.day))}）の終値</b>です。${KIND_TXT[rt.kind]}${t ? "" : "（時刻未定のため引け後として計算）"}なので、${rt.kind === "session" ? "発表への反応はその日の取引時間中に出ます。" : "発表への反応はまず反応日の寄り付き（窓）に出ます。"}</p>`;
+  if (!tm) return `<div class="card why"><div class="why-h">いつ買って、いつ売る？</div>
+    <div class="tl"><span><small>発表（日本時間）</small><b>${when}</b></span><span class="arr">→</span><span><small>日本株の反応日</small><b>${fmtMD(rt.day)}</b></span></div>${pre}
+    <p class="hint">寄り付きの値段のデータが足りないため、窓と日中の内訳は出せません。</p></div>`;
+  const p = plan(d, t, tm, s);
+  const steps = `<div class="tl3">
+    <span><small>① ${p.act}</small><b>${fmtMD(p.inD)} ${p.inT}</b></span><span class="arr">→</span>
+    <span><small>発表</small><b>${when}</b>${t ? "" : `<small>${unknownNote || "時刻未定"}</small>`}</span><span class="arr">→</span>
+    <span><small>② ${p.back}</small><b>${fmtMD(p.outD)} ${p.outT}</b></span></div>`;
+  const line = (lbl, x) => (x ? `<tr><th>${lbl}</th><td>同じ向き ${x.same}/${x.n}回</td><td>平均 ${pct(x.avg)}</td></tr>` : "");
+  return `<div class="card why"><div class="why-h">いつ買って、いつ売る？${tm.fallback ? ' <span class="vchip v-mkt">決め手なし</span>' : ""}</div>${steps}
+    <p class="why-sum"><b>過去の形:</b> ${tm.why}</p>
+    ${tm.P ? `<p class="why-sum">この入り方・出方だと、過去は<b>同じ向き ${tm.P.same}/${tm.P.n}回・平均 ${pct(tm.P.avg)}</b>${s < 0 ? "（下落＝空売りの利益）" : ""}。</p>` : ""}
+    ${pre}
+    <table class="rxtable mini">${line("窓<small>前日引け→反応日の寄り</small>", tm.G)}${line("日中<small>反応日の寄り→引け</small>", tm.I)}${line("1日<small>前日引け→反応日の引け</small>", tm.R)}${line("1週間<small>前日引け→5営業日目の引け</small>", tm.W)}</table>
+    <p class="note">過去の回の始値・終値から見た目安で、売買の推奨ではありません。手数料・空売りの貸株料や、寄り付きで値段がつかない場合などは考えていません。</p></div>`;
 }
 
 // ---------- 傾向 ----------
@@ -1323,12 +1360,13 @@ function renderBias() {
     html += `<h3 class="sec bias-h"><span>${fmtMD(x0.d)}${when} ${esc(title)}</span>${nk}<span class="nk rday">→ 反応 ${fmtMD(rt.day)}${x0.k === "earn" ? "（引け後に発表の場合）" : ""}</span></h3><ul class="list">`
       + xs.slice(0, state.biasOpen.has(g) ? xs.length : LIM).map((x) => {
         const held = state.hold.has(x.c);
-        const tmx = timing({ r: x.r, g: x.g, s: x.s, kind: reactTiming(x.d, x.tm).kind });
+        const tmx0 = timing({ r: x.r, g: x.g, w1: x.w1, s: x.s, kind: reactTiming(x.d, x.tm).kind });
+        const tmx = tmx0 && { short: plan(x.d, x.tm, tmx0, x.s).short, fallback: tmx0.fallback };
         const dir = x.s > 0 ? "上昇" : "下落";
         return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
           <div class="main"><div class="name">${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))} <span class="ncode">${esc(x.c)}</span></div>
           <div class="sub">${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div>
-          <div class="vline">${tmx ? `<span class="vchip v-time">仕込み ${esc(tmx.short)}</span>` : ""}${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
+          <div class="vline">${tmx ? `<span class="vchip v-time">${esc(tmx.short)}${tmx.fallback ? "（決め手なし）" : ""}</span>` : ""}${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
           <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.r.filter((v) => v != null))}</div>
           <span class="chev">›</span></li>`;
       }).join("") + `</ul>`
@@ -1493,7 +1531,8 @@ function openHoldSeries(c, key) {
     const nxt = (state.series.get(k) || []).find((e) => e.d >= todayStr()) || ev;
     const rr = rows.map((x) => evR(h, x.id)), av = rr.filter((v) => v != null);
     const sg = av.length && av.reduce((a, v) => a + v, 0) >= 0 ? 1 : -1, rk = reactTiming(nxt.d, nxt.t);
-    why = timingHtml(nxt.d, nxt.t, timing({ r: rr, g: rows.map((x) => gapOf(h, evDay(x.id))), s: sg, kind: rk.kind }));
+    const wk = (d) => { if (!state.hday.has(d)) return null; const i = state.hday.get(d), v = h.r.slice(i, i + 5); return v.length === 5 && v.every((x) => x != null) ? (v.reduce((a, x) => a * (1 + x / 100), 1) - 1) * 100 : null; };
+    why = timingHtml(nxt.d, nxt.t, timing({ r: rr, g: rows.map((x) => gapOf(h, evDay(x.id))), w1: rows.map((x) => wk(evDay(x.id))), s: sg, kind: rk.kind }), sg);
     why += evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
   }
   const st = stat(rows.map((r) => cols[0].f(r)));

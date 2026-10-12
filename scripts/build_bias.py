@@ -89,6 +89,15 @@ def main() -> int:
     # 窓（前日終値 → 反応日の始値）。r − g がおおよそ日中の動き
     gap = lambda h, d: h["g"][hday[d]] if h.get("g") and d in hday else None  # noqa: E731
 
+    def week(h, d):
+        """反応日から5営業日目の終値（反応日の前日終値比、%）。決算の「1週間後」と同じ定義"""
+        if d not in hday or hday[d] + 5 > len(h["r"]):
+            return None
+        v = h["r"][hday[d]:hday[d] + 5]
+        if any(x is None for x in v):
+            return None
+        return round((math.prod(1 + x / 100 for x in v) - 1) * 100, 2)
+
     def ev_day(eid):
         r = rx["events"].get(eid) or {}
         return (r.get("d1") or {}).get("nk_day") or next((x["day"] for x in r.get("idx", []) if x["sym"] == "^N225"), None)
@@ -149,7 +158,8 @@ def main() -> int:
                 items.append({"k": "ev", "c": c, "id": ev["id"], "d": ev["d"], "tm": ev.get("t", ""), **j,
                               "r": vals, "nk": [nk_r(p["id"]) for p in hist],
                               "dv": [driver(rx["events"][p["id"]], k) for p in hist],
-                              "g": [gap(h, ev_day(p["id"])) for p in hist]})
+                              "g": [gap(h, ev_day(p["id"])) for p in hist],
+                              "w1": [week(h, ev_day(p["id"])) for p in hist]})
     items.sort(key=lambda i: (i["d"], -abs(i["t"])))
     out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "items": items}
     (DATA / "bias.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

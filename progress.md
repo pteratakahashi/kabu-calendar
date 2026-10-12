@@ -97,7 +97,7 @@
 - [x] 同業他社の決算: 同じ業種（日経225の業種分類）か同じテーマ（高配当除く）の日経225銘柄の決算反応日に、保有株がどう動いたか（自社の決算日と重なる日は除く）。普段の1.5倍以上なら注意イベントに「同業決算」として出す
 - [x] h/<コード>.json に日次騰落率（直近約3年、h/index.json の days に揃える）・直近終値を追加（各約8KB）
 - 既知: 株価は前営業日の終値（場中の値ではない）。初回のブリーフ（10/12）は Claude Code が Yahoo の数値から手書き
-- **重大: 定期実行ルーティンは GitHub に push できていない**（10/12 の手動実行のログで判明: 「Claude doesn't have GitHub access to pteratakahashi/kabu-calendar」403）。つまり 10/9 以降、毎日2回の予定・ニュース・ブリーフの自動更新はリポジトリに反映されていなかった（Actions 側の JPX・株価・反応の更新は正常）。ユーザーが Claude GitHub App にリポジトリへのアクセスを許可する必要あり
+- **（解決済み 10/12 18:13）** 定期実行ルーティンは GitHub に push できていなかった（10/12 の手動実行のログで判明: 「Claude doesn't have GitHub access to pteratakahashi/kabu-calendar」403）。つまり 10/9 以降、毎日2回の予定・ニュース・ブリーフの自動更新はリポジトリに反映されていなかった（Actions 側の JPX・株価・反応の更新は正常）。ユーザーが Claude GitHub App にリポジトリへのアクセスを許可する必要あり
 
 ## v8（2026-10-12）傾向（日経225 × 今後の予定の偏り）
 要望: 保有していなくても、今後のイベント・決算で過去の値動きが上昇／下落に偏っている日経225銘柄を一覧で見たい（買い・空売りの検討用）
@@ -141,9 +141,5 @@
 - APIキーは本番運用開始後にローテーション（ダッシュボードで再発行 → `gh secret set` で差し替え → 旧キー無効化）。
 
 ## 【次のアクション】
-**USER ACTION REQUIRED** — ① 定期実行の push 権限を直す（これをしないと予定・ニュース・ブリーフが自動更新されない）:
-  1. スマホかPCで https://github.com/apps/claude/installations/select_target を開く
-  2. 自分のアカウント（pteratakahashi）を選ぶ →「Repository access」で「Only select repositories」に kabu-calendar を追加（または All repositories）→ Save
-  3. うまくいかなければ https://claude.ai/customize/connectors で GitHub を再接続
-  4. 終わったら Claude Code に「権限直した」と伝える → ルーティンを手動実行して push を確認する
-② スマホで v10 を確認: 「予定」→「傾向」→ 銘柄をタップ →「いつ仕込む？」「なぜ動く？」。表示が古ければアプリを一度閉じて開き直す
+**USER ACTION REQUIRED** — スマホで v10 を確認: 「予定」→「傾向」→ 銘柄をタップ →「いつ仕込む？」「なぜ動く？」。表示が古ければアプリを一度閉じて開き直す。
+（定期実行の push 権限は 10/12 にユーザーが GitHub の Claude App 設定で Save → 手動実行で push 成功を確認済み: 735380b「events: 2026-10-12 更新」。以後 6:30/17:30 の更新が反映される）

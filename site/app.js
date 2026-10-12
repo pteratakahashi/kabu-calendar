@@ -11,7 +11,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -22,7 +22,8 @@ const state = {
   nextByCode: new Map(), // code -> 直近の今後の決算 (なければ最新)
   hold: new Set(loadJSON(HOLD_KEY, null) ?? loadJSON(WATCH_KEY, [])), // 保有銘柄（日経225採用銘柄から選ぶ・端末内に保存）
   n225: { codes: [], history: [] }, n225set: new Set(),
-  hidx: null, hev: new Map(), hnews: new Map(), // 保有銘柄の反応（h/index.json の id → 位置）
+  hidx: null, hev: new Map(), hnews: new Map(), hday: new Map(), // 保有銘柄の反応（h/index.json の id・日付 → 位置）
+  alertList: [], brief: null, market: null,
   h: new Map(),          // 銘柄コード -> h/<コード>.json
   alerts: new Map(),     // イベント id -> [{c, abs, ratio, n}]（今後2週間、保有銘柄が大きく動きやすいもの）
   month: null, selected: null, weekStart: null,
@@ -107,6 +108,8 @@ async function load() {
     state.ipo = await getJSON("ipo.json").catch(() => []);
     state.news = await getJSON("news.json").catch(() => []);
     state.n225 = await getJSON("n225.json").catch(() => state.n225);
+    state.brief = await getJSON("brief.json").catch(() => null);
+    state.market = await getJSON("market.json").catch(() => null);
     state.n225set = new Set(state.n225.codes.map((x) => x.c));
     state.rx.news ||= {};
   } catch (e) {
@@ -701,8 +704,13 @@ function newsRxLine(id, compact = false) {
   return `<div class="rxline">${parts.join("")}<span class="rxhint">チャート ›</span></div>`;
 }
 
-function newsCard(n) {
+function newsCard(n, compact = false) {
   const d = parse(n.d);
+  if (compact) {
+    const nk = state.rx.news[n.id]?.idx?.find((x) => x.sym === "^N225");
+    return `<li class="row has-rx" data-news="${esc(n.id)}"><div class="when"><b>${d.getMonth() + 1}/${d.getDate()}</b><span>${esc(n.cat)}</span></div>
+      <div class="main"><div class="name">${esc(n.title)}</div>${nk ? `<div class="sub">日経 ${pct(nk.r1)}${nk.r5 != null ? ` · 1週間 ${pct(nk.r5)}` : ""}</div>` : ""}</div><span class="chev">›</span></li>`;
+  }
   return `<li class="news-row has-rx" data-news="${esc(n.id)}">
     <div class="lead"><span class="nd">${d.getMonth() + 1}/${d.getDate()}</span><span class="nt">${n.t ? esc(n.t) + (n.approx ? "頃" : "") : `(${WD[d.getDay()]})`}</span>${stars(n.impact)}</div>
     <div class="main"><div class="name"><span class="cat">${esc(n.cat)}</span>${FLAG[n.country] || ""} ${esc(n.title)}</div>
@@ -796,8 +804,11 @@ function renderSearch() {
 }
 
 // ---------- 保有銘柄 ----------
-// 選べるのは日経平均採用銘柄。端末内（localStorage）に保存。各銘柄の反応は h/<コード>.json を必要な時に読む
+// 選べるのは日経平均採用銘柄。保有銘柄・株数・取得単価は端末内（localStorage）だけに保存。
+// 各銘柄の反応は h/<コード>.json を必要な時に読む
 const ALERT_RATIO = 1.5; // 過去の平均の振れ幅が「普段の1日の値動き」の何倍以上なら注意とするか
+const POS_KEY = "kabucal.pos.v1"; // {コード: {q: 株数, cost: 取得単価}}
+const pos = loadJSON(POS_KEY, {});
 
 async function loadHold(c) {
   if (state.h.has(c)) return state.h.get(c);
@@ -813,10 +824,15 @@ async function loadHoldings() {
     state.hidx = await getJSON("h/index.json");
     state.hidx.ev.forEach((id, i) => state.hev.set(id, i));
     state.hidx.news.forEach((id, i) => state.hnews.set(id, i));
+    (state.hidx.days || []).forEach((d, i) => state.hday.set(d, i));
   } catch { return; }
   await Promise.all([...state.hold].map(loadHold));
+  refreshHold();
+}
+
+function refreshHold() {
   computeAlerts();
-  renderHold(); renderWeek();
+  renderHome(); renderHold(); renderWeek();
   if ($("#sheet").open && state.sheetFn) state.sheetFn();
 }
 
@@ -828,7 +844,38 @@ function saveHold() {
 const holdName = (c) => state.stock.get(c)?.n || state.n225.codes.find((x) => x.c === c)?.n || c;
 const evR = (h, id) => (h && state.hev.has(id) ? h.ev[state.hev.get(id)] : null);
 const newsR = (h, id) => (h && state.hnews.has(id) ? h.news[state.hnews.get(id)] : null);
+const dayR = (h, d) => (h?.r && state.hday.has(d) ? h.r[state.hday.get(d)] : null);
 const nkR = (id) => state.rx.events[id]?.d1?.nk ?? state.rx.events[id]?.idx?.find((x) => x.sym === "^N225")?.r ?? null;
+
+// ---- 株数・金額 ----
+const qty = (c) => (state.hold.has(c) ? pos[c]?.q || 0 : 0);
+const value = (c) => qty(c) * (state.h.get(c)?.px || 0);
+const hasPos = () => [...state.hold].some((c) => qty(c) > 0 && state.h.get(c));
+function yen(v, { sign = false } = {}) {
+  if (v == null || Number.isNaN(v)) return "—";
+  const a = Math.abs(v), s = sign ? (v > 0 ? "+" : v < 0 ? "−" : "±") : v < 0 ? "−" : "";
+  if (a >= 1e8) return `${s}${(a / 1e8).toFixed(a >= 1e9 ? 1 : 2)}億円`;
+  if (a >= 1e4) return `${s}${(a / 1e4).toFixed(a >= 1e6 ? 0 : 1)}万円`;
+  return `${s}${Math.round(a).toLocaleString()}円`;
+}
+const yenPct = (v) => `<span class="pct ${v > 0 ? "up" : v < 0 ? "down" : "flat"}">${yen(v, { sign: true })}</span>`;
+
+// ポートフォリオ全体（今の株数で計算）
+function portfolio() {
+  const cs = [...state.hold].filter((c) => qty(c) > 0 && state.h.get(c));
+  if (!cs.length) return null;
+  const val = cs.reduce((a, c) => a + value(c), 0);
+  const costed = cs.filter((c) => pos[c]?.cost > 0);
+  const pl = costed.length ? costed.reduce((a, c) => a + qty(c) * (state.h.get(c).px - pos[c].cost), 0) : null;
+  const plBase = costed.reduce((a, c) => a + qty(c) * pos[c].cost, 0);
+  // 前日比・普段の1日の振れ幅（直近250立会日、今の株数で）
+  const days = state.hidx?.days || [];
+  const daily = days.slice(-250).map((d) => cs.reduce((a, c) => { const r = dayR(state.h.get(c), d); return r == null ? a : a + value(c) * r / 100; }, 0));
+  const vol = daily.length ? daily.reduce((a, v) => a + Math.abs(v), 0) / daily.length : 0;
+  const lastDay = state.h.get(cs[0]).pd;
+  const chg = cs.reduce((a, c) => { const r = dayR(state.h.get(c), state.h.get(c).pd); return r == null ? a : a + value(c) / (1 + r / 100) * r / 100; }, 0);
+  return { cs, val, pl, plPct: plBase ? pl / plBase * 100 : null, vol, chg, chgPct: chg / (val - chg) * 100, lastDay };
+}
 
 // 指標の名前（同じ種類のイベントの代表名）
 function seriesName(ev) {
@@ -845,56 +892,127 @@ function holdSeriesStat(h, ev) {
   return st && { ...st, hist, vals, nk: stat(hist.map((e) => nkR(e.id))) };
 }
 
-// 今後2週間のイベントのうち、保有銘柄が過去に大きく動いたもの
+// ---- 同業他社 ----
+// 同じ業種（日経225の業種分類）か、同じテーマ（高配当は除く）の日経225銘柄
+function peersOf(c) {
+  const me = state.n225.codes.find((x) => x.c === c);
+  const th = new Set((state.stock.get(c)?.th || []).filter((t) => t !== "highdiv"));
+  return state.n225.codes.filter((x) => x.c !== c && ((me && x.sec === me.sec) || (state.stock.get(x.c)?.th || []).some((t) => th.has(t)))).map((x) => x.c);
+}
+// 同業 p の過去の決算（反応日）で、保有銘柄 c がどう動いたか
+function peerStat(c, p, before = todayStr()) {
+  const h = state.h.get(c);
+  if (!h?.r) return null;
+  const own = new Set(earnHistory(c, "9999-12-31").map((k) => state.rx.earnings[k]?.day));
+  const keys = earnHistory(p, before).filter((k) => k.split("@")[1] < before);
+  const rows = keys.map((k) => ({ k, d: k.split("@")[1], day: state.rx.earnings[k]?.day })).filter((x) => x.day && !own.has(x.day));
+  const st = stat(rows.map((x) => dayR(h, x.day)));
+  return st && { ...st, rows, pr: stat(rows.map((x) => state.rx.earnings[x.k]?.r)) };
+}
+
+// 今後2週間の注意: イベント・同業の決算で、保有銘柄（株数が入っていればポートフォリオ全体）が過去に普段より大きく動いたもの
 function computeAlerts() {
   state.alerts.clear();
+  state.alertList = [];
   const today = todayStr(), lim = new Date(); lim.setDate(lim.getDate() + 14);
   const end = ymd(lim);
+  const pf = portfolio();
   for (const ev of state.events) {
     if (ev.d < today || ev.d > end || ev.code) continue;
+    const stocks = [];
     for (const c of state.hold) {
       const h = state.h.get(c);
       if (!h?.vol) continue;
       const st = holdSeriesStat(h, ev);
-      if (!st || st.n < 3) continue;
-      const ratio = st.abs / h.vol;
-      if (ratio < ALERT_RATIO) continue;
-      if (!state.alerts.has(ev.id)) state.alerts.set(ev.id, []);
-      state.alerts.get(ev.id).push({ c, abs: st.abs, ratio, n: st.n, up: st.up, avg: st.avg });
+      if (st && st.n >= 3) stocks.push({ c, abs: st.abs, avg: st.avg, up: st.up, n: st.n, ratio: st.abs / h.vol, hist: st.hist });
+    }
+    let pfa = null;
+    if (pf && stocks.length) {
+      const hist = stocks[0].hist;
+      const yv = hist.map((e) => pf.cs.reduce((a, c) => { const r = evR(state.h.get(c), e.id); return r == null ? a : a + value(c) * r / 100; }, 0));
+      const st = stat(yv);
+      if (st) pfa = { abs: st.abs, avg: st.avg, up: st.up, n: st.n, ratio: st.abs / (pf.vol || 1) };
+    }
+    const hot = stocks.filter((x) => x.ratio >= ALERT_RATIO);
+    if (hot.length || (pfa && pfa.ratio >= ALERT_RATIO)) {
+      const a = { kind: "ev", id: ev.id, d: ev.d, t: ev.t, title: ev.title, stocks: hot.sort((x, y) => y.ratio - x.ratio), pf: pfa };
+      state.alerts.set(ev.id, a);
+      state.alertList.push(a);
     }
   }
-  for (const v of state.alerts.values()) v.sort((a, b) => b.ratio - a.ratio);
+  // 同業の決算
+  for (const c of state.hold) {
+    const h = state.h.get(c);
+    if (!h?.vol) continue;
+    const peers = new Set(peersOf(c));
+    for (let d = new Date(); ymd(d) <= end; d.setDate(d.getDate() + 1)) {
+      for (const e of state.byDate.get(ymd(d)) || []) {
+        if (!peers.has(e.c)) continue;
+        const st = peerStat(c, e.c);
+        if (!st || st.n < 4 || st.abs / h.vol < ALERT_RATIO) continue;
+        const id = `peer:${e.c}@${e.d}`;
+        let a = state.alerts.get(id);
+        if (!a) { a = { kind: "peer", id, p: e.c, d: e.d, t: e.t, title: `${holdName(e.c)} 決算（同業）`, stocks: [] }; state.alerts.set(id, a); state.alertList.push(a); }
+        a.stocks.push({ c, abs: st.abs, avg: st.avg, up: st.up, n: st.n, ratio: st.abs / h.vol });
+      }
+    }
+  }
+  state.alertList.sort((a, b) => (a.d + (a.t || "")).localeCompare(b.d + (b.t || "")));
+}
+
+function alertRow(a) {
+  const attr = a.kind === "peer" ? `data-hser="${esc(a.stocks[0].c)}|peer:${esc(a.p)}"` : `data-evrx="${esc(a.id)}"`;
+  const lines = [];
+  if (a.pf) lines.push(`保有株全体 <b>±${yen(a.pf.abs)}</b>（普段の${a.pf.ratio.toFixed(1)}倍）`);
+  for (const s of a.stocks.slice(0, 3)) {
+    const yv = qty(s.c) ? `≒±${yen(value(s.c) * s.abs / 100)}` : "";
+    lines.push(`${esc(holdName(s.c))} ±${s.abs.toFixed(1)}%${yv ? ` ${yv}` : ""}（上昇${s.up}/${s.n}回）`);
+  }
+  return `<li class="row has-rx" ${attr}>
+    <div class="when"><b>${fmtMD(a.d)}</b><span>${esc(a.t || "")}</span></div>
+    <div class="main"><div class="name">${a.kind === "peer" ? '<span class="tag">同業決算</span>' : ""}${esc(a.title)}</div>
+    <div class="sub">${lines.join("<br>")}</div></div><span class="chev">›</span></li>`;
+}
+
+const fmtMD = (s) => { const d = parse(s); return `${d.getMonth() + 1}/${d.getDate()}(${WD[d.getDay()]})`; };
+
+function pfCard(pf, { link = false } = {}) {
+  if (!pf) return "";
+  return `<div class="card pf ${link ? "has-rx" : ""}" ${link ? 'data-go="hold"' : ""}>
+    <div class="pf-top"><div><div class="lbl">評価額</div><div class="big">${yen(pf.val)}</div></div>
+      ${pf.pl != null ? `<div class="r"><div class="lbl">含み損益</div><div class="mid">${yenPct(pf.pl)}<small>${pf.plPct != null ? ` (${pf.plPct > 0 ? "+" : ""}${pf.plPct.toFixed(1)}%)` : ""}</small></div></div>` : ""}</div>
+    <div class="pf-row"><span>前日比（${fmtMD(pf.lastDay)}）</span><span>${yenPct(pf.chg)} ${pct(pf.chgPct)}</span></div>
+    <div class="pf-row"><span>普段の1日の値動き</span><b>±${yen(pf.vol)}</b></div>
+  </div>`;
 }
 
 function renderHold() {
   const el = $("#hold-list");
   if (!el) return;
   const asof = state.n225.asof ? `（${esc(state.n225.asof)}現在）` : "";
-  $("#hold-note").innerHTML = `選べるのは日経平均採用銘柄 225社${asof}。採用銘柄が入れ替わったら自動で反映されます。保有銘柄はこの端末にだけ保存されます。`;
-  const codes = [...state.hold].sort((a, b) => a.localeCompare(b));
+  $("#hold-note").innerHTML = `選べるのは日経平均採用銘柄 225社${asof}。採用銘柄が入れ替わったら自動で反映されます。保有銘柄・株数・取得単価はこの端末にだけ保存されます。株価は前営業日の終値。`;
+  const codes = [...state.hold].sort((a, b) => value(b) - value(a) || a.localeCompare(b));
+  const pf = portfolio();
+  $("#pf-sum").innerHTML = pfCard(pf) || (codes.length ? `<p class="hint">銘柄をタップして株数を入れると、影響を円で見られます</p>` : "");
   if (!codes.length) {
     $("#hold-alert").innerHTML = "";
-    el.innerHTML = `<p class="empty-msg">「銘柄を選ぶ」から持っている銘柄を登録すると、<br>ニュースや指標・決算でその株がどう動いたかが見られます</p>`;
+    el.innerHTML = `<div class="empty-card"><b>持っている銘柄を登録しましょう</b><p>ニュースや指標・決算で、その株がどう動いたかが分かります</p><button class="btn" id="hold-edit2">＋ 銘柄を選ぶ</button></div>`;
     return;
   }
-  // 今後2週間の注意イベント
+  $("#hold-alert").innerHTML = state.alertList.length
+    ? `<h3 class="sec">今後2週間の注意</h3><ul class="list">${state.alertList.map(alertRow).join("")}</ul>`
+    : `<p class="hint">今後2週間、保有株が普段の${ALERT_RATIO}倍以上動いてきた予定はありません</p>`;
   const today = todayStr();
-  const evs = state.events.filter((e) => state.alerts.has(e.id)).sort((a, b) => (a.d + (a.t || "")).localeCompare(b.d + (b.t || "")));
-  $("#hold-alert").innerHTML = evs.length ? `<h4 class="sheet-h">今後2週間の注意イベント</h4><ul class="list">`
-    + evs.map((e) => `<li class="has-rx" data-hev="${esc(e.id)}"><div class="lead"><span class="nd">${fmtDay(e.d)}</span><span class="nt">${esc(e.t || "")}</span></div>
-      <div class="main"><div class="name">${esc(e.title)}</div>
-      <div class="sub">${state.alerts.get(e.id).map((a) => `${esc(holdName(a.c))} 振れ幅 <b>${a.abs.toFixed(1)}%</b>（普段の${a.ratio.toFixed(1)}倍）`).join("<br>")}</div></div></li>`).join("")
-    + `</ul><p class="note">過去の同じイベント（最大10回）で、その銘柄の反応日の平均の振れ幅が普段の1日の値動きの${ALERT_RATIO}倍以上のもの</p>`
-    : `<p class="msum">今後2週間、保有銘柄が普段より大きく動いてきたイベントはありません</p>`;
-  el.innerHTML = `<h4 class="sheet-h">保有銘柄（${codes.length}）</h4><ul class="list">` + codes.map((c) => {
-    const s = state.stock.get(c) || {}, h = state.h.get(c);
-    const nx = state.nextByCode.get(c);
-    const out = !state.n225set.has(c) ? '<span class="badge">日経225から除外</span>' : "";
-    const last = earnHistory(c, todayStr())[0];
-    return `<li class="has-rx" data-hold="${esc(c)}"><div class="lead"><span class="code">${esc(c)}</span></div>
+  el.innerHTML = `<h3 class="sec">保有銘柄（${codes.length}）</h3><ul class="list">` + codes.map((c) => {
+    const h = state.h.get(c), q = qty(c), nx = state.nextByCode.get(c);
+    const out = !state.n225set.has(c) ? '<span class="tag">日経225から除外</span>' : "";
+    const r1 = h ? dayR(h, h.pd) : null;
+    const right = q && h ? `<div class="num-r"><b>${yen(value(c))}</b>${pos[c]?.cost ? yenPct(q * (h.px - pos[c].cost)) : pct(r1, { label: "前日 " })}</div>`
+      : `<div class="num-r">${h ? `<b>${h.px.toLocaleString()}円</b>${pct(r1, { label: "前日 " })}` : ""}</div>`;
+    return `<li class="row has-rx" data-hold="${esc(c)}">
       <div class="main"><div class="name">${esc(holdName(c))}${out}</div>
-      <div class="sub">${esc(s.sec || "")}${nx?.d ? ` · 決算 ${fmtDay(nx.d)}${nx.d < today ? " 発表済" : ""}` : ""}</div>
-      <div class="rxline">${h ? `<span class="lbl">普段の値動き ±${h.vol.toFixed(1)}%</span>` : ""}${last ? `<span class="lbl">前回決算 ${pct(state.rx.earnings[last].r)}</span>` : ""}<span class="rxhint">影響を見る ›</span></div></div></li>`;
+      <div class="sub">${esc(c)}${q ? ` · ${q.toLocaleString()}株` : ""}${nx?.d && nx.d >= today ? ` · 決算 ${fmtMD(nx.d)}` : ""}</div></div>
+      ${right}<span class="chev">›</span></li>`;
   }).join("") + `</ul>`;
 }
 
@@ -925,7 +1043,24 @@ async function togglePick(c) {
   renderPicker();
   await loadHold(c);
   computeAlerts();
-  renderHold(); renderWeek(); renderCalendar(); renderDay(); renderMonth();
+  renderHome(); renderHold(); renderWeek(); renderCalendar(); renderDay(); renderMonth();
+}
+
+function setPos(c, k, v) {
+  const n = Number(String(v).replace(/[^\d.]/g, ""));
+  pos[c] = { ...(pos[c] || {}), [k]: n > 0 ? n : 0 };
+  saveJSON(POS_KEY, pos);
+  computeAlerts();
+  renderHome(); renderHold(); renderWeek();
+  const h = state.h.get(c), el = $("#pos-out");
+  if (el && h) el.innerHTML = posSummary(c);
+}
+
+function posSummary(c) {
+  const h = state.h.get(c), q = qty(c);
+  if (!h || !q) return `<span class="hint">株数を入れると評価額と、イベントごとの影響が円で出ます</span>`;
+  const pl = pos[c]?.cost ? q * (h.px - pos[c].cost) : null;
+  return `評価額 <b>${yen(value(c))}</b>${pl != null ? ` · 含み損益 ${yenPct(pl)}` : ""} · 普段の1日 ±${yen(value(c) * h.vol / 100)}`;
 }
 
 // 保有銘柄の詳細: どのイベント・ニュース・決算でどう動いたか
@@ -935,22 +1070,37 @@ async function openHolding(c) {
   const s = state.stock.get(c) || {};
   const today = todayStr();
   const nx = state.nextByCode.get(c);
-  let html = `<p class="sheet-desc">${esc(c)} · ${esc(s.sec || "")}${h ? ` · 普段の1日の値動き ±${h.vol.toFixed(2)}%（直近1年の平均）` : ""}</p>`;
+  const q = qty(c);
+  const y = (p) => (q && p != null ? `<small>≒${yen(value(c) * p / 100)}</small>` : "");
+  let html = `<p class="sheet-desc">${esc(c)} · ${esc(s.sec || "")}${h ? ` · 終値 ${h.px.toLocaleString()}円（${fmtMD(h.pd)}）· 普段の1日の値動き ±${h.vol.toFixed(2)}%` : ""}</p>`;
   if (!h) { openSheet(name, html + `<p class="msum">反応データはまだありません（次回の更新で作られます）</p>`, null); return; }
+  html += `<div class="card posbox"><div class="pos-in">
+      <label>株数<input inputmode="numeric" data-pos="${esc(c)}|q" value="${pos[c]?.q || ""}" placeholder="例 100"></label>
+      <label>取得単価（円）<input inputmode="decimal" data-pos="${esc(c)}|cost" value="${pos[c]?.cost || ""}" placeholder="任意"></label></div>
+    <div id="pos-out" class="pos-out">${posSummary(c)}</div></div>`;
 
-  // 1) 今後2週間のイベント
+  // 1) 今後2週間のイベント・同業の決算
   const lim = new Date(); lim.setDate(lim.getDate() + 14);
   const up = state.events.filter((e) => e.d >= today && e.d <= ymd(lim) && !e.code)
     .map((e) => ({ e, st: holdSeriesStat(h, e) })).filter((x) => x.st && x.st.n >= 3)
     .sort((a, b) => b.st.abs - a.st.abs);
   if (up.length) {
-    html += `<h4 class="sheet-h">今後2週間のイベントと、この銘柄の過去の反応</h4><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th></tr></thead><tbody>`
-      + up.slice(0, 8).map(({ e, st }) => `<tr data-hser="${esc(c)}|${esc(e.id)}" class="${st.abs / h.vol >= ALERT_RATIO ? "warn" : ""}"><th>${fmtDay(e.d)} ${esc(seriesName(e))}<small>${st.abs / h.vol >= ALERT_RATIO ? "⚠ 普段より大きく動きやすい · " : ""}過去${st.n}回</small></th>
-        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%</td></tr>`).join("")
+    html += `<h3 class="sec">今後2週間のイベント</h3><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th></tr></thead><tbody>`
+      + up.slice(0, 8).map(({ e, st }) => `<tr data-hser="${esc(c)}|${esc(e.id)}" class="${st.abs / h.vol >= ALERT_RATIO ? "warn" : ""}"><th>${fmtMD(e.d)} ${esc(seriesName(e))}<small>${st.abs / h.vol >= ALERT_RATIO ? "⚠ 普段より大きく動きやすい · " : ""}過去${st.n}回</small></th>
+        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%${y(st.abs)}</td></tr>`).join("")
       + `</tbody></table>`;
   }
 
-  // 2) 指標・イベント別（よく動く順）
+  // 2) 同業他社の決算
+  const peers = peersOf(c).map((p) => ({ p, st: peerStat(c, p) })).filter((x) => x.st && x.st.n >= 4).sort((a, b) => b.st.abs - a.st.abs).slice(0, 8);
+  if (peers.length) {
+    html += `<h3 class="sec">同業他社の決算のとき</h3><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th></tr></thead><tbody>`
+      + peers.map(({ p, st }) => { const n = state.nextByCode.get(p); return `<tr data-hser="${esc(c)}|peer:${esc(p)}" class="${st.abs / h.vol >= ALERT_RATIO ? "warn" : ""}"><th>${esc(holdName(p))}<small>${n?.d >= today ? `次回 ${fmtMD(n.d)} · ` : ""}過去${st.n}回</small></th>
+        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%${y(st.abs)}</td></tr>`; }).join("")
+      + `</tbody></table><p class="note">同じ業種・テーマの日経225銘柄の決算反応日に、この銘柄がどう動いたか（自社の決算と重なった日は除く）</p>`;
+  }
+
+  // 3) 指標・イベント別（よく動く順）
   const seen = new Set(), rows = [];
   for (const ev of [...state.events].reverse()) {
     if (ev.d > today || ev.code) continue;
@@ -962,43 +1112,56 @@ async function openHolding(c) {
   }
   rows.sort((a, b) => b.st.abs - a.st.abs);
   if (rows.length) {
-    html += `<h4 class="sheet-h">指標・イベント別の反応（各 過去10回まで、よく動く順）</h4><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th><th>日経の振れ幅</th></tr></thead><tbody>`
-      + rows.slice(0, 15).map(({ ev, st }) => `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(seriesName(ev))}<small>過去${st.n}回</small></th>
-        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%</td><td class="num">${st.nk ? st.nk.abs.toFixed(1) + "%" : "—"}</td></tr>`).join("")
-      + `</tbody></table><p class="note">反応日（発表後に最初に開いた日本の立会日）の騰落率。振れ幅＝上げ下げを問わない平均の動きの大きさ。同じ日に別のイベントがあった場合はその影響も含みます。行をタップで各回の一覧</p>`;
+    html += `<h3 class="sec">指標・イベント別（よく動く順）</h3><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th><th>日経</th></tr></thead><tbody>`
+      + rows.slice(0, 12).map(({ ev, st }) => `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(seriesName(ev))}<small>過去${st.n}回</small></th>
+        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%</td><td class="num muted">${st.nk ? st.nk.abs.toFixed(1) + "%" : "—"}</td></tr>`).join("")
+      + `</tbody></table><p class="note">各イベントの反応日（発表後に最初に開いた日本の立会日）の騰落率、過去10回まで。振れ幅＝上げ下げを問わない平均の動き。日経＝同じ日の日経平均の振れ幅。同じ日に別のイベントがあった場合はその影響も含みます</p>`;
   }
 
-  // 3) ニュース（大きく動いた順）
+  // 4) ニュース（大きく動いた順）
   const ns = state.news.map((n) => ({ n, r: newsR(h, n.id) })).filter((x) => x.r && x.r[0] != null)
-    .sort((a, b) => Math.abs(b.r[0]) - Math.abs(a.r[0])).slice(0, 10);
+    .sort((a, b) => Math.abs(b.r[0]) - Math.abs(a.r[0])).slice(0, 8);
   if (ns.length) {
-    const nk = (id) => state.rx.news[id]?.idx?.find((x) => x.sym === "^N225")?.r1 ?? null;
-    html += `<h4 class="sheet-h">大きく動いたニュース（今年・上位10件）</h4><table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間後</th><th>1か月後</th></tr></thead><tbody>`
-      + ns.map(({ n, r }) => `<tr data-news="${esc(n.id)}"><th>${fmtDay(n.d)} ${esc(n.title)}<small>日経平均 ${nk(n.id) != null ? (nk(n.id) > 0 ? "+" : "") + nk(n.id).toFixed(2) + "%" : "—"}</small></th>
+    html += `<h3 class="sec">大きく動いたニュース</h3><table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間</th><th>1か月</th></tr></thead><tbody>`
+      + ns.map(({ n, r }) => `<tr data-news="${esc(n.id)}"><th>${fmtMD(n.d)} ${esc(n.title)}</th>
         <td>${pct(r[0])}</td><td>${pct(r[1])}</td><td>${pct(r[2])}</td></tr>`).join("")
       + `</tbody></table>`;
   }
 
-  // 4) 決算
-  html += earnHistoryHtml(c, nx?.d && nx.d >= today ? nx.d : "9999-12-31")
-    || `<p class="msum">過去の決算の反応データはありません</p>`;
+  // 5) 決算
+  html += earnHistoryHtml(c, nx?.d && nx.d >= today ? nx.d : "9999-12-31");
   if (nx?.d) html += `<p class="msum">次の決算: ${fmtDay(nx.d)}${nx.d < today ? "（発表済・次回は未定）" : ""}</p>`;
+  html += `<button class="btn ghost" data-unhold="${esc(c)}">保有から外す</button>`;
   openSheet(name, html, () => openHolding(c));
 }
 
-// 保有銘柄 × 指標: 各回の反応
-function openHoldSeries(c, evId) {
-  const h = state.h.get(c), ev = state.events.find((e) => e.id === evId);
-  if (!h || !ev) return;
-  const hist = eventHistory(ev).filter((e) => e.d < todayStr());
-  const rows = hist.map((e) => ({ d: e.d, sub: e.desc, attr: `data-evrx="${esc(e.id)}"`, id: e.id }));
-  const html = `<p class="sheet-desc">${esc(holdName(c))}（普段の1日の値動き ±${h.vol.toFixed(2)}%）が「${esc(seriesName(ev))}」の反応日にどう動いたか</p>`
-    + historyHtml(`${holdName(c)} の反応`, rows, [
-      { h: holdName(c).slice(0, 8), f: (x) => evR(h, x.id) },
-      { h: "日経平均", f: (x) => nkR(x.id) },
-      { h: "日経との差", f: (x) => (evR(h, x.id) != null && nkR(x.id) != null ? evR(h, x.id) - nkR(x.id) : null) },
-    ], { note: "反応日の終値騰落率。行をタップでその回の詳細" });
-  openSheet(`${seriesName(ev)} × ${holdName(c)}`, html, () => openHoldSeries(c, evId));
+// 保有銘柄 × 指標（または同業の決算）: 各回の反応
+function openHoldSeries(c, key) {
+  const h = state.h.get(c);
+  if (!h) return;
+  const q = qty(c);
+  let title, desc, rows, cols;
+  if (key.startsWith("peer:")) {
+    const p = key.slice(5), st = peerStat(c, p);
+    if (!st) return;
+    title = `${holdName(p)} 決算 × ${holdName(c)}`;
+    desc = `同業の${esc(holdName(p))}の決算反応日に、${esc(holdName(c))}（普段の1日 ±${h.vol.toFixed(2)}%）がどう動いたか`;
+    rows = st.rows.slice().reverse().map((x) => ({ d: x.d, attr: `data-rx="${esc(x.k)}"`, x }));
+    cols = [{ h: holdName(c).slice(0, 8), f: (o) => dayR(h, o.x.day) }, { h: holdName(p).slice(0, 8), f: (o) => state.rx.earnings[o.x.k]?.r ?? null }];
+  } else {
+    const ev = state.events.find((e) => e.id === key);
+    if (!ev) return;
+    title = `${seriesName(ev)} × ${holdName(c)}`;
+    desc = `${esc(holdName(c))}（普段の1日 ±${h.vol.toFixed(2)}%）が「${esc(seriesName(ev))}」の反応日にどう動いたか`;
+    rows = eventHistory(ev).filter((e) => e.d < todayStr()).map((e) => ({ d: e.d, sub: e.desc, attr: `data-evrx="${esc(e.id)}"`, id: e.id }));
+    cols = [{ h: holdName(c).slice(0, 8), f: (x) => evR(h, x.id) }, { h: "日経平均", f: (x) => nkR(x.id) },
+      { h: "日経との差", f: (x) => (evR(h, x.id) != null && nkR(x.id) != null ? evR(h, x.id) - nkR(x.id) : null) }];
+  }
+  const st = stat(rows.map((r) => cols[0].f(r)));
+  const html = `<p class="sheet-desc">${desc}</p>`
+    + (q && st ? `<p class="msum">今の株数（${q.toLocaleString()}株）なら、平均 ±${yen(value(c) * st.abs / 100)} の値動き</p>` : "")
+    + historyHtml(`${holdName(c)} の反応`, rows, cols, { note: "反応日の終値騰落率。行をタップでその回の詳細" });
+  openSheet(title, html, () => openHoldSeries(c, key));
   $("#sheet").scrollTop = 0;
 }
 
@@ -1010,22 +1173,94 @@ function holdEventHtml(ev) {
     if (!h) return "";
     const r = evR(h, ev.id), st = holdSeriesStat(h, ev);
     if (r == null && !st) return "";
-    return `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(holdName(c))}</th><td>${pct(r)}</td><td class="num">${st ? `${st.up}/${st.n}` : "—"}</td><td class="num">${st ? st.abs.toFixed(1) + "%" : "—"}</td></tr>`;
+    return `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(holdName(c))}${qty(c) && st ? `<small>平均 ±${yen(value(c) * st.abs / 100)}</small>` : ""}</th><td>${pct(r)}</td><td class="num">${st ? `${st.up}/${st.n}` : "—"}</td><td class="num">${st ? st.abs.toFixed(1) + "%" : "—"}</td></tr>`;
   }).join("");
-  return rows ? `<h4 class="sheet-h">保有銘柄の反応</h4><table class="rxtable hist"><thead><tr><th></th><th>この回</th><th>過去の上昇</th><th>過去の振れ幅</th></tr></thead><tbody>${rows}</tbody></table>` : "";
+  const a = state.alerts.get(ev.id);
+  return rows ? `<h3 class="sec">保有銘柄の反応</h3>${a?.pf ? `<p class="msum">保有株全体で過去平均 <b>±${yen(a.pf.abs)}</b>（普段の${a.pf.ratio.toFixed(1)}倍）</p>` : ""}<table class="rxtable hist"><thead><tr><th></th><th>この回</th><th>過去の上昇</th><th>過去の振れ幅</th></tr></thead><tbody>${rows}</tbody></table>` : "";
 }
 
 function holdNewsHtml(id) {
   if (!state.hold.size || !state.hidx) return "";
+  let tot = 0, any = false;
   const rows = [...state.hold].map((c) => {
     const r = newsR(state.h.get(c), id);
+    if (r && r[0] != null && qty(c)) { tot += value(c) / (1 + (r[0] || 0) / 100) * r[0] / 100; any = true; }
     return r ? `<tr data-hold="${esc(c)}"><th>${esc(holdName(c))}</th><td>${pct(r[0])}</td><td>${pct(r[1])}</td><td>${pct(r[2])}</td></tr>` : "";
   }).join("");
-  return rows ? `<h4 class="sheet-h">保有銘柄の反応</h4><table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間後</th><th>1か月後</th></tr></thead><tbody>${rows}</tbody></table>` : "";
+  return rows ? `<h3 class="sec">保有銘柄の反応</h3>${any ? `<p class="msum">今の株数なら反応日に ${yenPct(tot)}</p>` : ""}<table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間</th><th>1か月</th></tr></thead><tbody>${rows}</tbody></table>` : "";
+}
+
+// ---------- ホーム ----------
+function renderHome() {
+  const el = $("#home");
+  if (!el) return;
+  const now = new Date(), today = todayStr();
+  const evening = now.getHours() >= 15;
+  let html = `<div class="home-head"><div class="date">${now.getMonth() + 1}月${now.getDate()}日(${WD[now.getDay()]})</div><h2>${evening ? "夕方のブリーフ" : "朝のブリーフ"}</h2></div>`;
+
+  // ブリーフ（Claude 定期実行が作る）
+  const b = state.brief;
+  if (b?.items?.length) {
+    const stale = b.d !== today;
+    html += `<div class="card brief"><div class="card-h"><span>今日のポイント</span><small>${stale ? `${fmtMD(b.d)} ` : ""}${esc(b.t || "")} 作成</small></div>
+      <ol>${b.items.map((x) => `<li><b>${esc(x.h)}</b>${x.b ? `<p>${esc(x.b)}</p>` : ""}</li>`).join("")}</ol></div>`;
+  }
+
+  // 市場
+  const m = state.market?.items || [];
+  if (m.length) {
+    html += `<div class="card"><div class="card-h"><span>マーケット</span><small>前日比 · 終値ベース</small></div><div class="tiles">`
+      + m.map((x) => `<div class="tile"><span>${esc(x.name)}</span><b>${x.last.toLocaleString(undefined, { maximumFractionDigits: x.unit === "bp" ? 2 : x.last > 1000 ? 0 : 2 })}${x.unit === "bp" ? "%" : ""}</b>${x.unit === "bp" ? `<span class="pct ${x.chg > 0 ? "up" : x.chg < 0 ? "down" : "flat"}">${x.chg > 0 ? "+" : ""}${x.chg}bp</span>` : pct(x.chg)}</div>`).join("")
+      + `</div></div>`;
+  }
+
+  // 保有株
+  const pf = portfolio();
+  if (pf) html += pfCard(pf, { link: true });
+  else if (!state.hold.size) html += `<div class="empty-card"><b>持っている株を登録しよう</b><p>イベントやニュースで、あなたの株がどう動きやすいかをここに出します</p><button class="btn" data-go="hold">保有銘柄を登録</button></div>`;
+
+  // 今日・次の営業日
+  const days = [];
+  for (let d = new Date(now); days.length < 2; d.setDate(d.getDate() + 1)) {
+    const k = ymd(d);
+    if (k === today || (d.getDay() % 6 !== 0)) days.push(k);
+  }
+  for (const k of days) {
+    const items = weekItems(k).filter((it) => it.kind !== "news" && (it.impact >= 2 || it.watched || state.alerts.has(it.id)));
+    for (const a of state.alertList.filter((x) => x.kind === "peer" && x.d === k)) items.push({ kind: "peer", a, d: k, t: a.t, title: a.title, impact: 2 });
+    items.sort((a, b) => (a.t || "99").localeCompare(b.t || "99") || b.impact - a.impact);
+    html += `<h3 class="sec">${k === today ? "今日" : fmtMD(k)}の予定</h3>`;
+    html += items.length ? `<ul class="list">${items.map(homeRow).join("")}</ul>` : `<p class="hint">大きな予定はありません</p>`;
+  }
+
+  // この先2週間の注意（今日・次の日以外）
+  const later = state.alertList.filter((a) => !days.includes(a.d));
+  if (later.length) html += `<h3 class="sec">この先2週間、保有株が動きやすい予定</h3><ul class="list">${later.slice(0, 6).map(alertRow).join("")}</ul>`;
+
+  // 保有株の決算
+  const ups = [...state.hold].map((c) => ({ c, e: state.nextByCode.get(c) })).filter((x) => x.e?.d >= today).sort((a, b) => a.e.d.localeCompare(b.e.d)).slice(0, 5);
+  if (ups.length) html += `<h3 class="sec">保有株の決算予定</h3><ul class="list">${ups.map(({ c, e }) => `<li class="row has-rx" data-rx="${esc(c)}@${esc(e.d)}"><div class="when"><b>${fmtMD(e.d)}</b><span>${esc(e.t || "")}</span></div><div class="main"><div class="name">${esc(holdName(c))}</div><div class="sub">過去の決算反応を見る</div></div><span class="chev">›</span></li>`).join("")}</ul>`;
+
+  // 最新ニュース
+  if (state.news.length) html += `<h3 class="sec">最近の相場ニュース<button class="link" data-go="news">すべて ›</button></h3><ul class="list">${state.news.slice(0, 4).map((n) => newsCard(n, true)).join("")}</ul>`;
+  el.innerHTML = html;
+}
+
+function homeRow(it) {
+  let attr = "", sub = it.desc || "";
+  if (it.kind === "peer") return alertRow(it.a);
+  if (it.kind === "ev") attr = state.rx.events[it.id] || eventHistory(it).length ? `data-evrx="${esc(it.id)}"` : "";
+  else if (it.kind === "earn") attr = `data-rx="${esc(it.rxKey)}"`;
+  else if (it.kind === "ipo") attr = `data-ipo="${esc(it.c)}"`;
+  const a = it.kind === "ev" && state.alerts.get(it.id);
+  if (a) sub = a.pf ? `保有株全体で過去平均 ±${yen(a.pf.abs)}（普段の${a.pf.ratio.toFixed(1)}倍）` : a.stocks.map((s) => `${holdName(s.c)} ±${s.abs.toFixed(1)}%`).join(" · ");
+  return `<li class="row${attr ? " has-rx" : ""}${a ? " alert" : ""}" ${attr}>
+    <div class="when"><b>${esc(it.t || "—")}</b>${stars(it.impact)}</div>
+    <div class="main"><div class="name">${it.watched ? '<span class="tag">保有</span>' : ""}${esc(it.title)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>${attr ? '<span class="chev">›</span>' : ""}</li>`;
 }
 
 function renderAll() {
-  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderHold(); renderIpo(); renderNews();
+  renderHome(); renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderHold(); renderIpo(); renderNews();
   renderMonth();
   if ($("#sheet").open && state.sheetFn) state.sheetFn();
 }
@@ -1036,6 +1271,12 @@ function setSeg(el, v) {
 }
 
 document.addEventListener("click", (ev) => {
+  const go = ev.target.closest("[data-go]");
+  if (go) { if ($("#sheet").open) $("#sheet").close(); switchTab(go.dataset.go); return; }
+  if (ev.target.closest("#hold-edit2")) { openPicker(); return; }
+  const unh = ev.target.closest("[data-unhold]");
+  if (unh) { state.hold.delete(unh.dataset.unhold); saveHold(); $("#sheet").close(); refreshHold(); renderCalendar(); renderDay(); return; }
+  if (ev.target.closest("input")) return;
   const ph = ev.target.closest("[data-pick-hold]");
   if (ph) { togglePick(ph.dataset.pickHold); return; }
   if (ev.target.closest("#hold-edit")) { openPicker(); return; }
@@ -1068,6 +1309,7 @@ document.addEventListener("click", (ev) => {
   if (seg) {
     const box = seg.parentElement;
     setSeg(box, seg.dataset.v);
+    if (box.id === "plan-seg") { switchTab(seg.dataset.v); return; }
     if (box.id === "ipo-mode") { prefs.ipoMode = seg.dataset.v; renderIpo(); }
     else if (box.id === "ev-mode") {
       prefs.evMode = seg.dataset.v;
@@ -1094,9 +1336,17 @@ document.addEventListener("click", (ev) => {
   if (tab) switchTab(tab.dataset.v);
 });
 
+// 下のタブ: ホーム / 予定（イベント・決算・IPO を上の切り替えで）/ ニュース / 保有 / 検索
+const PLAN = ["events", "cal", "ipo"];
+const TITLES = { home: "ホーム", plan: "予定", news: "ニュース", hold: "保有銘柄", search: "検索" };
 function switchTab(v) {
+  if (PLAN.includes(v)) { prefs.plan = v; saveJSON(PREF_KEY, prefs); v = "plan"; }
+  const view = v === "plan" ? (prefs.plan || "events") : v;
   document.querySelectorAll(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.v === v));
-  document.querySelectorAll(".view").forEach((s) => s.classList.toggle("active", s.id === `view-${v}`));
+  document.querySelectorAll(".view").forEach((s) => s.classList.toggle("active", s.id === `view-${view}`));
+  $("#plan-seg").hidden = v !== "plan";
+  setSeg($("#plan-seg"), view);
+  $("#page-title").textContent = TITLES[v] || "";
   window.scrollTo(0, 0);
 }
 
@@ -1118,6 +1368,11 @@ $("#today-btn").onclick = () => {
   renderCalendar(); renderDay();
 };
 $("#q").addEventListener("input", renderSearch);
+// 株数・取得単価の入力（シート内）
+document.addEventListener("change", (e) => {
+  const el = e.target.closest("[data-pos]");
+  if (el) { const [c, k] = el.dataset.pos.split("|"); setPos(c, k, el.value); }
+});
 $("#cal-sort").value = prefs.calSort;
 $("#cal-sort").addEventListener("change", (e) => { prefs.calSort = e.target.value; saveJSON(PREF_KEY, prefs); renderDay(); renderMonth(); });
 setSeg($("#ipo-mode"), prefs.ipoMode);

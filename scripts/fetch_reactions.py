@@ -301,17 +301,24 @@ def build_holdings(out: dict, news: list[dict], daily: dict, n225: list[str]) ->
             ev_days.append(day)
     nw = [(n["id"], x["day"]) for n in news if (r := out["news"].get(n["id"]))
           for x in r["idx"] if x["sym"] == "^N225"]
-    (hdir / "index.json").write_text(json.dumps({"ev": ev_ids, "news": [i for i, _ in nw]}, separators=(",", ":")),
-                                     encoding="utf-8")
+    # 日本の立会日（日経平均の日足の日付）。各銘柄の日次騰落率 r はこの並びに揃える
+    #（同業の決算日・ポートフォリオ全体の値動きをアプリ側で計算するため）
+    nk = dclose("^N225")
+    days = [d.strftime("%Y-%m-%d") for d in nk.index[-760:]]
+    (hdir / "index.json").write_text(json.dumps({"ev": ev_ids, "news": [i for i, _ in nw], "days": days},
+                                                separators=(",", ":")), encoding="utf-8")
     n = 0
     for c in codes:
         s = daily.get(c)
         if s is None or s.empty:
             continue
         rets = s.pct_change().dropna().iloc[-250:]
+        dr = (s.pct_change() * 100).reindex(pd.to_datetime(days))
         rec = {
             "c": c,
             "vol": round(float(rets.abs().mean()) * 100, 2),  # 普段の1日の値動き（直近250日の平均の振れ幅）
+            "px": round(float(s.iloc[-1]), 1), "pd": s.index[-1].strftime("%Y-%m-%d"),  # 直近の終値
+            "r": [None if pd.isna(v) else round(float(v), 2) for v in dr],
             "ev": [holding_day_r(s, d) for d in ev_days],
             "news": [[p["r1"], p["r5"], p["r20"]] if (p := path(s, dt.date.fromisoformat(d))) else None for _, d in nw],
         }

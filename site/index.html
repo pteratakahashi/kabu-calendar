@@ -17,13 +17,25 @@
 </head>
 <body>
 <header class="topbar">
-  <h1>株イベントカレンダー</h1>
+  <h1 id="page-title">ホーム</h1>
   <div id="updated" class="updated">読み込み中…</div>
 </header>
 
 <main>
+  <!-- ホーム（朝・夕のブリーフ＋保有株） -->
+  <section id="view-home" class="view active">
+    <div id="home"></div>
+  </section>
+
+  <!-- 予定タブの切り替え（イベント / 決算 / IPO） -->
+  <div class="seg plan-seg" id="plan-seg" role="group" aria-label="予定の種類" hidden>
+    <button data-v="events" class="on">イベント</button>
+    <button data-v="cal">決算</button>
+    <button data-v="ipo">IPO</button>
+  </div>
+
   <!-- イベント（週表示） -->
-  <section id="view-events" class="view active">
+  <section id="view-events" class="view">
     <div class="month-nav">
       <h2 id="week-label"></h2>
       <label class="datejump" aria-label="日付を選んで移動">📆<input type="date" id="ev-date"></label>
@@ -105,7 +117,8 @@
 
   <!-- ウォッチ -->
   <section id="view-hold" class="view">
-    <div class="month-nav"><h2>保有銘柄</h2><button id="hold-edit" class="chip">銘柄を選ぶ</button></div>
+    <div class="hold-bar"><button id="hold-edit" class="chip">＋ 銘柄を選ぶ</button></div>
+    <div id="pf-sum"></div>
     <div id="hold-alert"></div>
     <div id="hold-list"></div>
     <p class="note" id="hold-note"></p>
@@ -121,12 +134,11 @@
 </dialog>
 
 <nav class="tabs">
-  <button data-v="events" class="on"><span class="ti">📰</span>イベント</button>
-  <button data-v="news"><span class="ti">🗞️</span>ニュース</button>
-  <button data-v="cal"><span class="ti">📅</span>決算</button>
-  <button data-v="ipo"><span class="ti">🆕</span>IPO</button>
-  <button data-v="search"><span class="ti">🔍</span>検索</button>
-  <button data-v="hold"><span class="ti">💼</span>保有</button>
+  <button data-v="home" class="on"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11.5 12 4l9 7.5M5.5 9.5V20h5v-5.5h3V20h5V9.5"/></svg>ホーム</button>
+  <button data-v="plan"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6.5h16V20H4zM4 10.5h16M8.5 3.5v5M15.5 3.5v5"/></svg>予定</button>
+  <button data-v="news"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4.5h11v15H6.5A1.5 1.5 0 0 1 5 18zM16 8.5h3v9.5a1.5 1.5 0 0 1-3 0M8 8.5h5M8 12h5M8 15.5h3"/></svg>ニュース</button>
+  <button data-v="hold"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 8h17v11.5h-17zM9 8V5.5h6V8M3.5 13h17"/></svg>保有</button>
+  <button data-v="search"><svg class="ti" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 4a6.5 6.5 0 1 1 0 13 6.5 6.5 0 0 1 0-13zM15.5 15.5 20.5 20.5"/></svg>検索</button>
 </nav>
 
 <script>

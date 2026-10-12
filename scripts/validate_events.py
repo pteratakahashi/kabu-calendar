@@ -121,6 +121,20 @@ def main():
     news = load(NEWS) if NEWS.exists() else []
     errors = [f"events.json {e}" for e in check(events, theme_ids, ALLOWED_KEYS)]
     errors += [f"news.json {e}" for e in check(news, theme_ids, NEWS_KEYS, news=True)]
+    brief_path = ROOT / "data" / "brief.json"
+    if brief_path.exists():
+        b = load(brief_path)
+        if not isinstance(b, dict) or not DATE_RE.match(str(b.get("d", ""))) or not TIME_RE.match(str(b.get("t", ""))):
+            errors.append("brief.json: d (YYYY-MM-DD) と t (HH:MM) が必要")
+        items = b.get("items") if isinstance(b, dict) else None
+        if not isinstance(items, list) or not 1 <= len(items) <= 6:
+            errors.append("brief.json: items は1〜6件の配列")
+        else:
+            for i, x in enumerate(items):
+                if not isinstance(x, dict) or not isinstance(x.get("h"), str) or not x["h"] or not isinstance(x.get("b", ""), str):
+                    errors.append(f"brief.json: items[{i}] は {{h: 見出し, b: 本文}}")
+                elif len(x["h"]) > 30 or len(x.get("b", "")) > 120:
+                    errors.append(f"brief.json: items[{i}] が長すぎ（見出し30字・本文120字まで）")
     if errors:
         print(f"NG: {len(errors)} 件のエラー")
         for e in errors:

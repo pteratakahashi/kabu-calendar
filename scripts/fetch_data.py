@@ -336,6 +336,9 @@ def main() -> int:
     dump("themes.json", themes)
     news = sorted(load_json(ROOT / "data" / "news.json", []), key=lambda n: (n["d"], n.get("t") or "99:99"), reverse=True)
     dump("news.json", news)
+    # 朝・夕のブリーフ（Claude 定期実行が data/brief.json に書く）
+    if (ROOT / "data" / "brief.json").exists():
+        dump("brief.json", load_json(ROOT / "data" / "brief.json", {}))
     (OUT / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=1), encoding="utf-8")
     print(f"done: earnings={len(earnings)} stocks={len(stocks)} events={len(events)}")
     return 0

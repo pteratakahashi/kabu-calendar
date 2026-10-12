@@ -43,6 +43,10 @@ jobs:
         continue-on-error: true   # 失敗時は前回の一覧のまま
         run: python scripts/fetch_n225.py
 
+      - name: Fetch market snapshot
+        continue-on-error: true
+        run: python scripts/fetch_market.py
+
       - name: Fetch market reactions
         continue-on-error: true   # Yahoo 側の不調で全体を止めない
         run: python scripts/fetch_reactions.py

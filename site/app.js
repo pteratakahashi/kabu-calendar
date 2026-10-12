@@ -686,6 +686,7 @@ function openEarnRx(key) {
   } else {
     html += `<p class="msum">${d === "9999-12-31" ? "次の決算日は未定です。" : d >= todayStr() ? `決算は ${fmtDay(d)} 予定（まだ発表前）。` : "この回の値動きデータはありません。"}過去の決算での反応から傾向を確認できます。</p>`;
   }
+  html += earnEvidenceHtml(c, d);
   html += earnHistoryHtml(c, d);
   html += `<ul class="list">${stockRow({ ...s, ...(state.nextByCode.get(c) || {}), c, n: s.n }, { showDate: true })}</ul>`;
   if (state.n225set.has(c)) {
@@ -1022,6 +1023,195 @@ function renderHold() {
   }).join("") + `</ul>`;
 }
 
+// ---------- なぜ動く？（根拠） ----------
+// ① 一般的な理屈（予定の種類 × 銘柄の業種・テーマ）と、② 過去の回のデータでの裏付け
+//   ・結果との連動: その回の「結果」を表す市場の動き（海外決算＝その会社の株価の反応、指標＝発表1時間後のドル円）と同じ向き・逆向きに動いたか
+//   ・銘柄固有か: 日経平均を上回った（下回った）回の多さ
+//   ・地合いか: 日経平均も同じ向きに偏っていたか
+const SEMI_TK = new Set(["NVDA", "AMD", "AVGO", "MU", "INTC", "ASML", "TSM", "005930.KS"]);
+const TECH_TK = new Set(["MSFT", "GOOGL", "META", "AMZN", "AAPL"]);
+function evClass(k) {
+  if (k.startsWith("earn:")) {
+    const t = k.slice(5);
+    return SEMI_TK.has(t) ? "semiearn" : TECH_TK.has(t) ? "techearn" : t === "NFLX" ? "nflx" : t === "TSLA" ? "tsla" : "";
+  }
+  if (/^(tsmc-monthly|samsung-prelim)$/.test(k)) return "semiearn";
+  if (/^(us-|fomc|beige-book|jackson-hole|warsh)/.test(k)) return "usmacro";
+  if (/^(boj|jp-cpi|jp-tokyo-cpi|jp-cgpi)/.test(k)) return "jprate";
+  if (/^jp-/.test(k)) return "jpmacro";
+  if (/^ecb/.test(k)) return "ecb";
+  if (/^cn-/.test(k)) return "china";
+  return "";
+}
+function stockGroup(c) {
+  const sec = state.n225.codes.find((x) => x.c === c)?.sec || state.stock.get(c)?.sec || "";
+  const th = new Set(state.stock.get(c)?.th || []);
+  const has = (...a) => a.some((t) => th.has(t));
+  if (has("semi", "semiequip", "semimat")) return "semi";
+  if (has("ai", "datacenter", "wire")) return "ai";
+  if (has("game")) return "game";
+  if (["銀行", "保険", "証券", "その他金融"].includes(sec) || has("bank", "regbank")) return "bank";
+  if (sec === "不動産" || has("realestate")) return "realestate";
+  if (["自動車", "ゴム"].includes(sec) || has("auto")) return "auto";
+  if (["商社", "鉄鋼", "非鉄金属製品", "石油", "鉱業", "海運"].includes(sec) || has("trading", "steel", "ship", "rareearth")) return "commodity";
+  if (["電気機器", "精密機器", "機械", "化学", "窯業", "造船", "その他製造"].includes(sec)) return "export";
+  if (["食品", "小売業", "電力", "ガス", "空運", "鉄道・バス", "陸運", "パルプ・紙", "水産", "繊維", "建設"].includes(sec)) return "domestic";
+  if (["医薬品", "情報・通信", "サービス"].includes(sec)) return "defensive";
+  return "";
+}
+// sign = 結果の指標（ドル円・海外企業の株価）とこの銘柄が、理屈の上で同じ向き(1)・逆向き(-1)に動くはずか（0=決まらない）
+const EXPORT_US = { tag: "円安で追い風", sign: 1, why: "米国の指標は米金利とドル円を動かします。輸出の多い企業は、円安になると海外の売上・利益が円に直したときに増えるため買われやすくなります。" };
+const EXPORT_JP = { tag: "円高が逆風", sign: 1, why: "日銀の利上げ観測が強まると円高（ドル円は下落）になりやすく、輸出企業は円に直した利益が減る連想で売られやすくなります。" };
+const SEMI_US = { tag: "米ハイテク連動", sign: 0, why: "米金利が下がるとハイテク・成長株が買われやすく、その夜の米国の半導体株の動きが日本の半導体・AI関連にそのまま波及します。" };
+const REASONS = {
+  "usmacro:export": EXPORT_US, "usmacro:auto": EXPORT_US,
+  "usmacro:bank": { tag: "金利上昇で追い風", sign: 1, why: "強い米指標 → 米金利上昇（ドル円も上昇）→ 日本の金利も上がりやすい、という連想で、利ざやが広がる銀行・保険が買われやすくなります。" },
+  "usmacro:realestate": { tag: "金利上昇が逆風", sign: -1, why: "金利が上がると借入コストが増え物件の価値も下がりやすいため、米金利の上昇（ドル円の上昇）で売られやすくなります。" },
+  "usmacro:domestic": { tag: "円高で追い風", sign: -1, why: "原材料や燃料を輸入する内需企業は、円高（ドル円の下落）で輸入コストが下がるため買われやすくなります。" },
+  "usmacro:semi": SEMI_US, "usmacro:ai": SEMI_US,
+  "usmacro:commodity": { tag: "景気・資源連動", sign: 0, why: "米国の景気の強さは、資源価格や世界の物流量の見通しを通じて商社・素材・海運に影響します。" },
+  "usmacro:defensive": { tag: "逃げ先", sign: 0, why: "医薬品・通信などは景気の影響を受けにくく、指標で相場が荒れる日に資金の逃げ先として買われやすい傾向があります。" },
+  "jprate:bank": { tag: "利上げで追い風", sign: -1, why: "日銀の利上げ観測が強まると国内金利が上がり、利ざやが広がる期待で銀行・保険が買われやすくなります（このとき円高＝ドル円は下落しやすい）。" },
+  "jprate:realestate": { tag: "利上げが逆風", sign: 1, why: "利上げ観測は借入コスト増の連想で不動産に逆風です（このとき円高＝ドル円は下落しやすい）。" },
+  "jprate:export": EXPORT_JP, "jprate:auto": EXPORT_JP,
+  "jprate:domestic": { tag: "円高で追い風", sign: -1, why: "利上げ観測で円高になると、輸入コストが下がる内需企業には追い風です。" },
+  "jpmacro:export": { tag: "国内の設備投資", sign: 0, why: "国内の設備投資・景況感を映す指標で、機械・電機の受注見通しに関係します。" },
+  "ecb:export": { tag: "欧州売上", sign: 0, why: "欧州の金利とユーロ円を通じて、欧州での売上が大きい企業の業績見通しに影響します。" },
+  "ecb:auto": { tag: "欧州売上", sign: 0, why: "欧州の金利とユーロ円を通じて、欧州での売上が大きい企業の業績見通しに影響します。" },
+  "china:commodity": { tag: "中国需要", sign: 0, why: "中国の景気は鉄鋼・資源・海運の需要に直結します。" },
+  "china:export": { tag: "中国需要", sign: 0, why: "中国は建機・工作機械・電子部品の大きな市場で、景気指標が受注見通しに影響します。" },
+  "china:auto": { tag: "中国需要", sign: 0, why: "中国は自動車・部品の大きな市場で、景気指標が販売見通しに影響します。" },
+  "semiearn:semi": { tag: "受注見通し", sign: 1, why: "海外の半導体大手の業績や設備投資計画は、日本の製造装置・材料メーカーの受注見通しに直結します。" },
+  "semiearn:ai": { tag: "AI需要", sign: 1, why: "AI向け半導体の需要の強さが、データセンター・電線・電力設備の需要見通しに波及します。" },
+  "techearn:semi": { tag: "AI投資連動", sign: 1, why: "大手IT企業のAI向け設備投資の計画が、半導体・データセンター関連の需要見通しに波及します。" },
+  "techearn:ai": { tag: "AI投資連動", sign: 1, why: "大手IT企業のAI向け設備投資の計画が、半導体・データセンター関連の需要見通しに波及します。" },
+  "techearn:export": { tag: "部品需要", sign: 1, why: "アップルなど大手ITの販売動向は、スマホ・PC向けの電子部品メーカーの受注見通しに影響します。" },
+  "nflx:game": { tag: "IP評価", sign: 1, why: "動画配信の会員数やコンテンツ投資の動向が、アニメ・ゲームなどIPを持つ企業の評価に波及します。" },
+  "tsla:auto": { tag: "EV見通し", sign: 1, why: "EV・自動運転の見通しが、自動車・部品・電池関連の評価に波及します。" },
+};
+// 半導体・大手ITの決算で半導体株が売られる日は、資金が割安株・内需株へ移りやすい（セクターローテーション）
+const ROTATION = { tag: "資金の移動", sign: -1, why: "半導体・AI株が売られる日は、その資金が銀行・建設・内需・資源などの割安株に移りやすく（セクターローテーション）、逆に半導体株が買われる日はこれらが売られやすくなります。" };
+for (const e of ["semiearn", "techearn"]) for (const g of ["bank", "realestate", "domestic", "commodity", "defensive"]) REASONS[`${e}:${g}`] ||= ROTATION;
+const reasonFor = (c, key) => REASONS[`${evClass(key)}:${stockGroup(c)}`] || null;
+
+// その回の「結果」を表す市場の動き（build_bias.py の driver と同じ定義）
+function driverVal(id, key) {
+  const r = state.rx.events[id];
+  if (!r) return null;
+  if (key.startsWith("earn:")) return r.d1?.tk ?? null;
+  const s = r.series?.find((x) => x.sym === "JPY=X");
+  return s ? (s.m60 ?? s.end ?? null) : null;
+}
+function driverName(ev) {
+  return seriesOf(ev).startsWith("earn:") ? `${seriesName(ev).replace(/ 決算$/, "")}の株価` : "ドル円";
+}
+
+function corr(p) {
+  const n = p.length, mx = p.reduce((a, [x]) => a + x, 0) / n, my = p.reduce((a, [, y]) => a + y, 0) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (const [x, y] of p) { sxy += (x - mx) * (y - my); sxx += (x - mx) ** 2; syy += (y - my) ** 2; }
+  return sxx && syy ? sxy / Math.sqrt(sxx * syy) : 0;
+}
+
+// r: この銘柄の各回の騰落率、nk: 同じ日の日経平均、dv: 結果の指標（あれば）。s: 偏りの向き（1=上昇, -1=下落）
+function evidence({ r, nk, dv, s, rule }) {
+  const both = (a) => r.map((x, i) => [x, a?.[i]]).filter(([x, y]) => x != null && y != null);
+  const ex = both(nk).map(([x, y]) => x - y);
+  const exW = ex.filter((v) => Math.sign(v) === s).length;
+  const nkV = (nk || []).filter((v) => v != null), nkSame = nkV.filter((v) => Math.sign(v) === s).length;
+  let link = null;
+  const p = both(dv).filter(([, y]) => y !== 0);
+  if (p.length >= 5) {
+    const g = (f) => { const q = p.filter(([, y]) => f(y)); return { n: q.length, up: q.filter(([x]) => x > 0).length, avg: q.length ? q.reduce((a, [x]) => a + x, 0) / q.length : null }; };
+    link = { n: p.length, c: corr(p), hi: g((y) => y > 0), lo: g((y) => y < 0) };
+  }
+  // 結果の向きで株価の向きも変わっているか（上がった回と下がった回で、上昇した割合が5割以上違う）
+  const linked = !!(link && link.n >= 6 && link.hi.n >= 2 && link.lo.n >= 2 && Math.abs(link.c) >= 0.4
+    && Math.sign(link.hi.up / link.hi.n - link.lo.up / link.lo.n) === Math.sign(link.c)
+    && Math.abs(link.hi.up / link.hi.n - link.lo.up / link.lo.n) >= 0.5);
+  const own = ex.length >= 6 && exW >= 0.75 * ex.length;
+  const mkt = nkV.length >= 6 && nkSame >= 0.7 * nkV.length;
+  const code = linked ? "link" : own ? "own" : mkt ? "mkt" : "weak";
+  const match = linked && rule?.sign ? Math.sign(link.c) === rule.sign : null;
+  // 理屈（向きが決まっているもの）が過去のデータで確かめられたか: true=裏付けあり / false=当てはまらない / null=確かめられない
+  const ruleOk = rule?.sign && link && link.n >= 6 ? !!(linked && match) : null;
+  return { code, ruleOk, label: { link: "結果に連動", own: "銘柄固有", mkt: "地合い", weak: "根拠薄" }[code], ex, exW, nkV, nkSame, link, linked, own, mkt, match };
+}
+
+const verdictChip = (e) => `<span class="vchip v-${e.code}">${e.label}</span>`;
+
+// 一覧の1行用（短く）
+function evidenceShort(c, key, x) {
+  const rule = reasonFor(c, key);
+  const e = evidence({ r: x.r, nk: x.nk, dv: x.dv, s: x.s, rule });
+  const t = !rule ? (e.code === "weak" ? "偶然かも" : "") : e.ruleOk === true ? `${rule.tag} ✓` : e.ruleOk === false ? "理屈では説明できず" : rule.tag;
+  return `${verdictChip(e)}${t ? `<span class="vtag">${esc(t)}</span>` : ""}`;
+}
+
+// シート用（詳しく）
+function evidenceHtml(c, key, { r, nk, dv, dname }) {
+  const v = r.filter((x) => x != null);
+  if (v.length < 4) return "";
+  const avg = v.reduce((a, x) => a + x, 0) / v.length, s = avg >= 0 ? 1 : -1;
+  const rule = reasonFor(c, key);
+  const e = evidence({ r, nk, dv, s, rule });
+  const dir = s > 0 ? "上昇" : "下落";
+  const name = esc(holdName(c));
+  const li = [];
+  if (e.link) {
+    const L = e.link, st = (g) => (g.n ? `${g.up}/${g.n}回上昇<br>平均 ${pct(g.avg)}` : "—");
+    const hiLbl = dname === "ドル円" ? "ドル円が上がった（円安）回" : `${esc(dname)}が上がった回`;
+    const loLbl = dname === "ドル円" ? "ドル円が下がった（円高）回" : `${esc(dname)}が下がった回`;
+    li.push(`<b>結果との連動</b>: ${e.linked ? "あり（結果の向きで、この銘柄の向きも変わる）" : "なし（結果の向きによらず同じように動く）"}
+      <table class="rxtable mini"><tr><th>${hiLbl}</th><td>${st(L.hi)}</td></tr><tr><th>${loLbl}</th><td>${st(L.lo)}</td></tr></table>`
+      );
+  }
+  if (e.ex.length) li.push(`<b>日経平均との比較</b>: 日経平均より${s > 0 ? "強かった" : "弱かった"}回 ${e.exW}/${e.ex.length}（平均 ${pct(e.ex.reduce((a, x) => a + x, 0) / e.ex.length)}）${e.own ? " → 相場全体と関係なくこの銘柄が動いている" : ""}`);
+  if (e.nkV.length) li.push(`<b>地合い</b>: 同じ回に日経平均も${dir}したのは ${e.nkSame}/${e.nkV.length}回${e.mkt ? " → 相場全体の動きが大きい" : ""}`);
+  const sum = {
+    link: `${esc(dname)}と${e.link?.c > 0 ? "同じ向き" : "逆向き"}に動く傾向です。今回も結果（${esc(dname)}の動き）次第で向きが変わりやすく、過去の${dir}の偏りは、結果がたまたま一方に偏っていたことによる面もあります。`,
+    own: `相場全体とは関係なく、この予定の日に${name}が${dir}しやすい傾向です。`,
+    mkt: `この予定の日は相場全体が${dir}しやすく、${name}の偏りも主に地合いによるものです。`,
+    weak: "結果とも相場全体とも一貫した関係が見つかりません。偶然の偏りの可能性があります。",
+  }[e.code];
+  return `<div class="card why"><div class="why-h">なぜ動く？ ${verdictChip(e)}</div>
+    <p class="why-sum">${sum}</p>
+    <ul class="why-list">${li.map((x) => `<li>${x}</li>`).join("")}</ul>
+    <div class="why-rule"><b>一般的な理屈</b>${rule ? `<span class="vtag">${esc(rule.tag)}</span><p>${esc(rule.why)}</p>${e.ruleOk === true ? `<p class="ok">✓ 過去の回でも、${esc(dname)}の動きとこの理屈どおりの関係が見られます。</p>` : e.ruleOk === false ? `<p class="ng">△ ただし過去の回では、${esc(dname)}の動きとこの銘柄の動きにこの理屈どおりの関係が見られません。偏りの理由は別にある可能性があります。</p>` : ""}` : `<p>この予定と${name}の業種を結びつける一般的な理由は見当たりません。</p>`}</div></div>`;
+}
+
+// 自社の決算: 決算そのものへの反応か、1週間後も続くか、同じ時期の決算での傾向
+function earnArrays(c, before) {
+  const keys = earnHistory(c, before).filter((k) => k.split("@")[1] < before);
+  const nkD = (d) => (state.hidx?.nk && state.hday.has(d) ? state.hidx.nk[state.hday.get(d)] : null);
+  return {
+    ds: keys.map((k) => k.split("@")[1]),
+    r: keys.map((k) => state.rx.earnings[k]?.r ?? null),
+    nk: keys.map((k) => nkD(state.rx.earnings[k]?.day)),
+    w1: keys.map((k) => { const x = state.rx.earnings[k]; return x?.pts?.[x.k + 4]?.[1] ?? null; }),
+  };
+}
+function earnEvidenceHtml(c, d) {
+  const a = earnArrays(c, d);
+  const v = a.r.filter((x) => x != null);
+  if (v.length < 4) return "";
+  const avg = v.reduce((x, y) => x + y, 0) / v.length, s = avg >= 0 ? 1 : -1, dir = s > 0 ? "上昇" : "下落";
+  const e = evidence({ r: a.r, nk: a.nk, s });
+  const pw = a.r.map((x, i) => [x, a.w1[i]]).filter(([x, y]) => x != null && y != null);
+  const keep = pw.filter(([, y]) => Math.sign(y) === s).length;
+  const m = parse(d).getMonth() + 1;
+  const near = (x) => { const k = Math.abs(parse(x).getMonth() + 1 - m); return Math.min(k, 12 - k) <= 1; };
+  const same = a.r.filter((x, i) => x != null && d !== "9999-12-31" && near(a.ds[i]));
+  const li = [];
+  if (e.ex.length) li.push(`<b>日経平均との比較</b>: 反応日に日経平均より${s > 0 ? "強かった" : "弱かった"}回 ${e.exW}/${e.ex.length}${e.own ? " → 地合いではなく決算そのものへの反応" : ""}`);
+  if (pw.length) li.push(`<b>その後</b>: 1週間後も${dir}のままだった回 ${keep}/${pw.length}${keep >= 0.7 * pw.length ? " → 反応が続きやすい" : keep <= 0.3 * pw.length ? " → 1週間で戻しやすい" : ""}`);
+  if (same.length >= 2) li.push(`<b>同じ時期の決算</b>（${m}月前後）: ${dir} ${same.filter((x) => Math.sign(x) === s).length}/${same.length}回`);
+  const fy = m === 4 || m === 5;
+  return `<div class="card why"><div class="why-h">なぜ動く？ ${verdictChip(e)}</div>
+    <ul class="why-list">${li.map((x) => `<li>${x}</li>`).join("")}</ul>
+    <div class="why-rule"><b>一般的な理屈</b><p>${fy ? "4〜5月の本決算では新しい年度の会社予想が出ます。予想を控えめに出す会社は、内容が良くても売られやすい傾向があります。" : "四半期の決算は、会社予想に対する進み具合や、予想の上方・下方修正の有無で動きやすくなります。"}決算の中身（予想との差など）のデータはまだ取り込んでいないため、偏りの理由までは断定できません。</p></div></div>`;
+}
+
 // ---------- 傾向 ----------
 // 日経225 × 今後の予定（自社の決算・指標・海外決算）で、過去の反応が上昇か下落に偏っている組み合わせ。
 // 計算はサーバ側（scripts/build_bias.py → bias.json）。過去の回の数え方は「過去10回」と同じ
@@ -1055,15 +1245,17 @@ function renderBias() {
     const x0 = xs[0];
     const ev = x0.k === "ev" ? state.events.find((e) => e.id === x0.id) : null;
     const title = ev ? seriesName(ev) : "決算発表";
-    const nk = x0.nk ? `<span class="nk">日経平均は上昇 ${x0.nk[0]}/${x0.nk[1]}回</span>` : "";
+    const nkv = (x0.k === "ev" ? x0.nk || [] : []).filter((v) => v != null);
+    const nk = nkv.length ? `<span class="nk">日経平均は上昇 ${nkv.filter((v) => v > 0).length}/${nkv.length}回</span>` : "";
     html += `<h3 class="sec bias-h"><span>${fmtMD(x0.d)} ${esc(title)}</span>${nk}</h3><ul class="list">`
       + xs.slice(0, state.biasOpen.has(g) ? xs.length : LIM).map((x) => {
         const held = state.hold.has(x.c);
         const dir = x.s > 0 ? "上昇" : "下落";
         return `<li class="row has-rx" data-bias="${esc(x.c)}|${esc(x.k === "earn" ? `earn@${x.d}` : x.id)}">
           <div class="main"><div class="name">${held ? '<span class="tag">保有</span>' : ""}${esc(holdName(x.c))}</div>
-          <div class="sub">${esc(x.c)} · ${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div></div>
-          <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.last)}</div>
+          <div class="sub">${esc(x.c)} · ${dir} <b>${x.w}/${x.n}回</b> · 平均 ${pct(x.avg)}</div>
+          <div class="vline">${x.k === "earn" ? verdictChip(evidence({ r: x.r, nk: x.nk, s: x.s })) : evidenceShort(x.c, seriesOf(state.events.find((e) => e.id === x.id) || { id: x.id }), x)}</div></div>
+          <div class="bias-r"><span class="bias-badge ${x.s > 0 ? "up" : "down"}">${x.s > 0 ? "▲" : "▼"} ${dir}</span>${spark(x.r.filter((v) => v != null))}</div>
           <span class="chev">›</span></li>`;
       }).join("") + `</ul>`
       + (xs.length > LIM && !state.biasOpen.has(g) ? `<button class="btn ghost more" data-bias-more="${esc(g)}">ほか ${xs.length - LIM} 銘柄を表示</button>` : "");
@@ -1206,7 +1398,7 @@ function openHoldSeries(c, key) {
   const h = state.h.get(c);
   if (!h) return;
   const q = qty(c);
-  let title, desc, rows, cols;
+  let title, desc, rows, cols, why = "";
   if (key.startsWith("peer:")) {
     const p = key.slice(5), st = peerStat(c, p);
     if (!st) return;
@@ -1222,11 +1414,15 @@ function openHoldSeries(c, key) {
     rows = eventHistory(ev).filter((e) => e.d < todayStr()).map((e) => ({ d: e.d, sub: e.desc, attr: `data-evrx="${esc(e.id)}"`, id: e.id }));
     cols = [{ h: holdName(c).slice(0, 8), f: (x) => evR(h, x.id) }, { h: "日経平均", f: (x) => nkR(x.id) },
       { h: "日経との差", f: (x) => (evR(h, x.id) != null && nkR(x.id) != null ? evR(h, x.id) - nkR(x.id) : null) }];
+    const k = seriesOf(ev), dname = driverName(ev);
+    if (rows.some((x) => driverVal(x.id, k) != null)) cols.push({ h: dname === "ドル円" ? "ドル円 1時間後" : dname.replace(/の株価$/, ""), f: (x) => driverVal(x.id, k) });
+    why = evidenceHtml(c, k, { r: rows.map((x) => evR(h, x.id)), nk: rows.map((x) => nkR(x.id)), dv: rows.map((x) => driverVal(x.id, k)), dname });
   }
   const st = stat(rows.map((r) => cols[0].f(r)));
   const html = `<p class="sheet-desc">${desc}</p>`
     + (q && st ? `<p class="msum">今の株数（${q.toLocaleString()}株）なら、平均 ±${yen(value(c) * st.abs / 100)} の値動き</p>` : "")
-    + historyHtml(`${holdName(c)} の反応`, rows, cols, { note: "反応日の終値騰落率。行をタップでその回の詳細" })
+    + why
+    + historyHtml(`${holdName(c)} の反応`, rows, cols, { note: `反応日の終値騰落率。${cols.length > 3 ? (cols[3].h.startsWith("ドル円") ? "ドル円 1時間後 = 発表1時間後のドル円の変化率（その回の結果を市場がどう受け止めたかの目安）。" : `${esc(cols[3].h)} = その会社の決算後の最初の取引日の騰落率。`) : ""}行をタップでその回の詳細` })
     + (!state.hold.has(c) && state.n225set.has(c) ? `<button class="btn wide" data-addhold="${esc(c)}">＋ 保有銘柄に追加</button>` : "");
   openSheet(title, html, () => openHoldSeries(c, key));
   $("#sheet").scrollTop = 0;

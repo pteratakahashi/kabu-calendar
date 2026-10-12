@@ -305,7 +305,10 @@ def build_holdings(out: dict, news: list[dict], daily: dict, n225: list[str]) ->
     #（同業の決算日・ポートフォリオ全体の値動きをアプリ側で計算するため）
     nk = dclose("^N225")
     days = [d.strftime("%Y-%m-%d") for d in nk.index[-760:]]
-    (hdir / "index.json").write_text(json.dumps({"ev": ev_ids, "news": [i for i, _ in nw], "days": days},
+    # 日経平均の日次騰落率（days に揃える）。決算の反応日に日経全体より強かったかを見るため
+    nkr = (nk.pct_change() * 100).reindex(pd.to_datetime(days))
+    (hdir / "index.json").write_text(json.dumps({"ev": ev_ids, "news": [i for i, _ in nw], "days": days,
+                                                 "nk": [None if pd.isna(v) else round(float(v), 2) for v in nkr]},
                                                 separators=(",", ":")), encoding="utf-8")
     n = 0
     for c in codes:

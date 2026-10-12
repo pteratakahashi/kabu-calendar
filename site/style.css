@@ -475,3 +475,31 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .spark line { stroke: var(--line); }
 .spark .up { fill: var(--up); } .spark .down { fill: var(--down); }
 .btn.more { display: block; margin: 6px auto 0; font-size: 13px; }
+
+/* v9 なぜ動く？ */
+.vline { margin-top: 4px; display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+.vchip { font-size: 10.5px; font-weight: 700; padding: 1px 6px; border-radius: 5px; white-space: nowrap; }
+.v-link { background: color-mix(in srgb, #2e7d32 15%, transparent); color: #2e7d32; }
+.v-own { background: color-mix(in srgb, #6a1b9a 14%, transparent); color: #7b1fa2; }
+.v-mkt { background: var(--tag-bg); color: var(--muted); }
+.v-weak { background: color-mix(in srgb, #ef6c00 14%, transparent); color: #e65100; }
+:root[data-theme="dark"] .v-link { color: #81c784; } :root[data-theme="dark"] .v-own { color: #ce93d8; } :root[data-theme="dark"] .v-weak { color: #ffb74d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .v-link { color: #81c784; } :root:not([data-theme="light"]) .v-own { color: #ce93d8; } :root:not([data-theme="light"]) .v-weak { color: #ffb74d; } }
+.vtag { font-size: 11px; color: var(--muted); }
+.why { padding: 12px 14px; margin: 4px 0 14px; }
+.why-h { font-weight: 700; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+.why-sum { font-size: 13.5px; margin: 8px 0 6px; line-height: 1.6; }
+.why-list { margin: 0; padding-left: 1.1em; font-size: 13px; line-height: 1.6; }
+.why-list li { margin: 4px 0; }
+.why-list .ok { color: #2e7d32; font-size: 12.5px; } .why-list .ng { color: #e65100; font-size: 12.5px; }
+.rxtable.mini { margin: 4px 0; font-size: 12.5px; width: 100%; }
+.rxtable.mini th { font-weight: 500; text-align: left; color: var(--muted); }
+.rxtable.mini td { text-align: right; }
+.why-rule { border-top: 1px solid var(--line); margin-top: 10px; padding-top: 8px; font-size: 13px; }
+.why-rule b { margin-right: 6px; }
+.why-rule p { margin: 4px 0 0; line-height: 1.6; color: var(--text); }
+.why-rule .ok { color: #2e7d32; } .why-rule .ng { color: #e65100; }
+.rxtable.mini td { white-space: nowrap; line-height: 1.4; }
+.rxtable.mini th { white-space: normal; }
+:root[data-theme="dark"] .why .ok { color: #81c784; } :root[data-theme="dark"] .why .ng { color: #ffb74d; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .why .ok { color: #81c784; } :root:not([data-theme="light"]) .why .ng { color: #ffb74d; } }

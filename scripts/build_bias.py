@@ -43,7 +43,7 @@ def series_of(ev: dict) -> str:
     return SERIES_ALIAS.get(slug, slug)
 
 
-def judge(vals: list[float], vol: float, nk: list[float] | None = None) -> dict | None:
+def judge(vals: list[float | None], vol: float) -> dict | None:
     v = [x for x in vals if x is not None]
     n = len(v)
     if n < MIN_N:
@@ -61,14 +61,15 @@ def judge(vals: list[float], vol: float, nk: list[float] | None = None) -> dict 
     t = avg / (sd / math.sqrt(n)) if sd > 0 else 99.0
     if abs(t) < MIN_T:
         return None
-    rec = {"s": side, "n": n, "w": up if side > 0 else down, "avg": round(avg, 2),
-           "t": round(t, 1),
-           "last": [round(x, 2) for x in v[:HIST_N]]}
-    if nk is not None:
-        k = [x for x in nk if x is not None]
-        if k:
-            rec["nk"] = [sum(x > 0 for x in k), len(k)]
-    return rec
+    return {"s": side, "n": n, "w": up if side > 0 else down, "avg": round(avg, 2), "t": round(t, 1)}
+
+
+def driver(rec: dict, series: str) -> float | None:
+    """その回の「結果」を表す市場の動き。海外決算はその会社の株価の反応、指標は発表1時間後のドル円。"""
+    if series.startswith("earn:"):
+        return (rec.get("d1") or {}).get("tk")
+    s = next((x for x in rec.get("series", []) if x["sym"] == "JPY=X"), None)
+    return None if s is None else s.get("m60", s.get("end"))
 
 
 def main() -> int:
@@ -83,6 +84,8 @@ def main() -> int:
     earnings = load(DATA / "earnings.json", [])
     n225 = load(DATA / "n225.json", {}).get("codes", [])
     hev = {eid: i for i, eid in enumerate(idx["ev"])}
+    hday = {d: i for i, d in enumerate(idx["days"])}
+    nk_day = lambda d: idx["nk"][hday[d]] if "nk" in idx and d in hday else None  # noqa: E731
 
     def nk_r(eid):
         r = rx["events"].get(eid) or {}
@@ -106,11 +109,11 @@ def main() -> int:
             upcoming_ev.append((e, hist))
 
     # 銘柄ごとの過去の決算反応（新しい順）
-    earn_hist: dict[str, list[tuple[str, float]]] = {}
+    earn_hist: dict[str, list[tuple[str, dict]]] = {}
     for key, r in rx["earnings"].items():
         c, d = key.split("@")
         if d < today and r.get("r") is not None:
-            earn_hist.setdefault(c, []).append((d, r["r"]))
+            earn_hist.setdefault(c, []).append((d, r))
     nxt = {}
     for e in sorted(earnings, key=lambda e: e["d"]):
         if today <= e["d"] <= end and e["c"] not in nxt:
@@ -124,13 +127,21 @@ def main() -> int:
             continue
         vol = h["vol"]
         if (e := nxt.get(c)):
-            hist = sorted(earn_hist.get(c, []), reverse=True)[:HIST_N]
-            if (j := judge([r for _, r in hist], vol)):
-                items.append({"k": "earn", "c": c, "d": e["d"], "tm": e.get("t", ""), **j})
+            hist = sorted(earn_hist.get(c, []), key=lambda x: x[0], reverse=True)[:HIST_N]
+            if (j := judge([r["r"] for _, r in hist], vol)):
+                # 根拠を見るための各回の値（新しい順）: 日経平均（同じ反応日）、1週間後、決算日
+                items.append({"k": "earn", "c": c, "d": e["d"], "tm": e.get("t", ""), **j,
+                              "r": [r["r"] for _, r in hist], "nk": [nk_day(r["day"]) for _, r in hist],
+                              "w1": [p[1] if (p := (r.get("pts") or [])[r["k"] + 4:r["k"] + 5]) and (p := p[0]) else None
+                                     for _, r in hist],
+                              "ds": [d for d, _ in hist]})
         for ev, hist in upcoming_ev:
             vals = [h["ev"][hev[p["id"]]] for p in hist]
-            if (j := judge(vals, vol, [nk_r(p["id"]) for p in hist])):
-                items.append({"k": "ev", "c": c, "id": ev["id"], "d": ev["d"], "tm": ev.get("t", ""), **j})
+            if (j := judge(vals, vol)):
+                k = series_of(ev)
+                items.append({"k": "ev", "c": c, "id": ev["id"], "d": ev["d"], "tm": ev.get("t", ""), **j,
+                              "r": vals, "nk": [nk_r(p["id"]) for p in hist],
+                              "dv": [driver(rx["events"][p["id"]], k) for p in hist]})
     items.sort(key=lambda i: (i["d"], -abs(i["t"])))
     out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "items": items}
     (DATA / "bias.json").write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")

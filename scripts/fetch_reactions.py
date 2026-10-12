@@ -8,6 +8,8 @@
     15:30 以降（または時刻不明）の発表は翌営業日を反応日とする
 
 - 予定外ニュース（data/news.json）: 反応日・1週間後・1か月後の騰落率（日経平均/S&P500/SOX/関連テーマ主力株/関連銘柄）
+- 保有銘柄用（日経225採用銘柄）: 銘柄ごとに site/data/h/<コード>.json を作る。
+    各イベントの反応日・各ニュースの反応日/1週間後/1か月後の騰落率（並びは h/index.json の id 順）
 - 「過去10回」用: 指標は前年分まで（1時間足は730日まで取れる）、国内決算は約3年分、
     全イベントに反応日の日経平均騰落率（d1）を付ける
 
@@ -275,6 +277,49 @@ def react_day_jp(d: str, t: str | None) -> dt.date:
 
 # ------------------------------------------------------------- main
 
+def holding_day_r(s: pd.Series, day: str) -> float | None:
+    """その日の終値 / 前営業日終値（その日に取引が無ければ None）。"""
+    ts = pd.Timestamp(day)
+    if s is None or s.empty or ts not in s.index:
+        return None
+    i = s.index.get_loc(ts)
+    return round((float(s.iloc[i]) / float(s.iloc[i - 1]) - 1) * 100, 2) if i > 0 else None
+
+
+def build_holdings(out: dict, news: list[dict], daily: dict, n225: list[str]) -> None:
+    hdir = DATA / "h"
+    hdir.mkdir(exist_ok=True)
+    codes = sorted(set(n225) | {p.stem for p in hdir.glob("*.json") if p.stem != "index"})
+    missing = [c for c in codes if c not in daily]
+    daily.update(daily_closes(missing))
+    # 日本株の反応日が決まっているイベント・ニュースだけ
+    ev_ids, ev_days = [], []
+    for eid, rec in out["events"].items():
+        day = (rec.get("d1") or {}).get("nk_day") or next((x["day"] for x in rec.get("idx", []) if x["sym"] == "^N225"), None)
+        if day:
+            ev_ids.append(eid)
+            ev_days.append(day)
+    nw = [(n["id"], x["day"]) for n in news if (r := out["news"].get(n["id"]))
+          for x in r["idx"] if x["sym"] == "^N225"]
+    (hdir / "index.json").write_text(json.dumps({"ev": ev_ids, "news": [i for i, _ in nw]}, separators=(",", ":")),
+                                     encoding="utf-8")
+    n = 0
+    for c in codes:
+        s = daily.get(c)
+        if s is None or s.empty:
+            continue
+        rets = s.pct_change().dropna().iloc[-250:]
+        rec = {
+            "c": c,
+            "vol": round(float(rets.abs().mean()) * 100, 2),  # 普段の1日の値動き（直近250日の平均の振れ幅）
+            "ev": [holding_day_r(s, d) for d in ev_days],
+            "news": [[p["r1"], p["r5"], p["r20"]] if (p := path(s, dt.date.fromisoformat(d))) else None for _, d in nw],
+        }
+        (hdir / f"{c}.json").write_text(json.dumps(rec, separators=(",", ":")), encoding="utf-8")
+        n += 1
+    log(f"  holdings: {n} 銘柄")
+
+
 def main() -> int:
     now = pd.Timestamp.now(tz=JST)
     events = load(DATA / "events.json", [])
@@ -329,6 +374,8 @@ def main() -> int:
     today = now.strftime("%Y-%m-%d")
     since = EARN_START
     theme_codes = {c for t in themes.values() for c in t["codes"]}
+    n225 = [x["c"] for x in load(DATA / "n225.json", {}).get("codes", [])]
+    theme_codes |= set(n225)  # 日経225採用銘柄は保有銘柄に選べるので、過去の決算反応も全社分作る
     timed = {ev["code"]: ev for ev in events if ev.get("code")}
     # 過去10回の反応用に、アプリには出さない古い決算日（Yahoo 補完分）も対象にする。
     # 同じ銘柄の決算が前後4日以内に earnings.json にあれば（同じ回の日付ずれ）足さない
@@ -416,6 +463,9 @@ def main() -> int:
     out["news"] = {k: v for k, v in out["news"].items() if k in ids}
 
     OUT.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+
+    # 6) 保有銘柄（日経225採用銘柄＋過去に採用されていた銘柄のファイルも更新し続ける）
+    build_holdings(out, news, daily, n225)
     log(f"done: events={len(out['events'])} earnings={len(out['earnings'])} news={len(out['news'])}")
     return 0
 

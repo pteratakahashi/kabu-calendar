@@ -65,7 +65,7 @@
     <div id="grid" class="grid"></div>
     <div class="legend">
       <span><i class="dot big"></i>大型決算</span>
-      <span><i class="dot watch"></i>ウォッチ</span>
+      <span><i class="dot watch"></i>保有</span>
       <span><i class="num-sample">12</i>決算社数</span>
     </div>
     </div><div class="cal-right">
@@ -104,8 +104,11 @@
   </section>
 
   <!-- ウォッチ -->
-  <section id="view-watch" class="view">
-    <ul id="watch-list" class="list"></ul>
+  <section id="view-hold" class="view">
+    <div class="month-nav"><h2>保有銘柄</h2><button id="hold-edit" class="chip">銘柄を選ぶ</button></div>
+    <div id="hold-alert"></div>
+    <div id="hold-list"></div>
+    <p class="note" id="hold-note"></p>
   </section>
 </main>
 
@@ -123,7 +126,7 @@
   <button data-v="cal"><span class="ti">📅</span>決算</button>
   <button data-v="ipo"><span class="ti">🆕</span>IPO</button>
   <button data-v="search"><span class="ti">🔍</span>検索</button>
-  <button data-v="watch"><span class="ti">★</span>ウォッチ</button>
+  <button data-v="hold"><span class="ti">💼</span>保有</button>
 </nav>
 
 <script>

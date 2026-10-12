@@ -1,7 +1,8 @@
 "use strict";
 
 // ---------- storage (ウォッチリスト・表示設定は端末内) ----------
-const WATCH_KEY = "kabucal.watch.v1";
+const WATCH_KEY = "kabucal.watch.v1"; // 旧ウォッチ（v5まで）。保有銘柄へ移行する
+const HOLD_KEY = "kabucal.hold.v1";
 const PREF_KEY = "kabucal.prefs.v1";
 function loadJSON(key, def) {
   try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
@@ -19,7 +20,11 @@ const state = {
   byDate: new Map(),     // "YYYY-MM-DD" -> [earning]
   evByDate: new Map(),   // "YYYY-MM-DD" -> [event]
   nextByCode: new Map(), // code -> 直近の今後の決算 (なければ最新)
-  watch: new Set(loadJSON(WATCH_KEY, [])),
+  hold: new Set(loadJSON(HOLD_KEY, null) ?? loadJSON(WATCH_KEY, [])), // 保有銘柄（日経225採用銘柄から選ぶ・端末内に保存）
+  n225: { codes: [], history: [] }, n225set: new Set(),
+  hidx: null, hev: new Map(), hnews: new Map(), // 保有銘柄の反応（h/index.json の id → 位置）
+  h: new Map(),          // 銘柄コード -> h/<コード>.json
+  alerts: new Map(),     // イベント id -> [{c, abs, ratio, n}]（今後2週間、保有銘柄が大きく動きやすいもの）
   month: null, selected: null, weekStart: null,
   evTheme: "", calTheme: "",
   rx: { events: {}, earnings: {}, news: {} }, // 株価の反応（reactions.json）
@@ -101,6 +106,8 @@ async function load() {
     state.rx = await getJSON("reactions.json").catch(() => state.rx);
     state.ipo = await getJSON("ipo.json").catch(() => []);
     state.news = await getJSON("news.json").catch(() => []);
+    state.n225 = await getJSON("n225.json").catch(() => state.n225);
+    state.n225set = new Set(state.n225.codes.map((x) => x.c));
     state.rx.news ||= {};
   } catch (e) {
     $("#updated").textContent = "データ取得に失敗しました";
@@ -113,8 +120,14 @@ async function load() {
   state.selected = t;
   state.month = t.slice(0, 7);
   state.weekStart = mondayOf(t);
+  // 旧ウォッチからの移行: 日経225採用銘柄だけ引き継ぐ
+  if (loadJSON(HOLD_KEY, null) == null && state.n225set.size) {
+    state.hold = new Set([...state.hold].filter((c) => state.n225set.has(c)));
+    saveHold();
+  }
   renderThemeBars();
   renderAll();
+  loadHoldings();
 }
 
 function index() {
@@ -288,7 +301,7 @@ function sizeBadge(sz) {
 
 function stockRow(e0, { showDate = false } = {}) {
   const e = info(e0);
-  const watched = state.watch.has(e.c);
+  const watched = state.hold.has(e.c);
   const q = e.q ? `<span class="badge">${esc(Q_LABEL[e.q] || e.q)}</span>` : "";
   const when = showDate ? (e.d ? fmtDay(e.d) + (e.d < todayStr() ? " 発表済" : "") : "日付未定") : null;
   const sub = q + sizeBadge(e.sz) + [when, e.sec || e.mkt].filter(Boolean).map(esc).join(" · ");
@@ -302,7 +315,6 @@ function stockRow(e0, { showDate = false } = {}) {
     <div class="lead"><span class="code">${esc(e.c)}</span>${stars(e.imp)}</div>
     <div class="main"><div class="name">${esc(e.n)}</div><div class="sub">${sub}</div>${rxb}
       ${e.th.length ? `<div class="chips">${themeChips(e.th)}</div>` : ""}</div>
-    <button class="star ${watched ? "on" : ""}" data-code="${esc(e.c)}" aria-label="ウォッチ${watched ? "解除" : "登録"}">★</button>
   </li>`;
 }
 
@@ -319,7 +331,7 @@ function weekItems(day) {
     if (!ev.code) return { kind: "ev", ...ev };
     // 銘柄コード付きのイベント（時刻の分かる国内決算）は銘柄の影響度・テーマを引き継ぐ
     const s = state.stock.get(ev.code) || {};
-    return { kind: "earn", ...ev, c: ev.code, rxKey: `${ev.code}@${day}`, watched: state.watch.has(ev.code),
+    return { kind: "earn", ...ev, c: ev.code, rxKey: `${ev.code}@${day}`, watched: state.hold.has(ev.code),
       impact: Math.max(ev.impact, s.imp || 1), themes: ev.themes?.length ? ev.themes : (s.th || []) };
   });
   for (const x of state.ipoByDate.get(day) || []) {
@@ -333,7 +345,7 @@ function weekItems(day) {
   for (const e0 of state.byDate.get(day) || []) {
     if (covered.has(e0.c)) continue;
     const e = info(e0);
-    const watched = state.watch.has(e.c);
+    const watched = state.hold.has(e.c);
     if (e.imp < 3 && !watched) continue;
     items.push({
       kind: "earn", c: e.c, d: day, t: e.t, country: "JP", watched, rxKey: `${e.c}@${day}`,
@@ -347,7 +359,9 @@ function weekItems(day) {
 function evRow(it) {
   const time = it.t ? `${esc(it.t)}${it.approx ? "<small>頃</small>" : ""}` : "—";
   const tent = it.tentative ? '<span class="badge tent">予定</span>' : "";
-  const watch = it.watched ? '<span class="badge wbadge">ウォッチ</span>' : "";
+  const watch = it.watched ? '<span class="badge wbadge">保有</span>' : "";
+  const al = it.kind === "ev" && state.alerts.get(it.id);
+  const alert = al ? `<span class="badge hbadge">保有株 注意</span>` : "";
   let rx = "", attr = it.kind === "earn" ? `data-code="${esc(it.c)}"` : "";
   if (it.kind === "ipo") {
     attr = `data-ipo="${esc(it.c)}"`;
@@ -382,7 +396,7 @@ function evRow(it) {
   return `<div class="ev imp${it.impact}${it.watched ? " watched" : ""}${rx ? " has-rx" : ""}" ${attr}>
     <span class="flag">${it.kind === "ipo" ? "🆕" : it.kind === "news" ? "🗞️" : FLAG[it.country] || "🌐"}</span>
     <div class="ev-main">
-      <div class="ev-title">${it.kind === "news" ? `<span class="cat">${esc(it.cat)}</span>` : ""}${esc(it.title)}${tent}${watch}</div>
+      <div class="ev-title">${it.kind === "news" ? `<span class="cat">${esc(it.cat)}</span>` : ""}${esc(it.title)}${tent}${watch}${alert}</div>
       ${it.desc ? `<div class="ev-desc">${esc(it.desc)}</div>` : ""}
       <div class="ev-meta">${stars(it.impact)}${themeChips(it.themes)}</div>
       ${rx}
@@ -440,7 +454,7 @@ function renderCalendar() {
     if (i === 35 && d.getMonth() !== m - 1) break; // 5週で収まる月は6行目を出さない
     const key = ymd(d);
     const list = state.byDate.get(key) || [];
-    const hasWatch = list.some((e) => state.watch.has(e.c));
+    const hasWatch = list.some((e) => state.hold.has(e.c));
     const big = list.filter((e) => (state.stock.get(e.c)?.imp || 1) === 3).length;
     const cell = document.createElement("button");
     cell.className = "cell"
@@ -482,7 +496,7 @@ function renderDay() {
   if (state.calTheme) list = list.filter((e) => e.th.includes(state.calTheme));
   const sorter = SORTERS[prefs.calSort] || SORTERS.imp;
   // ウォッチ銘柄は常に先頭
-  list.sort((a, b) => (state.watch.has(b.c) - state.watch.has(a.c)) || sorter(a, b));
+  list.sort((a, b) => (state.hold.has(b.c) - state.hold.has(a.c)) || sorter(a, b));
   const big = all.filter((e) => e.imp === 3).length;
   $("#day-label").textContent = `${fmtDay(key)}　決算 ${all.length}社${big ? `（★★★ ${big}社）` : ""}`;
   let html = list.map((e) => stockRow(e)).join("");
@@ -507,10 +521,10 @@ function renderMonth() {
   let total = 0, html = "";
   for (const d of days) {
     let list = state.byDate.get(d).map(info);
-    list = list.filter((e) => e.imp >= 2 || state.watch.has(e.c)); // 大企業（★★以上）＋ウォッチ
+    list = list.filter((e) => e.imp >= 2 || state.hold.has(e.c)); // 大企業（★★以上）＋保有
     if (state.calTheme) list = list.filter((e) => e.th.includes(state.calTheme));
     if (!list.length) continue;
-    list.sort((a, b) => (state.watch.has(b.c) - state.watch.has(a.c)) || sorter(a, b));
+    list.sort((a, b) => (state.hold.has(b.c) - state.hold.has(a.c)) || sorter(a, b));
     total += list.length;
     html += `<h4 class="mday${d === todayStr() ? " today" : ""}">${fmtDay(d)}<span>${list.length}社</span></h4><ul class="list">${list.map((e) => stockRow(e)).join("")}</ul>`;
   }
@@ -618,6 +632,7 @@ function openEventRx(id) {
   let html = `<p class="sheet-desc">${fmtDay(ev.d)} ${esc(ev.t || "")} 発表（日本時間）${ev.desc ? "<br>" + esc(ev.desc) : ""}</p>`;
   if (r.none) html += `<p class="msum">${ev.d >= todayStr() ? "まだ発表前です。" : "この回の値動きデータはありません。"}同じイベントの過去の反応から傾向を確認できます。</p>`;
   if (r.d1?.nk != null && !r.idx) html += `<div class="rx-big">${pct(r.d1.nk)}<span>日経平均 ${fmtDay(r.d1.nk_day)}（反応日）の騰落率</span></div>`;
+  html += holdEventHtml(ev);
   html += eventHistoryHtml(ev);
   if (r.series.length) {
     const hourly = r.iv === "1h";
@@ -733,6 +748,7 @@ function openNews(id) {
   let html = `<p class="sheet-desc">${fmtDay(n.d)}${n.t ? ` ${esc(n.t)}${n.approx ? "頃" : ""}（日本時間）` : ""} · <span class="cat">${esc(n.cat)}</span>${stars(n.impact)}<br>${esc(n.desc || "")}
     ${n.src ? `<br><a class="srcl" href="${esc(n.src)}" target="_blank" rel="noopener">出典 ↗</a>` : ""}</p>`;
   if (n.themes?.length) html += `<div class="chips" style="margin:-4px 0 10px">${themeChips(n.themes)}</div>`;
+  html += holdNewsHtml(id);
   if (r) {
     const rows = r.idx.map((x) => [x.name + (x.sym === "^GSPC" || x.sym === "^SOX" ? " 🇺🇸" : ""), x]);
     if (r.theme) rows.push([`関連テーマ主力 ${r.theme.n}社平均`, r.theme]);
@@ -779,23 +795,237 @@ function renderSearch() {
     : `<li class="empty">見つかりません</li>`;
 }
 
-function renderWatch() {
+// ---------- 保有銘柄 ----------
+// 選べるのは日経平均採用銘柄。端末内（localStorage）に保存。各銘柄の反応は h/<コード>.json を必要な時に読む
+const ALERT_RATIO = 1.5; // 過去の平均の振れ幅が「普段の1日の値動き」の何倍以上なら注意とするか
+
+async function loadHold(c) {
+  if (state.h.has(c)) return state.h.get(c);
+  try {
+    const r = await getJSON(`h/${c}.json`);
+    state.h.set(c, r);
+    return r;
+  } catch { return null; }
+}
+
+async function loadHoldings() {
+  try {
+    state.hidx = await getJSON("h/index.json");
+    state.hidx.ev.forEach((id, i) => state.hev.set(id, i));
+    state.hidx.news.forEach((id, i) => state.hnews.set(id, i));
+  } catch { return; }
+  await Promise.all([...state.hold].map(loadHold));
+  computeAlerts();
+  renderHold(); renderWeek();
+  if ($("#sheet").open && state.sheetFn) state.sheetFn();
+}
+
+function saveHold() {
+  saveJSON(HOLD_KEY, [...state.hold]);
+  try { localStorage.removeItem(WATCH_KEY); } catch { /* noop */ }
+}
+
+const holdName = (c) => state.stock.get(c)?.n || state.n225.codes.find((x) => x.c === c)?.n || c;
+const evR = (h, id) => (h && state.hev.has(id) ? h.ev[state.hev.get(id)] : null);
+const newsR = (h, id) => (h && state.hnews.has(id) ? h.news[state.hnews.get(id)] : null);
+const nkR = (id) => state.rx.events[id]?.d1?.nk ?? state.rx.events[id]?.idx?.find((x) => x.sym === "^N225")?.r ?? null;
+
+// 指標の名前（同じ種類のイベントの代表名）
+function seriesName(ev) {
+  const k = seriesOf(ev);
+  const t = ev.title.replace(/（.*?）|\(.*?\)/g, "").replace(/^(米|日本|中国)?\d+月/, "$1").replace(/\s*\d+-\d+月期/, "").replace(/決算.*$/, "").trim();
+  return k.startsWith("earn:") ? `${t} 決算` : t;
+}
+
+// その銘柄の、その種類のイベントでの過去の反応（ev の回まで、最大10回）
+function holdSeriesStat(h, ev) {
+  const hist = eventHistory(ev).filter((e) => e.id !== ev.id || ev.d < todayStr());
+  const vals = hist.map((e) => evR(h, e.id));
+  const st = stat(vals);
+  return st && { ...st, hist, vals, nk: stat(hist.map((e) => nkR(e.id))) };
+}
+
+// 今後2週間のイベントのうち、保有銘柄が過去に大きく動いたもの
+function computeAlerts() {
+  state.alerts.clear();
+  const today = todayStr(), lim = new Date(); lim.setDate(lim.getDate() + 14);
+  const end = ymd(lim);
+  for (const ev of state.events) {
+    if (ev.d < today || ev.d > end || ev.code) continue;
+    for (const c of state.hold) {
+      const h = state.h.get(c);
+      if (!h?.vol) continue;
+      const st = holdSeriesStat(h, ev);
+      if (!st || st.n < 3) continue;
+      const ratio = st.abs / h.vol;
+      if (ratio < ALERT_RATIO) continue;
+      if (!state.alerts.has(ev.id)) state.alerts.set(ev.id, []);
+      state.alerts.get(ev.id).push({ c, abs: st.abs, ratio, n: st.n, up: st.up, avg: st.avg });
+    }
+  }
+  for (const v of state.alerts.values()) v.sort((a, b) => b.ratio - a.ratio);
+}
+
+function renderHold() {
+  const el = $("#hold-list");
+  if (!el) return;
+  const asof = state.n225.asof ? `（${esc(state.n225.asof)}現在）` : "";
+  $("#hold-note").innerHTML = `選べるのは日経平均採用銘柄 225社${asof}。採用銘柄が入れ替わったら自動で反映されます。保有銘柄はこの端末にだけ保存されます。`;
+  const codes = [...state.hold].sort((a, b) => a.localeCompare(b));
+  if (!codes.length) {
+    $("#hold-alert").innerHTML = "";
+    el.innerHTML = `<p class="empty-msg">「銘柄を選ぶ」から持っている銘柄を登録すると、<br>ニュースや指標・決算でその株がどう動いたかが見られます</p>`;
+    return;
+  }
+  // 今後2週間の注意イベント
   const today = todayStr();
-  const items = [...state.watch].map((c) => {
-    const e = state.nextByCode.get(c);
-    const s = state.stock.get(c);
-    return e ? { ...e, past: e.d && e.d < today } : { c, n: s?.n || c, d: "" };
-  });
-  // 今後の予定が近い順 → 未定 → 過去
-  const rank = (x) => (!x.d ? "2" : x.past ? "3" + x.d : "1" + x.d);
-  items.sort((a, b) => rank(a).localeCompare(rank(b)));
-  $("#watch-list").innerHTML = items.length
-    ? items.map((e) => stockRow(e, { showDate: true })).join("")
-    : `<li class="empty">検索タブで ★ を押すとここに表示されます</li>`;
+  const evs = state.events.filter((e) => state.alerts.has(e.id)).sort((a, b) => (a.d + (a.t || "")).localeCompare(b.d + (b.t || "")));
+  $("#hold-alert").innerHTML = evs.length ? `<h4 class="sheet-h">今後2週間の注意イベント</h4><ul class="list">`
+    + evs.map((e) => `<li class="has-rx" data-hev="${esc(e.id)}"><div class="lead"><span class="nd">${fmtDay(e.d)}</span><span class="nt">${esc(e.t || "")}</span></div>
+      <div class="main"><div class="name">${esc(e.title)}</div>
+      <div class="sub">${state.alerts.get(e.id).map((a) => `${esc(holdName(a.c))} 振れ幅 <b>${a.abs.toFixed(1)}%</b>（普段の${a.ratio.toFixed(1)}倍）`).join("<br>")}</div></div></li>`).join("")
+    + `</ul><p class="note">過去の同じイベント（最大10回）で、その銘柄の反応日の平均の振れ幅が普段の1日の値動きの${ALERT_RATIO}倍以上のもの</p>`
+    : `<p class="msum">今後2週間、保有銘柄が普段より大きく動いてきたイベントはありません</p>`;
+  el.innerHTML = `<h4 class="sheet-h">保有銘柄（${codes.length}）</h4><ul class="list">` + codes.map((c) => {
+    const s = state.stock.get(c) || {}, h = state.h.get(c);
+    const nx = state.nextByCode.get(c);
+    const out = !state.n225set.has(c) ? '<span class="badge">日経225から除外</span>' : "";
+    const last = earnHistory(c, todayStr())[0];
+    return `<li class="has-rx" data-hold="${esc(c)}"><div class="lead"><span class="code">${esc(c)}</span></div>
+      <div class="main"><div class="name">${esc(holdName(c))}${out}</div>
+      <div class="sub">${esc(s.sec || "")}${nx?.d ? ` · 決算 ${fmtDay(nx.d)}${nx.d < today ? " 発表済" : ""}` : ""}</div>
+      <div class="rxline">${h ? `<span class="lbl">普段の値動き ±${h.vol.toFixed(1)}%</span>` : ""}${last ? `<span class="lbl">前回決算 ${pct(state.rx.earnings[last].r)}</span>` : ""}<span class="rxhint">影響を見る ›</span></div></div></li>`;
+  }).join("") + `</ul>`;
+}
+
+// 銘柄を選ぶ（日経225の業種別リスト）
+function openPicker() {
+  const html = `<input id="pick-q" type="search" placeholder="コード・社名で絞り込み" autocomplete="off"><div id="pick-list"></div>`;
+  openSheet(`保有銘柄を選ぶ（${state.hold.size}）`, html, null);
+  renderPicker();
+  $("#pick-q").addEventListener("input", renderPicker);
+}
+
+function renderPicker() {
+  const q = norm($("#pick-q")?.value.trim() || "");
+  const list = state.n225.codes.filter((x) => !q || x.c.toLowerCase().startsWith(q) || norm(x.n).includes(q) || norm(holdName(x.c)).includes(q));
+  let html = "", sec = "";
+  for (const x of list) {
+    if (x.sec !== sec) { if (sec) html += "</ul>"; sec = x.sec; html += `<h4 class="mday">${esc(sec)}</h4><ul class="list">`; }
+    const on = state.hold.has(x.c);
+    html += `<li class="pick${on ? " on" : ""}" data-pick-hold="${esc(x.c)}"><span class="code">${esc(x.c)}</span><div class="main"><div class="name">${esc(holdName(x.c))}</div></div><span class="ck">${on ? "✓" : ""}</span></li>`;
+  }
+  $("#pick-list").innerHTML = list.length ? html + "</ul>" : `<p class="empty-msg">見つかりません</p>`;
+  $("#sheet-title").textContent = `保有銘柄を選ぶ（${state.hold.size}）`;
+}
+
+async function togglePick(c) {
+  state.hold.has(c) ? state.hold.delete(c) : state.hold.add(c);
+  saveHold();
+  renderPicker();
+  await loadHold(c);
+  computeAlerts();
+  renderHold(); renderWeek(); renderCalendar(); renderDay(); renderMonth();
+}
+
+// 保有銘柄の詳細: どのイベント・ニュース・決算でどう動いたか
+async function openHolding(c) {
+  const h = await loadHold(c);
+  const name = holdName(c);
+  const s = state.stock.get(c) || {};
+  const today = todayStr();
+  const nx = state.nextByCode.get(c);
+  let html = `<p class="sheet-desc">${esc(c)} · ${esc(s.sec || "")}${h ? ` · 普段の1日の値動き ±${h.vol.toFixed(2)}%（直近1年の平均）` : ""}</p>`;
+  if (!h) { openSheet(name, html + `<p class="msum">反応データはまだありません（次回の更新で作られます）</p>`, null); return; }
+
+  // 1) 今後2週間のイベント
+  const lim = new Date(); lim.setDate(lim.getDate() + 14);
+  const up = state.events.filter((e) => e.d >= today && e.d <= ymd(lim) && !e.code)
+    .map((e) => ({ e, st: holdSeriesStat(h, e) })).filter((x) => x.st && x.st.n >= 3)
+    .sort((a, b) => b.st.abs - a.st.abs);
+  if (up.length) {
+    html += `<h4 class="sheet-h">今後2週間のイベントと、この銘柄の過去の反応</h4><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th></tr></thead><tbody>`
+      + up.slice(0, 8).map(({ e, st }) => `<tr data-hser="${esc(c)}|${esc(e.id)}" class="${st.abs / h.vol >= ALERT_RATIO ? "warn" : ""}"><th>${fmtDay(e.d)} ${esc(seriesName(e))}<small>${st.abs / h.vol >= ALERT_RATIO ? "⚠ 普段より大きく動きやすい · " : ""}過去${st.n}回</small></th>
+        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%</td></tr>`).join("")
+      + `</tbody></table>`;
+  }
+
+  // 2) 指標・イベント別（よく動く順）
+  const seen = new Set(), rows = [];
+  for (const ev of [...state.events].reverse()) {
+    if (ev.d > today || ev.code) continue;
+    const k = seriesOf(ev);
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const st = holdSeriesStat(h, ev);
+    if (st && st.n >= 3) rows.push({ ev, st });
+  }
+  rows.sort((a, b) => b.st.abs - a.st.abs);
+  if (rows.length) {
+    html += `<h4 class="sheet-h">指標・イベント別の反応（各 過去10回まで、よく動く順）</h4><table class="rxtable hist"><thead><tr><th></th><th>上昇</th><th>平均</th><th>振れ幅</th><th>日経の振れ幅</th></tr></thead><tbody>`
+      + rows.slice(0, 15).map(({ ev, st }) => `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(seriesName(ev))}<small>過去${st.n}回</small></th>
+        <td class="num">${st.up}/${st.n}</td><td>${pct(st.avg)}</td><td class="num">${st.abs.toFixed(1)}%</td><td class="num">${st.nk ? st.nk.abs.toFixed(1) + "%" : "—"}</td></tr>`).join("")
+      + `</tbody></table><p class="note">反応日（発表後に最初に開いた日本の立会日）の騰落率。振れ幅＝上げ下げを問わない平均の動きの大きさ。同じ日に別のイベントがあった場合はその影響も含みます。行をタップで各回の一覧</p>`;
+  }
+
+  // 3) ニュース（大きく動いた順）
+  const ns = state.news.map((n) => ({ n, r: newsR(h, n.id) })).filter((x) => x.r && x.r[0] != null)
+    .sort((a, b) => Math.abs(b.r[0]) - Math.abs(a.r[0])).slice(0, 10);
+  if (ns.length) {
+    const nk = (id) => state.rx.news[id]?.idx?.find((x) => x.sym === "^N225")?.r1 ?? null;
+    html += `<h4 class="sheet-h">大きく動いたニュース（今年・上位10件）</h4><table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間後</th><th>1か月後</th></tr></thead><tbody>`
+      + ns.map(({ n, r }) => `<tr data-news="${esc(n.id)}"><th>${fmtDay(n.d)} ${esc(n.title)}<small>日経平均 ${nk(n.id) != null ? (nk(n.id) > 0 ? "+" : "") + nk(n.id).toFixed(2) + "%" : "—"}</small></th>
+        <td>${pct(r[0])}</td><td>${pct(r[1])}</td><td>${pct(r[2])}</td></tr>`).join("")
+      + `</tbody></table>`;
+  }
+
+  // 4) 決算
+  html += earnHistoryHtml(c, nx?.d && nx.d >= today ? nx.d : "9999-12-31")
+    || `<p class="msum">過去の決算の反応データはありません</p>`;
+  if (nx?.d) html += `<p class="msum">次の決算: ${fmtDay(nx.d)}${nx.d < today ? "（発表済・次回は未定）" : ""}</p>`;
+  openSheet(name, html, () => openHolding(c));
+}
+
+// 保有銘柄 × 指標: 各回の反応
+function openHoldSeries(c, evId) {
+  const h = state.h.get(c), ev = state.events.find((e) => e.id === evId);
+  if (!h || !ev) return;
+  const hist = eventHistory(ev).filter((e) => e.d < todayStr());
+  const rows = hist.map((e) => ({ d: e.d, sub: e.desc, attr: `data-evrx="${esc(e.id)}"`, id: e.id }));
+  const html = `<p class="sheet-desc">${esc(holdName(c))}（普段の1日の値動き ±${h.vol.toFixed(2)}%）が「${esc(seriesName(ev))}」の反応日にどう動いたか</p>`
+    + historyHtml(`${holdName(c)} の反応`, rows, [
+      { h: holdName(c).slice(0, 8), f: (x) => evR(h, x.id) },
+      { h: "日経平均", f: (x) => nkR(x.id) },
+      { h: "日経との差", f: (x) => (evR(h, x.id) != null && nkR(x.id) != null ? evR(h, x.id) - nkR(x.id) : null) },
+    ], { note: "反応日の終値騰落率。行をタップでその回の詳細" });
+  openSheet(`${seriesName(ev)} × ${holdName(c)}`, html, () => openHoldSeries(c, evId));
+  $("#sheet").scrollTop = 0;
+}
+
+// イベント・ニュースのシートに差し込む「保有銘柄の反応」
+function holdEventHtml(ev) {
+  if (!state.hold.size || !state.hidx) return "";
+  const rows = [...state.hold].map((c) => {
+    const h = state.h.get(c);
+    if (!h) return "";
+    const r = evR(h, ev.id), st = holdSeriesStat(h, ev);
+    if (r == null && !st) return "";
+    return `<tr data-hser="${esc(c)}|${esc(ev.id)}"><th>${esc(holdName(c))}</th><td>${pct(r)}</td><td class="num">${st ? `${st.up}/${st.n}` : "—"}</td><td class="num">${st ? st.abs.toFixed(1) + "%" : "—"}</td></tr>`;
+  }).join("");
+  return rows ? `<h4 class="sheet-h">保有銘柄の反応</h4><table class="rxtable hist"><thead><tr><th></th><th>この回</th><th>過去の上昇</th><th>過去の振れ幅</th></tr></thead><tbody>${rows}</tbody></table>` : "";
+}
+
+function holdNewsHtml(id) {
+  if (!state.hold.size || !state.hidx) return "";
+  const rows = [...state.hold].map((c) => {
+    const r = newsR(state.h.get(c), id);
+    return r ? `<tr data-hold="${esc(c)}"><th>${esc(holdName(c))}</th><td>${pct(r[0])}</td><td>${pct(r[1])}</td><td>${pct(r[2])}</td></tr>` : "";
+  }).join("");
+  return rows ? `<h4 class="sheet-h">保有銘柄の反応</h4><table class="rxtable hist"><thead><tr><th></th><th>反応日</th><th>1週間後</th><th>1か月後</th></tr></thead><tbody>${rows}</tbody></table>` : "";
 }
 
 function renderAll() {
-  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderWatch(); renderIpo(); renderNews();
+  renderWeek(); renderCalendar(); renderDay(); renderSearch(); renderHold(); renderIpo(); renderNews();
   renderMonth();
   if ($("#sheet").open && state.sheetFn) state.sheetFn();
 }
@@ -806,14 +1036,15 @@ function setSeg(el, v) {
 }
 
 document.addEventListener("click", (ev) => {
-  const star = ev.target.closest(".star");
-  if (star) {
-    const c = star.dataset.code;
-    state.watch.has(c) ? state.watch.delete(c) : state.watch.add(c);
-    saveJSON(WATCH_KEY, [...state.watch]);
-    renderAll();
-    return;
-  }
+  const ph = ev.target.closest("[data-pick-hold]");
+  if (ph) { togglePick(ph.dataset.pickHold); return; }
+  if (ev.target.closest("#hold-edit")) { openPicker(); return; }
+  const hs = ev.target.closest("[data-hser]");
+  if (hs) { const [c, id] = hs.dataset.hser.split("|"); openHoldSeries(c, id); return; }
+  const hev = ev.target.closest("[data-hev]");
+  if (hev) { openEventRx(hev.dataset.hev); return; }
+  const hd = ev.target.closest("[data-hold]");
+  if (hd) { openHolding(hd.dataset.hold); return; }
   const ncat = ev.target.closest("[data-ncat]");
   if (ncat) { prefs.newsCat = ncat.dataset.ncat; saveJSON(PREF_KEY, prefs); renderNews(); return; }
   const nw = ev.target.closest("[data-news]");
@@ -870,7 +1101,7 @@ function switchTab(v) {
 }
 
 $("#sheet-close").onclick = () => $("#sheet").close();
-$("#sheet").addEventListener("close", () => { state.sheetFn = null; });
+$("#sheet").addEventListener("close", () => { state.sheetFn = null; renderHold(); });
 $("#sheet").addEventListener("click", (e) => { if (e.target.id === "sheet") $("#sheet").close(); });
 $("#prev").onclick = () => shiftMonth(-1);
 $("#next").onclick = () => shiftMonth(1);

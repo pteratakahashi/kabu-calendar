@@ -39,6 +39,10 @@ jobs:
         continue-on-error: true
         run: python scripts/fetch_ipo.py
 
+      - name: Fetch Nikkei 225 constituents
+        continue-on-error: true   # 失敗時は前回の一覧のまま
+        run: python scripts/fetch_n225.py
+
       - name: Fetch market reactions
         continue-on-error: true   # Yahoo 側の不調で全体を止めない
         run: python scripts/fetch_reactions.py
@@ -47,7 +51,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add site/data
+          git add site/data data/earnings_backfill.json
           git diff --cached --quiet || git commit -m "data: update $(TZ=Asia/Tokyo date +%F)"
           # Claude の定期実行が同時に push している場合に備えて rebase してから push
           for i in 1 2 3; do git pull --rebase -q && git push && break; sleep 5; done

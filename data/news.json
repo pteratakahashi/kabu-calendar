@@ -1343,5 +1343,23 @@
    "1605"
   ],
   "src": "https://kumanichi.com/articles/2044753"
+ },
+ {
+  "id": "2026-10-13-mideast-tension-chip-selloff",
+  "d": "2026-10-13",
+  "t": "09:00",
+  "country": "JP",
+  "cat": "地政学",
+  "title": "中東緊迫懸念で日経平均一時1900円超安",
+  "desc": "連休明けに米ハイテク株安と中東情勢への懸念で半導体中心に売り。終値は1,253円安の67,777円。",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "semiequip"
+  ],
+  "codes": [
+   "8035"
+  ],
+  "src": "https://news.web.nhk/newsweb/na/nd-20261013de58344"
  }
 ]

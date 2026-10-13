@@ -424,7 +424,7 @@ def main() -> int:
         if out["earnings"].get(key, {}).get("done"):
             continue
         tev = timed.get(e["c"])
-        targets[key] = (e["c"], e["d"], tev["t"] if tev and tev["d"] == e["d"] else (e.get("t") or None))
+        targets[key] = (e["c"], e["d"], tev["t"] if tev and tev["d"] == e["d"] else (None if e.get("tp") else e.get("t") or None))  # tp = 前回の時刻による目安
 
     # 時刻つきで登録した国内決算イベントも対象に（Yahoo の決算日とずれていても拾う）
     for ev in events:

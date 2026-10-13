@@ -322,12 +322,19 @@ function sizeBadge(sz) {
   return sz === "Core30" || sz === "Large70" ? `<span class="badge size">${sz}</span>` : "";
 }
 
+// 決算の発表時刻。tp があるのは「前回の決算短信の時刻」による目安（scripts/fetch_tdnet.py）
+function earnTime(e) {
+  if (!e.t) return "";
+  return e.tp ? `<b class="etime" title="前回（${esc(fmtMD(e.tp))}）の発表時刻">${esc(e.t)}頃<small>前回</small></b>`
+    : `<b class="etime">${esc(e.t)}</b>`;
+}
+
 function stockRow(e0, { showDate = false } = {}) {
   const e = info(e0);
   const watched = state.hold.has(e.c);
   const q = e.q ? `<span class="badge">${esc(Q_LABEL[e.q] || e.q)}</span>` : "";
   const when = showDate ? (e.d ? fmtDay(e.d) + (e.d < todayStr() ? " 発表済" : "") : "日付未定") : null;
-  const sub = q + sizeBadge(e.sz) + [when, e.sec || e.mkt].filter(Boolean).map(esc).join(" · ");
+  const sub = earnTime(e) + q + sizeBadge(e.sz) + [when, e.sec || e.mkt].filter(Boolean).map(esc).join(" · ");
   const rxKey = e.d ? `${e.c}@${e.d}` : `${e.c}@9999-12-31`;
   const rx = state.rx.earnings[rxKey];
   const nh = earnHistory(e.c, rxKey.split("@")[1]).length;
@@ -371,7 +378,7 @@ function weekItems(day) {
     const watched = state.hold.has(e.c);
     if (e.imp < 3 && !watched) continue;
     items.push({
-      kind: "earn", c: e.c, d: day, t: e.t, country: "JP", watched, rxKey: `${e.c}@${day}`,
+      kind: "earn", c: e.c, d: day, t: e.t, approx: !!e.tp, country: "JP", watched, rxKey: `${e.c}@${day}`,
       title: `${e.n} 決算`, desc: [Q_LABEL[e.q] || e.q, e.sz && `TOPIX ${e.sz}`].filter(Boolean).join(" · "),
       impact: e.imp, themes: e.th,
     });
@@ -510,6 +517,7 @@ const SORTERS = {
   imp: (a, b) => b.imp - a.imp || b.w - a.w || a.c.localeCompare(b.c),
   w: (a, b) => b.w - a.w || b.imp - a.imp || a.c.localeCompare(b.c),
   c: (a, b) => a.c.localeCompare(b.c),
+  t: (a, b) => (a.t || "99").localeCompare(b.t || "99") || b.imp - a.imp || b.w - a.w || a.c.localeCompare(b.c),
 };
 
 function renderDay() {
@@ -1610,7 +1618,7 @@ function homeRow(it) {
   const a = it.kind === "ev" && state.alerts.get(it.id);
   if (a) sub = a.pf ? `保有株全体で過去平均 ±${yen(a.pf.abs)}（普段の${a.pf.ratio.toFixed(1)}倍）` : a.stocks.map((s) => `${holdName(s.c)} ±${s.abs.toFixed(1)}%`).join(" · ");
   return `<li class="row${attr ? " has-rx" : ""}${a ? " alert" : ""}" ${attr}>
-    <div class="when"><b>${esc(it.t || "—")}</b>${stars(it.impact)}</div>
+    <div class="when"><b>${esc(it.t || "—")}${it.t && it.approx ? "<small>頃</small>" : ""}</b>${stars(it.impact)}</div>
     <div class="main"><div class="name">${it.watched ? '<span class="tag">保有</span>' : ""}${esc(it.title)}</div>${sub ? `<div class="sub">${esc(sub)}</div>` : ""}</div>${attr ? '<span class="chev">›</span>' : ""}</li>`;
 }
 

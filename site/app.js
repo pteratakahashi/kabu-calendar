@@ -5,6 +5,7 @@ const WATCH_KEY = "kabucal.watch.v1"; // 旧ウォッチ（v5まで）。保有�
 const HOLD_KEY = "kabucal.hold.v1";
 const PREF_KEY = "kabucal.prefs.v1";
 const MKT_KEY = "kabucal.mkt.v1"; // ホームのマーケットに出す指標（ティッカーの並び）。未設定なら market.json の def の指標
+const MKT_SEEN_KEY = "kabucal.mkt.seen.v1"; // 一度見た指標。後から増えた def の指標は、選び済みの人にも1回だけ足す
 function loadJSON(key, def) {
   try { return JSON.parse(localStorage.getItem(key)) ?? def; } catch { return def; }
 }
@@ -1320,7 +1321,19 @@ async function openLink(v) {
 // ---------- マーケットの指標選び ----------
 function mktSel() {
   const all = state.market?.items || [];
-  const sel = loadJSON(MKT_KEY, null);
+  let sel = loadJSON(MKT_KEY, null);
+  if (!all.length) return Array.isArray(sel) ? sel : [];
+  if (Array.isArray(sel)) {
+    // 記録が無い端末は、この仕組みを入れる前からある指標を見たことにする（日本の半導体だけが新しい）
+    const seen = new Set(loadJSON(MKT_SEEN_KEY, null) ?? all.filter((x) => x.grp !== "日本の半導体").map((x) => x.sym));
+    const add = all.filter((x) => x.def !== false && !seen.has(x.sym) && !sel.includes(x.sym)).map((x) => x.sym);
+    if (add.length) {
+      const at = sel.indexOf("^SOX");
+      sel = at >= 0 ? [...sel.slice(0, at + 1), ...add, ...sel.slice(at + 1)] : [...sel, ...add];
+      saveJSON(MKT_KEY, sel);
+    }
+  }
+  saveJSON(MKT_SEEN_KEY, all.map((x) => x.sym));
   return Array.isArray(sel) ? sel : all.filter((x) => x.def !== false).map((x) => x.sym);
 }
 function mktShown() {
@@ -1352,7 +1365,7 @@ function renderMktEdit() {
     html += `<li class="pick" data-mkt-tg="${esc(x.sym)}"><div class="main"><div class="name">${esc(x.name)}</div></div><span class="ck">＋</span></li>`;
   }
   if (grp) html += "</ul>";
-  html += `<button class="btn ghost wide" data-mkt-reset>最初の8つに戻す</button>`;
+  html += `<button class="btn ghost wide" data-mkt-reset>最初の状態に戻す</button>`;
   $("#sheet-body").innerHTML = html;
 }
 function mktSave(sel) {

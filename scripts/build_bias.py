@@ -30,6 +30,7 @@ MIN_RATE_LONG = 0.75  # 15回以上あるとき（例 15/20）。偶然でこう
 MIN_T = 1.5        # 平均 ÷ 標準誤差。1〜2回の大きな動きだけで平均が偏っているものを除く
 HORIZON = 35       # 今日から何日先までの予定を対象にするか
 PAST_DAYS = 180    # 過去の結果を何日前の回まで出すか
+BUY_ONLY = True    # 空売り（下がりやすい側）は出さない。過去の結果で勝率が低かったため（2026-10-14 ユーザー判断）
 SERIES_ALIAS = {"us-ism-svc": "us-ism-services", "us-fomc": "fomc"}
 NOT_EARN = {"tsmc-monthly", "samsung-prelim"}
 
@@ -207,6 +208,9 @@ def main() -> int:
         for ev, hist in past_ev:
             if h["ev"][hev[ev["id"]]] is not None and (it := ev_item(c, h, ev, hist)):
                 past.append({**it, "a": ev_vals(h, ev["id"], series_of(ev))})
+    if BUY_ONLY:
+        items = [i for i in items if i["s"] > 0]
+        past = [i for i in past if i["s"] > 0]
     items.sort(key=lambda i: (i["d"], -abs(i["t"])))
     past.sort(key=lambda i: (i["d"], i["c"]), reverse=True)
     out = {"asof": today, "horizon": HORIZON, "min_n": MIN_N, "min_rate": MIN_RATE, "min_rate_long": MIN_RATE_LONG,

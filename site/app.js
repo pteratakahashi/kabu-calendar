@@ -1547,7 +1547,7 @@ function renderBias() {
   const items = all.filter(keep);
   // 売買する順（日付 → 寄り → 引け）に並べる。入る行（買い・空売り）は1件ずつ、出る行（売り・買い戻し）は予定ごとに1行にまとめる
   const slots = biasSlots(all, today, keep);
-  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}〜${b.hist_n || 10}回のうち${Math.round(b.min_rate * 100)}%以上${b.min_rate_long ? `（15回以上あるものは${Math.round(b.min_rate_long * 100)}%以上）` : ""}が同じ向きに動いた日経225銘柄（${items.length}件）。売買する順に並べています</p>`;
+  let html = `<p class="hint">今後${b.horizon}日の予定で、過去${b.min_n}〜${b.hist_n || 10}回のうち${Math.round(b.min_rate * 100)}%以上${b.min_rate_long ? `（15回以上あるものは${Math.round(b.min_rate_long * 100)}%以上）` : ""}が上がった日経225銘柄（${items.length}件・買いのみ。空売りは過去の成績が悪いため出していません）。売買する順に並べています</p>`;
   const LIM = 6;
   for (const sl of slots) {
     const k = sl.k;
@@ -2189,6 +2189,7 @@ document.addEventListener("change", (e) => {
 $("#cal-sort").value = prefs.calSort;
 $("#cal-sort").addEventListener("change", (e) => { prefs.calSort = e.target.value; saveJSON(PREF_KEY, prefs); renderDay(); renderMonth(); });
 setSeg($("#ipo-mode"), prefs.ipoMode);
+prefs.biasDir = ""; // 空売りをやめたので向きの絞り込みは使わない
 setSeg($("#bias-dir"), prefs.biasDir);
 setSeg($("#bias-kind"), prefs.biasKind);
 setSeg($("#bias-mode"), prefs.biasMode);

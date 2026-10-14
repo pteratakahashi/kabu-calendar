@@ -576,3 +576,4 @@ dialog#sheet { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
 .res.win { color: var(--up); }
 .res.lose { color: var(--down); }
 .res.wait { color: var(--muted); font-weight: 400; font-size: 12px; }
+a.btn { text-decoration: none; text-align: center; box-sizing: border-box; }

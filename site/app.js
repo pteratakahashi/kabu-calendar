@@ -2062,6 +2062,8 @@ window.addEventListener("online", retryLoad);
 // GitHub Actions のデータ更新（update.yml）をその場で動かし、終わったら読み直す。
 // 動かすには GitHub のトークン（このリポジトリの Actions 読み書きだけ許可したもの）が要り、この端末にだけ保存する
 const GH_REPO = "pteratakahashi/kabu-calendar", GH_WF = "update.yml";
+// 名前・期限・権限（Actions の読み書き）を入れた状態で作成画面を開く（リポジトリの選択だけは URL で指定できない）
+const GH_TOKEN_URL = "https://github.com/settings/personal-access-tokens/new?name=kabu-calendar-refresh&description=" + encodeURIComponent("株カレンダーの更新ボタン用") + "&expires_in=none&actions=write";
 const GH_TOKEN_KEY = "kabucal.ghtoken.v1", GH_RUN_KEY = "kabucal.refresh.v1";
 const ghToken = () => { try { return localStorage.getItem(GH_TOKEN_KEY) || ""; } catch { return ""; } };
 async function gh(path, opt = {}) {
@@ -2123,15 +2125,19 @@ async function pollRefresh(since) {
 function openRefreshSetup(err = "") {
   openSheet("最新の状況に更新", `${err ? `<p class="clash">${esc(err)}</p>` : ""}
     <p class="sheet-desc">↻ を押すと、株価・予定・傾向のデータをその場で取り直します（3〜5分）。いつもは 7:00 と 18:30 の1日2回、自動で更新しています。</p>
-    <p class="sheet-desc">取り直しは GitHub で動いているので、最初に1回だけ <b>GitHub のトークン</b>（合い鍵）をこの端末に登録します。</p>
+    <p class="sheet-desc">取り直しは GitHub で動いているので、最初に1回だけ <b>GitHub の合い鍵（トークン）</b>をこの端末に登録します。GitHub の画面は英語ですが、押す場所だけ書いておきます。</p>
+    <a class="btn wide" href="${GH_TOKEN_URL}" target="_blank" rel="noopener">① GitHub の合い鍵の作成画面を開く</a>
+    <p class="hint">名前・期限（無期限）・権限は入力済みの状態で開きます。ログイン画面が出たらログインしてください。</p>
     <ol class="steps-ol">
-      <li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub のトークン作成ページ</a>を開く</li>
-      <li>Token name は何でも（例: kabucal）、Expiration は好きな期限</li>
-      <li>Repository access →「Only select repositories」→ <b>kabu-calendar</b></li>
-      <li>Permissions →「Add permissions」→ <b>Actions</b> を選び <b>Read and write</b></li>
-      <li>「Generate token」→ 出てきた github_pat_… をコピーして下に貼る</li>
+      <li>画面の中ほどの <b>「Repository access」</b>（どのリポジトリに使うか）で、<b>「Only select repositories」</b>（選んだものだけ）を押す</li>
+      <li>すぐ下に出る <b>「Select repositories」</b> を押して、<b>kabu-calendar</b> を選ぶ</li>
+      <li>一番下までスクロールして、緑のボタン <b>「Generate token」</b>（作成）を押す。確認の画面が出たら、もう一度 <b>「Generate token」</b></li>
+      <li><b>github_pat_</b> で始まる長い文字の横にある、<b>四角が2つ重なったマーク</b>（コピー）を押す</li>
+      <li>このアプリに戻って、下の「貼り付け」を押す（または欄に貼り付け）</li>
     </ol>
-    <input id="gh-token" class="tok-input" type="password" placeholder="github_pat_…" autocomplete="off" value="${esc(ghToken())}">
+    <p class="hint">※「Permissions」の欄に「Actions: Read and write」と出ていれば権限はOKです。ここは触らなくて大丈夫です。</p>
+    <input id="gh-token" class="tok-input" type="password" placeholder="github_pat_… をここに貼り付け" autocomplete="off" value="${esc(ghToken())}">
+    <button class="btn ghost wide" data-tok-paste>貼り付け</button>
     <button class="btn wide" data-tok-save>登録して更新する</button>
     <p class="hint">トークンはこの端末の中だけに保存され、GitHub 以外には送りません。このリポジトリのデータ更新を動かすことしかできない権限です。</p>
     <button class="btn ghost wide" data-reload>データの読み直しだけする</button>
@@ -2142,9 +2148,13 @@ $("#sheet").addEventListener("click", (ev) => {
   if (ev.target.closest("[data-tok-save]")) {
     const v = $("#gh-token").value.trim();
     if (!v) return;
+    if (!/^(github_pat_|ghp_)/.test(v)) { alert("github_pat_ で始まる文字を貼り付けてください"); return; }
     try { localStorage.setItem(GH_TOKEN_KEY, v); } catch { alert("この端末に保存できませんでした"); return; }
     $("#sheet").close();
     startRefresh();
+  } else if (ev.target.closest("[data-tok-paste]")) {
+    navigator.clipboard?.readText?.().then((t) => { $("#gh-token").value = t.trim(); $("#gh-token").type = "text"; })
+      .catch(() => alert("貼り付けできませんでした。欄を長押しして「ペースト」してください"));
   } else if (ev.target.closest("[data-tok-del]")) {
     try { localStorage.removeItem(GH_TOKEN_KEY); } catch { /* noop */ }
     $("#sheet").close();

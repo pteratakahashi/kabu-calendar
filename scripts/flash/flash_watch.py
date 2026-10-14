@@ -458,7 +458,8 @@ def make_flash(a: dict, x: dict, st: dict, liq: dict, now: dt.datetime, data: di
           "src": x["src"], "title": x["title"], "url": x["url"], "theme": a["theme"], "why": a["why"],
           "strength": a["strength"], "stocks": picks, "by": "ci" if CI else "pc"}
     # 同じテーマが少し前に出ていれば「まとめ」扱い（強くなった時だけ目立たせる）
-    prev = [f for f in data["items"] if f["theme"] == fl["theme"]
+    base = lambda t: re.sub(r"[（(].*?[）)]", "", t).strip()  # noqa: E731  「サイバーセキュリティ（自治体）」も同じテーマ
+    prev = [f for f in data["items"] if base(f["theme"]) == base(fl["theme"])
             and now - dt.datetime.fromisoformat(f["at"]) < dt.timedelta(hours=SAME_THEME_H)]
     fl["muted"] = bool(prev) and fl["strength"] <= max(f["strength"] for f in prev)
     return fl

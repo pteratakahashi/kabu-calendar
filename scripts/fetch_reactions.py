@@ -320,10 +320,12 @@ def build_holdings(out: dict, news: list[dict], daily: dict, n225: list[str]) ->
           for x in r["idx"] if x["sym"] == "^N225"]
     # 日本の立会日（日経平均の日足の日付）。各銘柄の日次騰落率 r はこの並びに揃える
     #（同業の決算日・ポートフォリオ全体の値動きをアプリ側で計算するため）
+    # Yahoo の ^N225 日足は日が抜けることがある（2026-10-13 など）ので、TOPIX ETF の日付も合わせる
     nk = dclose("^N225")
-    days = [d.strftime("%Y-%m-%d") for d in nk.index[-760:]]
-    # 日経平均の日次騰落率（days に揃える）。決算の反応日に日経全体より強かったかを見るため
-    nkr = (nk.pct_change() * 100).reindex(pd.to_datetime(days))
+    allday = nk.index.union(dclose("1306.T").index)
+    days = [d.strftime("%Y-%m-%d") for d in allday[-760:]]
+    # 日経平均の日次騰落率（days に揃える）。決算の反応日に日経全体より強かったかを見るため。抜けた日とその翌日は空
+    nkr = (nk.reindex(allday).pct_change(fill_method=None) * 100).reindex(pd.to_datetime(days))
     (hdir / "index.json").write_text(json.dumps({"ev": ev_ids, "news": [i for i, _ in nw], "days": days,
                                                  "nk": [None if pd.isna(v) else round(float(v), 2) for v in nkr]},
                                                 separators=(",", ":")), encoding="utf-8")

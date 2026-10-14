@@ -18,7 +18,7 @@
 <body>
 <header class="topbar">
   <h1 id="page-title">ホーム</h1>
-  <div id="updated" class="updated">読み込み中…</div>
+  <div class="upd-wrap"><div id="updated" class="updated">読み込み中…</div><button id="refresh" class="refresh" aria-label="最新の状況に更新">↻</button></div>
 </header>
 
 <main>
@@ -109,12 +109,23 @@
     <p class="note">出典: JPX 新規上場会社情報。初値・騰落率は公開価格比（データ: Yahoo Finance）</p>
   </section>
 
-  <!-- 傾向（今後の予定 × 理屈で関係する業種と、その理屈の過去の的中率） -->
+  <!-- 傾向（日経225 × 今後の予定で、過去の反応が上昇・下落に偏っている銘柄） -->
   <section id="view-bias" class="view">
-    <div class="seg" id="bias-only" role="group" aria-label="表示する関連性">
-      <button data-v="" class="on">すべて</button>
-      <button data-v="ok">裏付けありのみ</button>
+    <div class="seg" id="bias-mode" role="group" aria-label="表示">
+      <button data-v="" class="on">これから</button>
+      <button data-v="past">やっていたら（過去の結果）</button>
     </div>
+    <div class="seg" id="bias-dir" role="group" aria-label="上昇・下落">
+      <button data-v="" class="on">すべて</button>
+      <button data-v="1">上がりやすい</button>
+      <button data-v="-1">下がりやすい</button>
+    </div>
+    <div class="seg" id="bias-kind" role="group" aria-label="予定の種類">
+      <button data-v="" class="on">すべて</button>
+      <button data-v="earn">自社の決算</button>
+      <button data-v="ev">指標・海外決算</button>
+    </div>
+    <input id="bias-q" type="search" placeholder="銘柄名・コードで絞り込み" autocomplete="off" hidden>
     <div id="bias-list"></div>
     <p class="note" id="bias-note"></p>
   </section>

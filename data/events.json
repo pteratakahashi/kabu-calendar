@@ -7442,8 +7442,8 @@
   "ticker": "GOOGL"
  },
  {
-  "id": "2026-10-29-meta",
-  "d": "2026-10-29",
+  "id": "2026-10-22-meta",
+  "d": "2026-10-22",
   "t": "05:05",
   "approx": true,
   "country": "US",
@@ -7454,8 +7454,8 @@
    "ai",
    "semi"
   ],
-  "tentative": true,
-  "src": "https://www.marketbeat.com/earnings/reports/2026-10-28-facebook-inc-stock/",
+  "tentative": false,
+  "src": "https://www.finviz.com/news/401445/meta-to-announce-third-quarter-2026-results",
   "ticker": "META"
  },
  {

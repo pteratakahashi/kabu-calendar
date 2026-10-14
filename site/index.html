@@ -54,11 +54,18 @@
 
   <!-- 予定外ニュース -->
   <section id="view-news" class="view">
+    <div class="seg" id="news-mode" role="group" aria-label="表示">
+      <button data-v="flash" class="on">速報（連想）</button>
+      <button data-v="">これまでのニュース</button>
+    </div>
+    <div id="flash-view"></div>
+    <div id="news-past">
     <p class="msum news-lead">株価を動かした予定外のニュースと、その後の値動き（反応日・1週間後・1か月後）</p>
     <div class="theme-bar" id="news-cats"></div>
     <div id="news-sum"></div>
     <div id="news-list"></div>
     <p class="note">騰落率は反応日の前日終値＝0%（日本株は日本時間で次に開く立会日、米国株は米国の次の取引日）。データ: Yahoo Finance</p>
+    </div>
   </section>
 
   <!-- 決算カレンダー -->

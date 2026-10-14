@@ -13,7 +13,7 @@ function saveJSON(key, v) {
   try { localStorage.setItem(key, JSON.stringify(v)); } catch { /* private mode 等 */ }
 }
 
-const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events", biasDir: "", biasKind: "", biasMode: "" }, loadJSON(PREF_KEY, {}));
+const prefs = Object.assign({ calSort: "imp", calMode: "day", evMode: "week", ipoMode: "up", newsCat: "", plan: "events", biasDir: "", biasKind: "", biasMode: "", newsMode: "flash" }, loadJSON(PREF_KEY, {}));
 
 const state = {
   earnings: [], stocks: [], events: [], themes: [], meta: null,
@@ -760,6 +760,56 @@ function newsCard(n, compact = false) {
       ${n.themes?.length ? `<div class="chips">${themeChips(n.themes)}</div>` : ""}
       ${newsRxLine(n.id)}</div>
   </li>`;
+}
+
+// ---------- 速報（連想） ----------
+// このPCで動く見張り役（scripts/flash/flash_watch.py）が書く flash.json を、GitHub から直接読む（Pages の更新を待たない）
+const FLASH_URL = "https://raw.githubusercontent.com/pteratakahashi/kabu-calendar/main/site/data/flash.json";
+async function loadFlash() {
+  try {
+    const r = await fetch(`${FLASH_URL}?t=${Date.now()}`, { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    state.flash = await r.json();
+  } catch {
+    try { state.flash ??= await getJSON("flash.json"); } catch { state.flash ??= { items: [] }; }
+  }
+  if (prefs.newsMode === "flash") renderFlash();
+}
+const FL_COLS = [["m5", "5分"], ["m30", "30分"], ["high", "当日高値"], ["close", "引け"], ["d1", "翌日"], ["d5", "5日後"]];
+function renderFlash() {
+  const el = $("#flash-view");
+  const F = state.flash;
+  if (!F) { el.innerHTML = `<p class="empty-msg">読み込み中…</p>`; return; }
+  const hb = F.hb ? new Date(F.hb) : null;
+  const alive = hb && Date.now() - hb.getTime() < 45 * 60 * 1000;
+  let html = `<p class="flash-status ${alive ? "ok" : "ng"}">${alive ? "●" : "○"} 見張り役: ${hb ? `最終確認 ${hb.getMonth() + 1}/${hb.getDate()} ${pad(hb.getHours())}:${pad(hb.getMinutes())}` : "まだ動いていません"}${alive ? "" : "（止まっています。PCが起動しているか確認してください）"}</p>
+    <p class="hint">ニュースが出たら、連想で買われそうな銘柄を Claude が挙げてスマホに通知します。基準の値段は<b>通知した時刻の次の1分足の始値</b>（場の外なら次の寄り付き）で、そこで買っていたらどうなったかを記録しています。株価は約20分遅れで反映。</p>`;
+  const items = F.items || [];
+  // 成績（通知した銘柄を全部、基準の値段で買っていたら）
+  const all = items.flatMap((f) => f.stocks.map((s) => s.r || {}));
+  const rows = FL_COLS.map(([k, lbl]) => { const v = all.map((r) => r[k]).filter((x) => x != null); return v.length ? `<tr><td>${lbl}</td><td>${v.length}</td><td>${Math.round(v.filter((x) => x > 0).length / v.length * 100)}%</td><td>${prof(v.reduce((a, x) => a + x, 0) / v.length)}</td></tr>` : ""; }).join("");
+  if (rows) html += `<h3 class="sec">これまでの成績（通知した銘柄を全部買っていたら）</h3><table class="pastsum"><thead><tr><th>売った時</th><th>銘柄数</th><th>勝率</th><th>平均</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="hint">手数料・金利は含みません。「当日高値」は通知後その日の一番高い値段で売れた場合（実際には難しい上限）。</p>`;
+  if (!items.length) { el.innerHTML = html + `<p class="empty-msg">まだ速報はありません</p>`; return; }
+  html += `<h3 class="sec">速報（新しい順）</h3>` + items.slice(0, state.flashLim || 40).map((f) => {
+    const at = new Date(f.at);
+    return `<div class="card flash${f.muted ? " muted" : ""}">
+      <div class="flash-h"><span class="fstar">${"★".repeat(f.strength)}</span><b>${esc(f.theme)}</b><span class="muted">${at.getMonth() + 1}/${at.getDate()} ${pad(at.getHours())}:${pad(at.getMinutes())}${f.muted ? " · 通知まとめ" : ""}</span></div>
+      <a class="flash-title" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}<small>（${esc(f.src)}）</small></a>
+      <p class="flash-why">${esc(f.why)}</p>
+      <table class="flash-tbl"><thead><tr><th></th>${FL_COLS.map(([, l]) => `<th>${l}</th>`).join("")}</tr></thead><tbody>
+      ${f.stocks.map((s) => `<tr><th><span class="fname">${esc(s.n)}</span> <span class="ncode">${esc(s.c)}</span>${s.thin ? ' <span class="vchip v-mkt" title="1日の売買代金が1億円未満">売買少</span>' : ""}<small>${esc(s.reason)}</small></th>
+        ${FL_COLS.map(([k]) => { const v = s.r?.[k]; return `<td class="${v == null ? "" : v > 0 ? "up" : v < 0 ? "down" : ""}">${v == null ? "—" : (v > 0 ? "+" : "") + v.toFixed(1)}</td>`; }).join("")}</tr>`).join("")}
+      </tbody></table></div>`;
+  }).join("") + (items.length > (state.flashLim || 40) ? `<button class="btn ghost more" data-flash-more>もっと表示</button>` : "");
+  html += `<p class="note">連想は AI の推測で、外れることも多くあります。急騰した銘柄はすぐ下がることもあります。売買の判断はご自身で。</p>`;
+  el.innerHTML = html;
+}
+function applyNewsMode() {
+  setSeg($("#news-mode"), prefs.newsMode);
+  $("#flash-view").hidden = prefs.newsMode !== "flash";
+  $("#news-past").hidden = prefs.newsMode === "flash";
+  if (prefs.newsMode === "flash") { renderFlash(); loadFlash(); }
 }
 
 function renderNews() {
@@ -1974,6 +2024,7 @@ document.addEventListener("click", (ev) => {
   const ph = ev.target.closest("[data-pick-hold]");
   if (ph) { togglePick(ph.dataset.pickHold); return; }
   if (ev.target.closest("#hold-edit")) { openPicker(); return; }
+  if (ev.target.closest("[data-flash-more]")) { state.flashLim = (state.flashLim || 40) + 60; renderFlash(); return; }
   if (ev.target.closest("[data-past-more]")) { state.pastLim = (state.pastLim || 80) + 200; renderBias(); return; }
   const bm = ev.target.closest("[data-bias-more]");
   if (bm) { state.biasOpen.add(bm.dataset.biasMore); renderBias(); return; }
@@ -2013,6 +2064,7 @@ document.addEventListener("click", (ev) => {
     else if (box.id === "bias-dir") { prefs.biasDir = seg.dataset.v; renderBias(); }
     else if (box.id === "bias-kind") { prefs.biasKind = seg.dataset.v; renderBias(); }
     else if (box.id === "bias-mode") { prefs.biasMode = seg.dataset.v; renderBias(); }
+    else if (box.id === "news-mode") { prefs.newsMode = seg.dataset.v; applyNewsMode(); }
     else if (box.id === "ev-mode") {
       prefs.evMode = seg.dataset.v;
       if (prefs.evMode === "week") state.weekStart = mondayOf(state.weekStart);
@@ -2193,6 +2245,10 @@ prefs.biasDir = ""; // 空売りをやめたので向きの絞り込みは使わ
 setSeg($("#bias-dir"), prefs.biasDir);
 setSeg($("#bias-kind"), prefs.biasKind);
 setSeg($("#bias-mode"), prefs.biasMode);
+applyNewsMode();
+// 速報: 開いている間は1分ごとに読み直す。通知から開いたとき（#flash）は速報を表示
+setInterval(() => { if (!document.hidden && prefs.newsMode === "flash" && $("#view-news").classList.contains("active")) loadFlash(); }, 60000);
+if (location.hash === "#flash") { prefs.newsMode = "flash"; applyNewsMode(); setTimeout(() => switchTab("news"), 0); }
 $("#bias-q").addEventListener("input", () => renderBias());
 setSeg($("#ev-mode"), prefs.evMode);
 setSeg($("#cal-mode"), prefs.calMode);

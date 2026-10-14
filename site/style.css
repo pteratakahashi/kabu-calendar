@@ -595,3 +595,8 @@ a.btn { text-decoration: none; text-align: center; box-sizing: border-box; }
 .flash-tbl tbody th { text-align: left; font-weight: 600; white-space: normal; }
 .flash-tbl tbody th small { display: block; font-weight: 400; color: var(--muted); font-size: 11px; }
 .flash-tbl td.up { color: var(--up); } .flash-tbl td.down { color: var(--down); }
+.tabs button { position: relative; }
+.tbadge { position: absolute; top: 3px; left: calc(50% + 6px); min-width: 16px; height: 16px; padding: 0 4px; border-radius: 8px; background: var(--us); color: #fff; font-size: 10px; font-weight: 700; line-height: 16px; box-sizing: border-box; }
+.card.flash-home { border-left: 4px solid var(--watch); cursor: pointer; padding: 12px; }
+.card.flash-home .sub { font-size: 13px; margin-top: 4px; }
+.flash-status small { margin-left: 8px; color: var(--muted); }

@@ -763,6 +763,13 @@ function newsCard(n, compact = false) {
 }
 
 // ---------- 速報（連想） ----------
+// 新着のカード（ホーム）
+function flashHomeCard() {
+  const fs = flashNew();
+  if (!fs.length) return "";
+  return `<div class="card flash-home" data-go-flash><div class="flash-h"><b>⚡ 速報 ${fs.length}件</b><span class="muted">タップで見る ›</span></div>`
+    + fs.slice(0, 3).map((f) => `<div class="sub"><span class="fstar">${"★".repeat(f.strength)}</span> ${esc(f.theme)}: ${esc(f.stocks.slice(0, 4).map((s) => s.n).join("、"))}${f.stocks.length > 4 ? " ほか" : ""}</div>`).join("") + `</div>`;
+}
 // このPCで動く見張り役（scripts/flash/flash_watch.py）が書く flash.json を、GitHub から直接読む（Pages の更新を待たない）
 const FLASH_URL = "https://raw.githubusercontent.com/pteratakahashi/kabu-calendar/main/site/data/flash.json";
 async function loadFlash() {
@@ -773,28 +780,41 @@ async function loadFlash() {
   } catch {
     try { state.flash ??= await getJSON("flash.json"); } catch { state.flash ??= { items: [] }; }
   }
+  markFlash();
   if (prefs.newsMode === "flash") renderFlash();
+  if (state.meta && $("#view-home").classList.contains("active")) renderHome();
+}
+// 新着: 最後に速報画面を見た時より後の速報（まとめ扱いを除く）。ニュースタブの印とホームのカードに出す
+const FLASH_SEEN_KEY = "kabucal.flashseen.v1";
+const flashNew = () => { const seen = loadJSON(FLASH_SEEN_KEY, ""); return (state.flash?.items || []).filter((f) => f.at > seen && !f.muted); };
+function markFlash() {
+  const n = flashNew().length;
+  const tab = document.querySelector('.tabs button[data-v="news"]');
+  if (tab) { tab.querySelector(".tbadge")?.remove(); if (n) tab.insertAdjacentHTML("beforeend", `<span class="tbadge">${n > 9 ? "9+" : n}</span>`); }
 }
 const FL_COLS = [["m5", "5分"], ["m30", "30分"], ["high", "当日高値"], ["close", "引け"], ["d1", "翌日"], ["d5", "5日後"]];
 function renderFlash() {
   const el = $("#flash-view");
   const F = state.flash;
   if (!F) { el.innerHTML = `<p class="empty-msg">読み込み中…</p>`; return; }
+  if ($("#view-news").classList.contains("active") && F.items?.length) { saveJSON(FLASH_SEEN_KEY, F.items[0].at); markFlash(); }
+  const hm = (s) => { const d = new Date(s); return `${d.getMonth() + 1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
   const hb = F.hb ? new Date(F.hb) : null;
   const alive = hb && Date.now() - hb.getTime() < 45 * 60 * 1000;
-  let html = `<p class="flash-status ${alive ? "ok" : "ng"}">${alive ? "●" : "○"} 見張り役: ${hb ? `最終確認 ${hb.getMonth() + 1}/${hb.getDate()} ${pad(hb.getHours())}:${pad(hb.getMinutes())}` : "まだ動いていません"}${alive ? "" : "（止まっています。PCが起動しているか確認してください）"}</p>
-    <p class="hint">ニュースが出たら、連想で買われそうな銘柄を Claude が挙げてスマホに通知します。基準の値段は<b>通知した時刻の次の1分足の始値</b>（場の外なら次の寄り付き）で、そこで買っていたらどうなったかを記録しています。株価は約20分遅れで反映。</p>`;
+  let html = `<p class="flash-status ${alive ? "ok" : "ng"}">${alive ? "● PCの見張り役: 動いています（2分ごとに確認）" : "○ PCの見張り役: 止まっています（PCが起動していない・スリープ中など）"}${hb ? `<small>最終 ${hm(F.hb)}</small>` : ""}</p>
+    ${alive ? "" : `<p class="hint">PCが止まっている間は、右上の ↻ を押すとその場でニュースを確認します（3〜5分）。${F.ci_at ? `前回 ${hm(F.ci_at)}` : ""}</p>`}
+    <p class="hint">ニュースが出たら、連想で買われそうな銘柄を Claude が挙げます。基準の値段は<b>速報が出た時刻の次の1分足の始値</b>（場の外なら次の寄り付き）で、そこで買っていたらどうなったかを記録しています。株価は約20分遅れで反映。</p>`;
   const items = F.items || [];
   // 成績（通知した銘柄を全部、基準の値段で買っていたら）
   const all = items.flatMap((f) => f.stocks.map((s) => s.r || {}));
   const rows = FL_COLS.map(([k, lbl]) => { const v = all.map((r) => r[k]).filter((x) => x != null); return v.length ? `<tr><td>${lbl}</td><td>${v.length}</td><td>${Math.round(v.filter((x) => x > 0).length / v.length * 100)}%</td><td>${prof(v.reduce((a, x) => a + x, 0) / v.length)}</td></tr>` : ""; }).join("");
-  if (rows) html += `<h3 class="sec">これまでの成績（通知した銘柄を全部買っていたら）</h3><table class="pastsum"><thead><tr><th>売った時</th><th>銘柄数</th><th>勝率</th><th>平均</th></tr></thead><tbody>${rows}</tbody></table>
-    <p class="hint">手数料・金利は含みません。「当日高値」は通知後その日の一番高い値段で売れた場合（実際には難しい上限）。</p>`;
+  if (rows) html += `<h3 class="sec">これまでの成績（速報の銘柄を全部買っていたら）</h3><table class="pastsum"><thead><tr><th>売った時</th><th>銘柄数</th><th>勝率</th><th>平均</th></tr></thead><tbody>${rows}</tbody></table>
+    <p class="hint">手数料・金利は含みません。「当日高値」は速報後その日の一番高い値段で売れた場合（実際には難しい上限）。</p>`;
   if (!items.length) { el.innerHTML = html + `<p class="empty-msg">まだ速報はありません</p>`; return; }
   html += `<h3 class="sec">速報（新しい順）</h3>` + items.slice(0, state.flashLim || 40).map((f) => {
     const at = new Date(f.at);
     return `<div class="card flash${f.muted ? " muted" : ""}">
-      <div class="flash-h"><span class="fstar">${"★".repeat(f.strength)}</span><b>${esc(f.theme)}</b><span class="muted">${at.getMonth() + 1}/${at.getDate()} ${pad(at.getHours())}:${pad(at.getMinutes())}${f.muted ? " · 通知まとめ" : ""}</span></div>
+      <div class="flash-h"><span class="fstar">${"★".repeat(f.strength)}</span><b>${esc(f.theme)}</b><span class="muted">${at.getMonth() + 1}/${at.getDate()} ${pad(at.getHours())}:${pad(at.getMinutes())}${f.muted ? " · 続報" : ""}</span></div>
       <a class="flash-title" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}<small>（${esc(f.src)}）</small></a>
       <p class="flash-why">${esc(f.why)}</p>
       <table class="flash-tbl"><thead><tr><th></th>${FL_COLS.map(([, l]) => `<th>${l}</th>`).join("")}</tr></thead><tbody>
@@ -1897,7 +1917,7 @@ function renderHome() {
   if (!el) return;
   const now = new Date(), today = todayStr();
   const evening = now.getHours() >= 15;
-  let html = `<div class="home-head"><div class="date">${now.getMonth() + 1}月${now.getDate()}日(${WD[now.getDay()]})</div><h2>${evening ? "夕方のブリーフ" : "朝のブリーフ"}</h2></div>`;
+  let html = flashHomeCard() + `<div class="home-head"><div class="date">${now.getMonth() + 1}月${now.getDate()}日(${WD[now.getDay()]})</div><h2>${evening ? "夕方のブリーフ" : "朝のブリーフ"}</h2></div>`;
 
   // ブリーフ（Claude 定期実行が作る）
   const b = state.brief;
@@ -2024,6 +2044,7 @@ document.addEventListener("click", (ev) => {
   const ph = ev.target.closest("[data-pick-hold]");
   if (ph) { togglePick(ph.dataset.pickHold); return; }
   if (ev.target.closest("#hold-edit")) { openPicker(); return; }
+  if (ev.target.closest("[data-go-flash]")) { prefs.newsMode = "flash"; saveJSON(PREF_KEY, prefs); switchTab("news"); applyNewsMode(); return; }
   if (ev.target.closest("[data-flash-more]")) { state.flashLim = (state.flashLim || 40) + 60; renderFlash(); return; }
   if (ev.target.closest("[data-past-more]")) { state.pastLim = (state.pastLim || 80) + 200; renderBias(); return; }
   const bm = ev.target.closest("[data-bias-more]");
@@ -2101,6 +2122,7 @@ function switchTab(v) {
   $("#plan-seg").hidden = v !== "plan";
   setSeg($("#plan-seg"), view);
   $("#page-title").textContent = TITLES[v] || "";
+  if (v === "news" && prefs.newsMode === "flash") renderFlash();
   window.scrollTo(0, 0);
 }
 
@@ -2176,7 +2198,7 @@ async function pollRefresh(since) {
 }
 function openRefreshSetup(err = "") {
   openSheet("最新の状況に更新", `${err ? `<p class="clash">${esc(err)}</p>` : ""}
-    <p class="sheet-desc">↻ を押すと、株価・予定・傾向のデータをその場で取り直します（3〜5分）。いつもは 7:00 と 18:30 の1日2回、自動で更新しています。</p>
+    <p class="sheet-desc">↻ を押すと、株価・予定・傾向のデータと<b>速報（ニュースからの連想）</b>をその場で取り直します（3〜5分）。いつもは 7:00 と 18:30 の1日2回、自動で更新しています。</p>
     <p class="sheet-desc">取り直しは GitHub で動いているので、最初に1回だけ <b>GitHub の合い鍵（トークン）</b>をこの端末に登録します。GitHub の画面は英語ですが、押す場所だけ書いておきます。</p>
     <a class="btn wide" href="${GH_TOKEN_URL}" target="_blank" rel="noopener">① GitHub の合い鍵の作成画面を開く</a>
     <p class="hint">名前・期限（無期限）・権限は入力済みの状態で開きます。ログイン画面が出たらログインしてください。</p>
@@ -2247,7 +2269,9 @@ setSeg($("#bias-kind"), prefs.biasKind);
 setSeg($("#bias-mode"), prefs.biasMode);
 applyNewsMode();
 // 速報: 開いている間は1分ごとに読み直す。通知から開いたとき（#flash）は速報を表示
-setInterval(() => { if (!document.hidden && prefs.newsMode === "flash" && $("#view-news").classList.contains("active")) loadFlash(); }, 60000);
+setInterval(() => { if (!document.hidden) loadFlash(); }, 60000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) loadFlash(); });
+loadFlash();
 if (location.hash === "#flash") { prefs.newsMode = "flash"; applyNewsMode(); setTimeout(() => switchTab("news"), 0); }
 $("#bias-q").addEventListener("input", () => renderBias());
 setSeg($("#ev-mode"), prefs.evMode);

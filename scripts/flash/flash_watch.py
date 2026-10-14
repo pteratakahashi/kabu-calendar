@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""速報（連想）: ニュースが出たら、連想で上がりそうな日本株を Claude に挙げてもらい、スマホに通知して結果を記録する。
+"""速報（連想）: ニュースが出たら、連想で上がりそうな日本株を Claude に挙げてもらい、アプリの「速報」に出して結果を記録する。
 
-このPC（WSL）で常に動かす見張り役。1分ごとに:
+このPC（WSL）で常に動かす見張り役（2分ごと）。PCが止まっている間は GitHub Actions の更新（↻ と1日2回）で --ci を1回ずつ動かす:
   1. ニュースを集める（Yahoo!ニュースのトピックス、Google ニュースのキーワード検索、TDnet の適時開示）
-  2. 新しい見出しをまとめて Claude に渡し、「連想で買われそうな銘柄」があるものだけ返してもらう
+  2. 新しい見出しをまとめて Claude Code（claude -p、Claude のプランの範囲内・API 料金なし）に渡し、「連想で買われそうな銘柄」があるものだけ返してもらう
   3. 銘柄コードを上場銘柄一覧（site/data/stocks.json）で確かめ、売買代金が少なすぎる銘柄に印を付ける
-  4. ntfy（スマホの通知アプリ）と、設定があれば Discord に通知
-  5. site/data/flash.json に記録して GitHub に置く（アプリの「速報」が読む）
+  4. site/data/flash.json に記録して GitHub に置く（アプリの「速報」が読む。PC と Actions の両方が書くので、置く前に GitHub の内容とまとめる）
+     .env に NTFY_TOPIC / DISCORD_WEBHOOK_URL があればそちらにも通知（任意）
 5分ごとに、過去の速報の銘柄が通知後どう動いたか（5分後・30分後・その日の高値・引け・翌日・5営業日後）を書き足す。
 
-設定は リポジトリ直下の .env（ANTHROPIC_API_KEY, NTFY_TOPIC, DISCORD_WEBHOOK_URL, FLASH_MODEL）。
-使い方: .venv/bin/python scripts/flash/flash_watch.py [--once] [--dry]
+設定は リポジトリ直下の .env（FLASH_MODEL, NTFY_TOPIC, DISCORD_WEBHOOK_URL。どれも任意）。
+Actions では CLAUDE_CODE_OAUTH_TOKEN（claude setup-token で作ったプランのトークン）と GITHUB_TOKEN を使う。
+使い方: .venv/bin/python scripts/flash/flash_watch.py [--once] [--dry] [--ci]
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
 import time
@@ -31,14 +33,14 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-import anthropic
 import pandas as pd
 import yfinance as yf
 
 ROOT = Path(__file__).resolve().parents[2]
 STATE_DIR = ROOT / ".flash"
 STATE = STATE_DIR / "state.json"
-LIQ = STATE_DIR / "liquidity.json"
+CI = "--ci" in sys.argv
+LIQ = ROOT / "data" / "flash_liq.json" if CI else STATE_DIR / "liquidity.json"  # Actions ではコミットして次回に使い回す
 LOG = STATE_DIR / "watch.log"
 OUT = STATE_DIR / "flash.json"  # 手元の控え（本体は GitHub の site/data/flash.json）
 REPO = "pteratakahashi/kabu-calendar"
@@ -46,14 +48,16 @@ OUT_PATH = "site/data/flash.json"
 JST = dt.timezone(dt.timedelta(hours=9))
 UA = {"User-Agent": "Mozilla/5.0 (kabu-calendar flash; personal)"}
 
-POLL = 60              # 何秒ごとにニュースを見るか
+POLL = 120             # 何秒ごとにニュースを見るか（Claude のプランの利用枠を使いすぎないよう2分）
 TRACK_EVERY = 300      # 何秒ごとに結果を更新するか
 KEEP = 400             # flash.json に残す速報の数
 MIN_STRENGTH = 2       # これ以上を通知（1〜3）
 LIQ_MIN = 1e8          # 1日の売買代金（20日の中央値）がこれ未満は「売買しにくい」印
 SAME_THEME_H = 3       # 同じテーマの速報は何時間以内なら通知をまとめるか
-MODEL = os.environ.get("FLASH_MODEL", "claude-opus-5-5")
-ONCE, DRY = "--once" in sys.argv, "--dry" in sys.argv
+NEW_H = 6 if CI else 2  # 何時間前までの記事を見るか（Actions は回数が少ないので長め）
+MODEL = os.environ.get("FLASH_MODEL", "opus")
+CLAUDE = os.environ.get("CLAUDE_BIN") or shutil.which("claude") or str(Path.home() / ".npm-global/bin/claude")
+ONCE, DRY = "--once" in sys.argv or CI, "--dry" in sys.argv
 
 YAHOO = ["top-picks", "business", "it", "domestic", "world", "science"]
 GNEWS_Q = [
@@ -239,23 +243,25 @@ def system_prompt(st: dict) -> str:
 {themes_text(st)}"""
 
 
-def judge(client: anthropic.Anthropic, sys_prompt: str, items: list[dict]) -> list[dict]:
+def judge(sys_prompt: str, items: list[dict]) -> list[dict]:
+    """Claude Code（claude -p）で判定。ANTHROPIC_API_KEY を渡さないので、ログイン中の Claude のプランで動く"""
     lines = "\n".join(f"[{x['id']}] {x['t'][11:16]} {x['src']}: {x['title']}" for x in items)
-    r = client.beta.messages.create(
-        model=MODEL, max_tokens=8000,
-        betas=["server-side-fallback-2026-07-01"], fallbacks="default",
-        cache_control={"type": "ephemeral"},
-        system=sys_prompt,
-        output_config={"effort": "low", "format": {"type": "json_schema", "schema": SCHEMA}},
-        messages=[{"role": "user", "content": f"新しい見出し（{dt.datetime.now(JST):%Y-%m-%d %H:%M} 時点）:\n{lines}"}],
-    )
-    if r.stop_reason == "refusal":
-        log("Claude が判定を断りました", getattr(r, "stop_details", None))
+    env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
+    cmd = [CLAUDE, "-p", "--no-session-persistence", "--strict-mcp-config", "--tools", "", "--model", MODEL,
+           "--output-format", "json", "--system-prompt", sys_prompt, "--json-schema", json.dumps(SCHEMA),
+           f"新しい見出し（{dt.datetime.now(JST):%Y-%m-%d %H:%M} 時点）:\n{lines}"]
+    r = subprocess.run(cmd, capture_output=True, text=True, timeout=300, env=env, cwd=STATE_DIR)
+    try:
+        d = json.loads(r.stdout)
+    except json.JSONDecodeError:
+        log("判定に失敗:", (r.stderr or r.stdout)[-300:])
         return []
-    text = next((b.text for b in r.content if b.type == "text"), "")
-    u = r.usage
-    log(f"判定 {len(items)}件 → in {u.input_tokens}+cache {getattr(u, 'cache_read_input_tokens', 0)} / out {u.output_tokens}")
-    return json.loads(text).get("alerts", []) if text else []
+    if d.get("is_error"):
+        log("判定に失敗:", str(d.get("result"))[:300])
+        return []
+    out = d.get("structured_output") or json.loads(d.get("result") or "{}")
+    log(f"判定 {len(items)}件 → {len(out.get('alerts', []))}件 {d.get('duration_ms', 0) / 1000:.0f}秒")
+    return out.get("alerts", [])
 
 
 def name_ok(a: str, b: str) -> bool:
@@ -299,38 +305,63 @@ def gh_token() -> str | None:
     return _gh["token"] or None
 
 
-def publish(data: dict, msg: str):
-    jsave(OUT, data)
-    if DRY or not (tok := gh_token()):
-        return
+def merge(a: dict, b: dict) -> dict:
+    """GitHub 上の flash.json と手元の内容をまとめる（PC と Actions の両方が書くため）"""
+    items = {f["id"]: f for f in a.get("items", [])}
+    for f in b.get("items", []):
+        g = items.get(f["id"])
+        if not g:
+            items[f["id"]] = f
+            continue
+        rs = {s["c"]: s.get("r", {}) for s in g["stocks"]}
+        for s in f["stocks"]:
+            s["r"] = {**rs.get(s["c"], {}), **s.get("r", {})}
+        f["done"] = f.get("done") or g.get("done")
+        items[f["id"]] = f
+    cut = (dt.datetime.now(JST) - dt.timedelta(days=2)).isoformat()
+    seen = {k: v for k, v in {**a.get("seen", {}), **b.get("seen", {})}.items() if v >= cut}
+    return {"hb": max(a.get("hb", ""), b.get("hb", "")), "ci_at": max(a.get("ci_at", ""), b.get("ci_at", "")), "seen": seen,
+            "items": sorted(items.values(), key=lambda f: f["at"], reverse=True)[:KEEP]}
+
+
+def publish(data: dict, msg: str) -> dict:
+    """GitHub の内容とまとめてから置く。まとめた結果を返す"""
+    tok = os.environ.get("GITHUB_TOKEN") or gh_token()
+    if DRY or not tok:
+        jsave(OUT, data)
+        return data
     api = f"https://api.github.com/repos/{REPO}/contents/{OUT_PATH}"
     hdr = {"Authorization": f"Bearer {tok}", "Accept": "application/vnd.github+json"}
-    for _ in range(3):
+    for _ in range(4):
         try:
-            if not _gh["sha"]:
-                try:
-                    _gh["sha"] = json.loads(http(api + "?ref=main", headers=hdr))["sha"]
-                except urllib.error.HTTPError as e:
-                    if e.code != 404:
-                        raise
+            sha, remote = None, {}
+            try:
+                cur = json.loads(http(api + f"?ref=main&t={int(time.time())}", headers=hdr))
+                sha, remote = cur["sha"], json.loads(base64.b64decode(cur["content"]))
+            except urllib.error.HTTPError as e:
+                if e.code != 404:
+                    raise
+            data = merge(remote, data)
             body = {"message": f"{msg} [skip ci]", "branch": "main",
                     "content": base64.b64encode(json.dumps(data, ensure_ascii=False, separators=(",", ":")).encode()).decode()}
-            if _gh["sha"]:
-                body["sha"] = _gh["sha"]
-            r = json.loads(http(api, json.dumps(body).encode(), {**hdr, "Content-Type": "application/json"}, "PUT"))
-            _gh["sha"] = r["content"]["sha"]
-            return
+            if sha:
+                body["sha"] = sha
+            http(api, json.dumps(body).encode(), {**hdr, "Content-Type": "application/json"}, "PUT")
+            jsave(OUT, data)
+            return data
         except urllib.error.HTTPError as e:
-            if e.code in (409, 422):  # 他の更新と重なった → sha を取り直す
-                _gh["sha"] = None
+            if e.code in (409, 422):  # 他の更新と重なった → 取り直す
+                time.sleep(2)
                 continue
             if e.code == 401:
                 _gh["token"] = None
             log("github", e.code)
-            return
+            break
         except Exception as e:  # noqa: BLE001
             log("github", type(e).__name__)
-            return
+            break
+    jsave(OUT, data)
+    return data
 
 
 # ---------- 結果の記録 ----------
@@ -411,93 +442,85 @@ def track(data: dict) -> bool:
 
 
 # ---------- 本体 ----------
+def make_flash(a: dict, x: dict, st: dict, liq: dict, now: dt.datetime, data: dict) -> dict | None:
+    picks = []
+    for s in a["stocks"]:
+        c = norm(s["code"]).upper()
+        if c in st and name_ok(s["name"], st[c]["n"]) and c not in {p["c"] for p in picks}:
+            v = liq.get("v", {}).get(c)
+            picks.append({"c": c, "n": st[c]["n"], "mkt": st[c].get("mkt", ""), "reason": s["reason"],
+                          "liq": round(v / 1e8, 1) if v else None, "thin": bool(v is not None and v < LIQ_MIN)})
+        else:
+            log("  銘柄を確認できず除外:", s["code"], s["name"])
+    if not picks:
+        return None
+    fl = {"id": f"{now:%Y%m%d%H%M}-{x['id']}", "at": now.isoformat(timespec="seconds"), "nt": x["t"],
+          "src": x["src"], "title": x["title"], "url": x["url"], "theme": a["theme"], "why": a["why"],
+          "strength": a["strength"], "stocks": picks, "by": "ci" if CI else "pc"}
+    # 同じテーマが少し前に出ていれば「まとめ」扱い（強くなった時だけ目立たせる）
+    prev = [f for f in data["items"] if f["theme"] == fl["theme"]
+            and now - dt.datetime.fromisoformat(f["at"]) < dt.timedelta(hours=SAME_THEME_H)]
+    fl["muted"] = bool(prev) and fl["strength"] <= max(f["strength"] for f in prev)
+    return fl
+
+
 def main() -> int:
     STATE_DIR.mkdir(exist_ok=True)
     load_env()
-    client = anthropic.Anthropic()
     st = stocks()
     liq = update_liquidity(st)
     state = jload(STATE, {"seen": {}})
     data = jload(OUT, None)
-    if data is None:  # 手元に控えが無ければ GitHub から
-        try:
-            data = json.loads(http(f"https://raw.githubusercontent.com/{REPO}/main/{OUT_PATH}?t={int(time.time())}"))
-        except Exception:  # noqa: BLE001
-            data = {"items": []}
-    first = not state["seen"]
+    try:  # GitHub の内容（PC と Actions の両方の速報・既読）から始める
+        remote = json.loads(http(f"https://raw.githubusercontent.com/{REPO}/main/{OUT_PATH}?t={int(time.time())}"))
+        data = merge(remote, data or {})
+    except Exception:  # noqa: BLE001
+        data = data or {"items": []}
+    data.setdefault("seen", {})
     sys_p, sys_day = system_prompt(st), dt.date.today()
     last_track = 0.0
     last_hb = 0.0
-    log(f"開始 model={MODEL} 銘柄 {len(st)} 売買代金 {len(liq.get('v', {}))} 初回={first}")
+    log(f"開始{' (Actions)' if CI else ''} model={MODEL} 銘柄 {len(st)} 売買代金 {len(liq.get('v', {}))}")
     while True:
         t0 = time.time()
         try:
             if dt.date.today() != sys_day:  # 1日1回、銘柄一覧・テーマ・売買代金を読み直す
                 st = stocks(); liq = update_liquidity(st); sys_p, sys_day = system_prompt(st), dt.date.today()
             now = dt.datetime.now(JST)
-            items = collect()
+            stamp = now.isoformat(timespec="minutes")
             new = []
-            for x in items:
-                if x["id"] in state["seen"]:
+            for x in collect():
+                if x["id"] in state["seen"] or x["id"] in data["seen"]:
                     continue
-                state["seen"][x["id"]] = now.isoformat(timespec="minutes")
-                # 2時間より古い記事は初動に間に合わないので見ない
-                if not first and now - dt.datetime.fromisoformat(x["t"]) < dt.timedelta(hours=2):
+                state["seen"][x["id"]] = data["seen"][x["id"]] = stamp
+                # 古い記事は初動に間に合わないので見ない
+                if now - dt.datetime.fromisoformat(x["t"]) < dt.timedelta(hours=NEW_H):
                     new.append(x)
-            if first:
-                log("初回: 既存の見出し", len(state["seen"]), "件は既読にしました")
-                first = False
+            added = []
             if new:
                 byid = {x["id"]: x for x in new}
-                for a in judge(client, sys_p, new[:60]):
+                for a in judge(sys_p, new[:60]):
                     x = byid.get(a["id"])
-                    if not x or a["strength"] < MIN_STRENGTH:
-                        continue
-                    picks = []
-                    for s in a["stocks"]:
-                        c = norm(s["code"]).upper()
-                        if c in st and name_ok(s["name"], st[c]["n"]) and c not in {p["c"] for p in picks}:
-                            v = liq.get("v", {}).get(c)
-                            picks.append({"c": c, "n": st[c]["n"], "mkt": st[c].get("mkt", ""), "reason": s["reason"],
-                                          "liq": round(v / 1e8, 1) if v else None, "thin": bool(v is not None and v < LIQ_MIN)})
-                        else:
-                            log("  銘柄を確認できず除外:", s["code"], s["name"])
-                    if not picks:
-                        continue
-                    fl = {"id": f"{now:%Y%m%d%H%M}-{x['id']}", "at": now.isoformat(timespec="seconds"), "nt": x["t"],
-                          "src": x["src"], "title": x["title"], "url": x["url"], "theme": a["theme"], "why": a["why"],
-                          "strength": a["strength"], "stocks": picks}
-                    # 同じテーマが少し前に出ていれば、強くなった時だけ通知
-                    prev = [f for f in data["items"] if f["theme"] == fl["theme"]
-                            and now - dt.datetime.fromisoformat(f["at"]) < dt.timedelta(hours=SAME_THEME_H)]
-                    fl["muted"] = bool(prev) and fl["strength"] <= max(f["strength"] for f in prev)
-                    data["items"].insert(0, fl)
-                    data["items"] = data["items"][:KEEP]
-                    log(f"速報 {'(通知まとめ) ' if fl['muted'] else ''}{'★' * fl['strength']} {fl['theme']}: {x['title']} →",
-                        "、".join(p["n"] for p in picks))
-                    if not fl["muted"]:
-                        notify(fl)
-                    data["hb"] = now.isoformat(timespec="minutes")
-                    publish(data, f"flash: {fl['theme']}")
-            # 3日より古い既読は忘れる
-            cut = (now - dt.timedelta(days=3)).isoformat()
+                    if x and a["strength"] >= MIN_STRENGTH and (fl := make_flash(a, x, st, liq, now, data)):
+                        data["items"].insert(0, fl)
+                        added.append(fl)
+                        log(f"速報 {'(まとめ) ' if fl['muted'] else ''}{'★' * fl['strength']} {fl['theme']}: {x['title']} →",
+                            "、".join(p["n"] for p in fl["stocks"]))
+                        if not fl["muted"]:
+                            notify(fl)
+            cut = (now - dt.timedelta(days=2)).isoformat()
             state["seen"] = {k: v for k, v in state["seen"].items() if v >= cut}
             jsave(STATE, state)
+            tracked = False
             if time.time() - last_track > TRACK_EVERY:
                 last_track = time.time()
-                if track(data):
-                    data["hb"] = now.isoformat(timespec="minutes")
-                    publish(data, "flash: 結果を更新")
-                    last_hb = time.time()
-            if time.time() - last_hb > 1800:  # 30分ごとに「動いています」の印
+                tracked = track(data)
+            data["ci_at" if CI else "hb"] = stamp
+            # 速報が出た・結果が増えた・30分たった（稼働中の印）・Actions の1回（既読を残す）のどれかで GitHub に置く
+            if added or tracked or CI or time.time() - last_hb > 1800:
                 last_hb = time.time()
-                data["hb"] = now.isoformat(timespec="minutes")
-                publish(data, "flash: 稼働中")
-        except anthropic.AuthenticationError:
-            log("APIキーが使えません。.env の ANTHROPIC_API_KEY を確認してください")
-        except anthropic.RateLimitError:
-            log("API の利用上限。少し待ちます")
-            time.sleep(60)
+                msg = f"flash: {added[0]['theme']}" if added else "flash: 結果を更新" if tracked else "flash: 稼働中"
+                data = publish(data, msg)
         except Exception:  # noqa: BLE001
             log("エラー:", traceback.format_exc().splitlines()[-1])
         if ONCE:

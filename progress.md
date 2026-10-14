@@ -284,5 +284,15 @@
 - 既知: PCが起動していない間は動かない。株価（Yahoo）は約20分遅れなので結果は遅れて入る。Google ニュースの RSS は数分遅れ
 - 初日の実例: FFRI を 10/13 10:02 に買っていたら 当日引け −9.2%・翌日 −20.8%（急騰後の反落）
 
+## v24（2026-10-14）速報: プランの範囲で判定・アプリ内で完結・PCが止まっている間は Actions
+ユーザー要望: API の追加料金なし（Claude のプランの範囲で）／通知アプリは使わず株カレンダー内で完結／PC再起動後も動くか
+- 判定を Claude API から **Claude Code（claude -p --json-schema、プランのログイン）** に変更。.env から ANTHROPIC_API_KEY と NTFY_TOPIC を削除（ntfy・Discord は .env に書けば使える任意機能として残す）。プランの利用枠を使いすぎないよう確認間隔を2分に
+- **Actions でも判定**: update.yml に「Flash news」ステップ（CLAUDE_CODE_OAUTH_TOKEN があれば claude-code を入れて `flash_watch.py --ci` を1回）。↻ と1日2回の更新で、PCが止まっている間のニュース（直近6時間）を判定。売買代金は data/flash_liq.json にコミットして使い回す
+  - トークン登録は `scripts/flash/setup_ci_token.sh`（claude setup-token → gh secret set）。**未登録**
+- flash.json は PC と Actions の両方が書くので、置く前に GitHub の内容と速報・結果・既読（seen）をまとめる。PC は hb、Actions は ci_at に時刻
+- アプリ: 新着（最後に速報を見た後の速報）をニュースタブに件数の印、ホームの一番上に「⚡速報 N件」カード。どの画面でも1分ごと・アプリを開き直した時に読み直す。PCの見張り役が止まっている時は「↻で確認できます」と表示
+- 再起動: Windows のスタートアップ（kabu-flash.vbs）で、**Windows にログインした時**に自動で起動。スリープ中・ログイン前は動かない
+- SW kabucal-v27
+
 ## 【次のアクション】
-**USER ACTION REQUIRED** — スマホに通知アプリ ntfy を入れて、トピックを登録する（手順はチャットで案内。トピック名は .env の NTFY_TOPIC）。あわせて ↻ 更新ボタンのトークン登録（日本語の手順つき）が未了。
+**USER ACTION REQUIRED** — PCが止まっている間も ↻ で速報を出すため、Ubuntu のターミナルで `bash ~/kabu-calendar/scripts/flash/setup_ci_token.sh` を実行（Claude のプランのトークンを GitHub に登録）。あわせて ↻ 更新ボタンのトークン登録（日本語の手順つき）が未了。

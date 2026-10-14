@@ -792,6 +792,24 @@ function markFlash() {
   const tab = document.querySelector('.tabs button[data-v="news"]');
   if (tab) { tab.querySelector(".tbadge")?.remove(); if (n) tab.insertAdjacentHTML("beforeend", `<span class="tbadge">${n > 9 ? "9+" : n}</span>`); }
 }
+// 同じテーマの続報（muted）は、その前の速報のカードにまとめる。kids は新しい順、extra は続報で新しく挙がった銘柄
+function flashGroups(items) {
+  const base = (t) => t.replace(/[（(].*?[）)]/g, "").trim();
+  const head = {}, out = [];
+  for (const f of [...items].sort((a, b) => (a.at < b.at ? -1 : 1))) {
+    const h = head[base(f.theme)];
+    const last = h && (h.kids[0]?.at || h.at);
+    if (f.muted && h && new Date(f.at) - new Date(last) < 6 * 3600e3) {
+      const have = new Set([h, ...h.kids].flatMap((x) => x.stocks.map((s) => s.c)));
+      h.kids.unshift({ ...f, extra: f.stocks.filter((s) => !have.has(s.c)) });
+    } else {
+      const g = { ...f, kids: [] };
+      head[base(f.theme)] = g;
+      out.push(g);
+    }
+  }
+  return out.reverse();
+}
 const FL_COLS = [["m5", "5分"], ["m30", "30分"], ["high", "当日高値"], ["close", "引け"], ["d1", "翌日"], ["d5", "5日後"]];
 function renderFlash() {
   const el = $("#flash-view");
@@ -804,8 +822,8 @@ function renderFlash() {
   let html = `<p class="flash-status ${alive ? "ok" : "ng"}">${alive ? "● PCの見張り役: 動いています（2分ごとに確認）" : "○ PCの見張り役: 止まっています（PCが起動していない・スリープ中など）"}${hb ? `<small>最終 ${hm(F.hb)}</small>` : ""}</p>
     ${alive ? "" : `<p class="hint">PCが止まっている間は、右上の ↻ を押すとその場でニュースを確認します（3〜5分）。${F.ci_at ? `前回 ${hm(F.ci_at)}` : ""}</p>`}
     <p class="hint">ニュースが出たら、連想で買われそうな銘柄を Claude が挙げます。基準の値段は<b>速報が出た時刻の次の1分足の始値</b>（場の外なら次の寄り付き）で、そこで買っていたらどうなったかを記録しています。株価は約20分遅れで反映。</p>`;
-  const items = F.items || [];
-  // 成績（通知した銘柄を全部、基準の値段で買っていたら）
+  const items = flashGroups(F.items || []);
+  // 成績（通知した銘柄を全部、基準の値段で買っていたら。続報は数えない）
   const all = items.flatMap((f) => f.stocks.map((s) => s.r || {}));
   const rows = FL_COLS.map(([k, lbl]) => { const v = all.map((r) => r[k]).filter((x) => x != null); return v.length ? `<tr><td>${lbl}</td><td>${v.length}</td><td>${Math.round(v.filter((x) => x > 0).length / v.length * 100)}%</td><td>${prof(v.reduce((a, x) => a + x, 0) / v.length)}</td></tr>` : ""; }).join("");
   if (rows) html += `<h3 class="sec">これまでの成績（速報の銘柄を全部買っていたら）</h3><table class="pastsum"><thead><tr><th>売った時</th><th>銘柄数</th><th>勝率</th><th>平均</th></tr></thead><tbody>${rows}</tbody></table>
@@ -813,14 +831,18 @@ function renderFlash() {
   if (!items.length) { el.innerHTML = html + `<p class="empty-msg">まだ速報はありません</p>`; return; }
   html += `<h3 class="sec">速報（新しい順）</h3>` + items.slice(0, state.flashLim || 40).map((f) => {
     const at = new Date(f.at);
-    return `<div class="card flash${f.muted ? " muted" : ""}">
-      <div class="flash-h"><span class="fstar">${"★".repeat(f.strength)}</span><b>${esc(f.theme)}</b><span class="muted">${at.getMonth() + 1}/${at.getDate()} ${pad(at.getHours())}:${pad(at.getMinutes())}${f.muted ? " · 続報" : ""}</span></div>
+    const kids = f.kids || [];
+    const more = kids.length ? `<details class="flash-kids"><summary>同じテーマの続報 ${kids.length}件（最新 ${hm(kids[0].at)}）</summary>`
+      + kids.map((k) => `<a class="flash-title" href="${esc(k.url)}" target="_blank" rel="noopener"><small class="kt">${hm(k.at)}</small>${esc(k.title)}<small>（${esc(k.src)}）</small></a>`
+        + (k.extra.length ? `<div class="sub">＋ ${esc(k.extra.map((s) => `${s.n} ${s.c}`).join("、"))}</div>` : "")).join("") + `</details>` : "";
+    return `<div class="card flash">
+      <div class="flash-h"><span class="fstar">${"★".repeat(f.strength)}</span><b>${esc(f.theme)}</b><span class="muted">${at.getMonth() + 1}/${at.getDate()} ${pad(at.getHours())}:${pad(at.getMinutes())}</span></div>
       <a class="flash-title" href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}<small>（${esc(f.src)}）</small></a>
       <p class="flash-why">${esc(f.why)}</p>
       <table class="flash-tbl"><thead><tr><th></th>${FL_COLS.map(([, l]) => `<th>${l}</th>`).join("")}</tr></thead><tbody>
       ${f.stocks.map((s) => `<tr><th><span class="fname">${esc(s.n)}</span> <span class="ncode">${esc(s.c)}</span>${s.thin ? ' <span class="vchip v-mkt" title="1日の売買代金が1億円未満">売買少</span>' : ""}<small>${esc(s.reason)}</small></th>
         ${FL_COLS.map(([k]) => { const v = s.r?.[k]; return `<td class="${v == null ? "" : v > 0 ? "up" : v < 0 ? "down" : ""}">${v == null ? "—" : (v > 0 ? "+" : "") + v.toFixed(1)}</td>`; }).join("")}</tr>`).join("")}
-      </tbody></table></div>`;
+      </tbody></table>${more}</div>`;
   }).join("") + (items.length > (state.flashLim || 40) ? `<button class="btn ghost more" data-flash-more>もっと表示</button>` : "");
   html += `<p class="note">連想は AI の推測で、外れることも多くあります。急騰した銘柄はすぐ下がることもあります。売買の判断はご自身で。</p>`;
   el.innerHTML = html;

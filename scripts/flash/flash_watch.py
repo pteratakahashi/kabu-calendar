@@ -53,6 +53,7 @@ TRACK_EVERY = 300      # 何秒ごとに結果を更新するか
 KEEP = 400             # flash.json に残す速報の数
 MIN_STRENGTH = 2       # これ以上を通知（1〜3）
 LIQ_MIN = 1e8          # 1日の売買代金（20日の中央値）がこれ未満は「売買しにくい」印
+DUP_SIM = 0.6          # 見出しの文字の重なりがこれ以上なら同じニュースとみなし、判定しない
 SAME_THEME_H = 3       # 同じテーマの速報は何時間以内なら通知をまとめるか
 NEW_H = 6 if CI else 2  # 何時間前までの記事を見るか（Actions は回数が少ないので長め）
 MODEL = os.environ.get("FLASH_MODEL", "opus")
@@ -98,6 +99,19 @@ def http(url: str, data: bytes | None = None, headers: dict | None = None, metho
 
 def norm(s: str) -> str:
     return unicodedata.normalize("NFKC", s or "").strip()
+
+
+# 同じニュースの言い換え・転載（媒体名や【写真】だけ違う等）を見分ける
+def title_key(t: str) -> str:
+    t = re.sub(r"^【[^】]*】", "", norm(t))
+    for _ in range(3):  # 末尾の (媒体名) (2026年…掲載)、途中で切れた括弧も
+        t = re.sub(r"\s*[(（][^()（）]*[)）]?\s*$", "", t)
+    return re.sub(r"[\s\W_]+", "", t)
+
+
+def same_title(a: str, b: str) -> bool:
+    A, B = ({x[i:i + 2] for i in range(len(x) - 1)} for x in (a, b))
+    return bool(A and B) and len(A & B) / len(A | B) >= DUP_SIM
 
 
 def jload(p: Path, default):
@@ -237,15 +251,19 @@ def system_prompt(st: dict) -> str:
 - strength: 3＝市場で広く連想買いが起きそう（大企業の大規模な被害、大きな災害、政策の正式決定など）、2＝一部の銘柄が動きそう、1＝弱い。
 - why は「なぜその銘柄が買われそうか」を1文で。reason は銘柄ごとに短く（20字程度）。
 - 同じ出来事の見出しが複数あれば、最も具体的な1つだけ選ぶ。該当がなければ alerts は空。
+- theme は短い一般的な名前（例「サイバーセキュリティ」「防災・国土強靭化」「半導体」）。細かい説明を括弧で付けない。
+- 「すでに出した速報」と同じ出来事の続報・別の媒体の記事・地域別の被害の追加などは選ばない。規模が大きく変わった・別の業種に広がった等の新しい展開だけ選ぶ。その場合も、同じテーマなら theme は前と全く同じ名前にする。
 - 株価・相場の動きそのものを伝える記事（「〇〇関連株が急騰」など）は、すでに動いた後なので strength を1つ下げる。
 
 参考: アプリにあるテーマと銘柄（これ以外の銘柄も挙げてよい）
 {themes_text(st)}"""
 
 
-def judge(sys_prompt: str, items: list[dict]) -> list[dict]:
+def judge(sys_prompt: str, items: list[dict], done: list[dict]) -> list[dict]:
     """Claude Code（claude -p）で判定。ANTHROPIC_API_KEY を渡さないので、ログイン中の Claude のプランで動く"""
     lines = "\n".join(f"[{x['id']}] {x['t'][11:16]} {x['src']}: {x['title']}" for x in items)
+    if done:
+        lines += "\n\nすでに出した速報（直近12時間）:\n" + "\n".join(f"- {f['theme']}: {f['title']}" for f in done)
     env = {k: v for k, v in os.environ.items() if k not in ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN")}
     cmd = [CLAUDE, "-p", "--no-session-persistence", "--strict-mcp-config", "--tools", "", "--model", MODEL,
            "--output-format", "json", "--system-prompt", sys_prompt, "--json-schema", json.dumps(SCHEMA),
@@ -489,18 +507,30 @@ def main() -> int:
                 st = stocks(); liq = update_liquidity(st); sys_p, sys_day = system_prompt(st), dt.date.today()
             now = dt.datetime.now(JST)
             stamp = now.isoformat(timespec="minutes")
-            new = []
+            new, dup = [], 0
+            # 最近見た見出し（PC は手元に24時間分、Actions は速報の見出しから）
+            recent = [k for _, k in state.setdefault("recent", [])] + [title_key(f["title"]) for f in data["items"][:100]]
             for x in collect():
                 if x["id"] in state["seen"] or x["id"] in data["seen"]:
                     continue
                 state["seen"][x["id"]] = data["seen"][x["id"]] = stamp
                 # 古い記事は初動に間に合わないので見ない
-                if now - dt.datetime.fromisoformat(x["t"]) < dt.timedelta(hours=NEW_H):
-                    new.append(x)
+                if now - dt.datetime.fromisoformat(x["t"]) >= dt.timedelta(hours=NEW_H):
+                    continue
+                k = title_key(x["title"])
+                if any(same_title(k, r) for r in recent):  # 別の媒体の同じ記事は判定しない
+                    dup += 1
+                    continue
+                recent.append(k)
+                state["recent"].append([stamp, k])
+                new.append(x)
+            if dup:
+                log(f"同じニュースを {dup} 件はぶきました")
             added = []
             if new:
                 byid = {x["id"]: x for x in new}
-                for a in judge(sys_p, new[:60]):
+                done = [f for f in data["items"] if now - dt.datetime.fromisoformat(f["at"]) < dt.timedelta(hours=12)][:30]
+                for a in judge(sys_p, new[:60], done):
                     x = byid.get(a["id"])
                     if x and a["strength"] >= MIN_STRENGTH and (fl := make_flash(a, x, st, liq, now, data)):
                         data["items"].insert(0, fl)
@@ -511,6 +541,8 @@ def main() -> int:
                             notify(fl)
             cut = (now - dt.timedelta(days=2)).isoformat()
             state["seen"] = {k: v for k, v in state["seen"].items() if v >= cut}
+            day = (now - dt.timedelta(days=1)).isoformat()
+            state["recent"] = [r for r in state["recent"] if r[0] >= day][-3000:]
             jsave(STATE, state)
             tracked = False
             if time.time() - last_track > TRACK_EVERY:

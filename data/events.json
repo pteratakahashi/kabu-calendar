@@ -7448,14 +7448,14 @@
   "approx": true,
   "country": "US",
   "title": "メタ 7-9月期決算",
-  "desc": "AI設備投資額に注目。日程は推定（例年10月下旬）",
+  "desc": "AI設備投資額に注目。10/21引け後発表、説明会は日本時間06:30〜",
   "impact": 2,
   "themes": [
    "ai",
    "semi"
   ],
   "tentative": false,
-  "src": "https://www.finviz.com/news/401445/meta-to-announce-third-quarter-2026-results",
+  "src": "https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-to-Announce-Third-Quarter-2026-Results/default.aspx",
   "ticker": "META"
  },
  {

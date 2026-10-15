@@ -1,32 +1,27 @@
 {
  "d": "2026-10-15",
- "t": "06:45",
+ "t": "17:45",
  "items": [
   {
-   "h": "米株は大幅安、ナスダック-1.9%",
-   "b": "14日の米国株はS&P500が約-1.1%の7,718.94、ナスダック総合が約-1.9%の26,692.87、ダウは約-0.1%。9月CPIの上振れと半導体株の下落が重荷になった。"
+   "h": "日経平均は6日続落、3318円安",
+   "b": "終値は6万4425円95銭（-4.90%）。下げ幅は歴代3位。FRBの追加利上げ観測の再燃やAI・半導体関連株への売りが重荷になったと報じられている。"
   },
   {
-   "h": "米CPIは前年比+3.7%で予想超え",
-   "b": "9月の米CPIは前年比+3.7%（予想3.6%、前月3.4%）。原油高が背景で、今月のFOMCでの利上げ観測が再燃したと報じられている。"
+   "h": "TSMCは好決算も売りは止まらず",
+   "b": "7-9月期の純利益は7630億台湾ドル（前年比約+69%）で市場予想を上回った。ただ「想定の範囲内」との受け止めが多く、半導体株の下げを止めるには至らなかった。"
   },
   {
-   "h": "半導体株安が続く、ASMLは決算",
-   "b": "半導体ETFのSOXXは7日続落。ASMLは7-9月期が過去最高売上で通期見通しも上方修正したが、株価の終値は報道により異なり確認できていない。"
+   "h": "今夜は米PPIと小売売上高（21:30）",
+   "b": "9月CPIが上振れした直後で、物価・消費指標への反応が注目される。結果次第で米金利と半導体株の動きが意識されやすい。"
   },
   {
-   "h": "今日はTSMC決算（15:00）",
-   "b": "8:50に8月機械受注、15:00にTSMCの7-9月期決算説明会。夜21:30は米PPIと米小売売上高。半導体関連株の動きに注目が集まりやすい。"
-  },
-  {
-   "h": "日本株は半導体株の売りが意識されやすい",
-   "b": "前日の米ハイテク・半導体株安を受け、東京エレクトロンなど値がさ半導体株の動向が日経平均を左右しやすい。"
+   "h": "明日は急落後の値動きに注目",
+   "b": "歴代3位の下げ幅の後で、米国時間の半導体株や金利の動きが東京市場の反応を左右しやすい。来週は19日に中国GDP、22日にディスコ決算。"
   }
  ],
  "src": [
-  "https://www.cnbc.com/2026/10/13/stock-market-today-live-updates-.html",
-  "https://investinglive.com/stocks/us-stocks-sink-as-ai-and-chips-tumble/",
-  "https://www.benzinga.com/markets/equities/26/10/62360140/nasdaq-100-drops-1-on-hot-cpi-soxx-falls-7th-day-stock-market-today",
-  "https://www.jiji.com/jc/article?k=2026101401234&g=int&m=rss"
+  "https://www.nikkei.com/article/DGXZQOFL1412Q0U6A011C2000000/",
+  "https://www.benzinga.com/markets/earnings/26/10/62372396/tsmc-q3-sixth-straight-record-ai-chip-boom",
+  "https://invezz.com/ng/news/2026/10/15/tsmc-earnings-crush-estimates-as-profit-jumps-69percent-but-stock-still-faces-big-test/"
  ]
 }

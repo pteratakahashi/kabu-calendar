@@ -7518,14 +7518,14 @@
   "approx": true,
   "country": "US",
   "title": "アマゾン 7-9月期決算",
-  "desc": "AWSとAI投資。日程は推定（例年10月下旬）",
+  "desc": "AWSとAI投資。10/29引け後発表、06:00〜説明会",
   "impact": 2,
   "themes": [
    "ai",
    "retail"
   ],
-  "tentative": true,
-  "src": "https://www.marketbeat.com/stocks/NASDAQ/AMZN/earnings/",
+  "tentative": false,
+  "src": "https://finviz.com/news/403264/amazoncom-to-webcast-third-quarter-2026-financial-results-conference-call",
   "ticker": "AMZN"
  },
  {

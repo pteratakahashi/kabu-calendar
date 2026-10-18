@@ -1361,5 +1361,24 @@
    "8035"
   ],
   "src": "https://news.web.nhk/newsweb/na/nd-20261013de58344"
+ },
+ {
+  "id": "2026-10-15-nikkei-plunge-ai-cpi",
+  "d": "2026-10-15",
+  "country": "JP",
+  "cat": "金融・市場",
+  "title": "日経平均が3318円安、下げ幅歴代3位",
+  "desc": "米CPI上振れによる利上げ観測とAI需要懸念で半導体株が急落。日経平均は6万4425円で引け、翌16日は898円高と反発",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "semiequip"
+  ],
+  "codes": [
+   "8035",
+   "6857"
+  ],
+  "src": "https://kumanichi.com/articles/2046867"
  }
 ]

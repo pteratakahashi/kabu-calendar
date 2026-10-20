@@ -7459,6 +7459,23 @@
     "ticker": "META"
   },
   {
+    "id": "2026-10-22-lam",
+    "d": "2026-10-22",
+    "t": "05:05",
+    "approx": true,
+    "country": "US",
+    "title": "ラムリサーチ 7-9月期決算",
+    "desc": "半導体製造装置の需要を占う。米国時間21日引け後",
+    "impact": 2,
+    "themes": [
+      "semi",
+      "semiequip"
+    ],
+    "tentative": true,
+    "src": "https://unusualwhales.com/stock/LRCX/earnings",
+    "ticker": "LRCX"
+  },
+  {
     "id": "2026-10-29-microsoft",
     "d": "2026-10-29",
     "t": "05:05",

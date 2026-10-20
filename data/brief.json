@@ -1,32 +1,28 @@
 {
  "d": "2026-10-20",
- "t": "06:30",
+ "t": "17:30",
  "items": [
   {
-   "h": "米国株はハイテク主導で反発",
-   "b": "19日の米国市場はナスダックが約1.1%高、S&P500が約0.41%高、ダウは約0.07%安と報じられた。前週はナスダックが約4.5%下落しており、その反動が出た形。"
+   "h": "日経平均は841円安、続落で6.4万円台",
+   "b": "終値は6万4075円42銭(-1.30%)。前週末の米AI・半導体株安を引き継ぎ、午後は一時6万4000円を割り込んだ。33業種中24業種が下落し、非鉄金属と銀行が弱かった。"
   },
   {
-   "h": "原油高とAI関連の警戒は続く",
-   "b": "フーシ派によるサウジ攻撃を背景にWTIは2%超上昇と報じられた。16日にはAI関連売りでナスダックが2.1%安となり、半導体株の値動きの荒さが意識されやすい。"
-  },
-  {
-   "h": "今日の日本は寄り付きの反応に注目",
-   "b": "米ハイテク反発を受け、前日に反落した日経平均(64,916円)やAI・半導体関連の戻りが意識されやすい。日本時間16:00にはディスコが4-9月期決算を発表する。"
+   "h": "AI・半導体と銀行株に売り",
+   "b": "ナスダック100先物の軟調や韓国・台湾株安が重しになった。午後にはソフトバンクGが6%超、三菱UFJが3%超下落と報じられた。"
   },
   {
    "h": "今夜〜明朝: ネットフリックス決算",
-   "b": "ネットフリックスは米国時間20日の引け後(日本時間21日朝)に決算予定。22日朝にテスラ・メタが続き、23日朝に日本の全国CPIが発表される。"
+   "b": "米国時間20日の引け後(日本時間21日5:01)に7-9月期決算を発表予定。22日朝のテスラ・メタへ続く。ナスダックの地合いが意識されやすい。"
   },
   {
-   "h": "月末は FOMC と日銀会合",
-   "b": "FOMC結果は日本時間29日朝、日銀会合の結果は30日昼に発表予定。それまで米メガテック決算が続く。"
+   "h": "22日はディスコ決算(16:00)",
+   "b": "ディスコは22日に4-9月期決算を開示予定。報道では営業利益は前年同期比4割増の1100億円程度とされ、AI向け好調が焦点。23日朝には全国CPIも発表される。"
   }
  ],
  "src": [
-  "https://www.thestreet.com/stock-market-today/stock-market-today-oct-19-2026-nasdaq-futures-climb-as-tech-rebound-from-sell-off",
-  "https://moneymorning.com/2026/10/19/monday-market-pulse-october-19-2026",
-  "https://financefeeds.com/the-nasdaq-index-just-had-its-worst-week-since-june-and-netflix-tesla-and-meta-report-next/",
-  "https://investinglive.com/news/oil-prices-extend-gains-as-yemen-s-houthis-threaten-broader-saudi-operation-after-attacks-hit-energy-sites/"
+  "https://www.media-ir.com/news/?p=185406",
+  "https://news.livedoor.com/article/detail/32612057/",
+  "https://finance.yahoo.co.jp/news/detail/024bb8efca90e0d4412c0989ca53dcbca37da708",
+  "https://s22.q4cdn.com/959853165/files/doc_news/Netflix-to-Announce-Third-Quarter-2026-Financial-Results-2026.pdf"
  ]
 }

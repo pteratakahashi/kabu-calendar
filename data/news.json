@@ -1380,5 +1380,27 @@
    "6857"
   ],
   "src": "https://kumanichi.com/articles/2046867"
+ },
+ {
+  "id": "2026-10-22-nikkei-1713-meta-capex",
+  "d": "2026-10-22",
+  "country": "JP",
+  "cat": "AI・半導体",
+  "title": "日経平均1713円安、メタのAI投資に警戒",
+  "desc": "メタの巨額AI投資とラムリサーチの時間外安が重なり東エレク・SBGなどAI半導体株が売られ、日経平均は約3カ月ぶりに6万3000円割れ",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "semiequip"
+  ],
+  "codes": [
+   "8035",
+   "9984"
+  ],
+  "tickers": [
+   "META"
+  ],
+  "src": "https://kabutan.jp/news/marketnews/?b=n202610221077"
  }
 ]

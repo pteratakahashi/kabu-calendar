@@ -7375,11 +7375,11 @@
   "t": "23:00",
   "country": "US",
   "title": "米10月ミシガン大消費者態度指数（確報）",
-  "desc": "消費者心理と期待インフレ率の確定値",
+  "desc": "確報48.0（速報46.3・予想46.3）、1年先インフレ期待4.7%",
   "impact": 1,
   "themes": [],
-  "tentative": true,
-  "src": "https://www.thetrading.tools/economic-calendar/consumer-sentiment"
+  "tentative": false,
+  "src": "https://fx.minkabu.jp/news/382497"
  },
  {
   "id": "2026-10-27-shinetsu",

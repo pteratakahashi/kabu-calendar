@@ -1402,5 +1402,25 @@
    "META"
   ],
   "src": "https://kabutan.jp/news/marketnews/?b=n202610221077"
+ },
+ {
+  "id": "2026-10-27-anthropic-ipo-prospectus",
+  "d": "2026-10-27",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "cat": "AI・半導体",
+  "title": "アンソロピックがIPO目論見書を公表",
+  "desc": "11月中旬上場の見通し。AIインフラ投資の拡大観測でNY市場でAI・半導体株に買い、ナスダックは3日ぶり反発。",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi",
+   "datacenter"
+  ],
+  "tickers": [
+   "NVDA"
+  ],
+  "src": "https://news.yahoo.co.jp/articles/be345ab776a466e31e1988b44629a491ee81a92a"
  }
 ]

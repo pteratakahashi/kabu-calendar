@@ -7698,6 +7698,21 @@
   "src": "https://www.bls.gov/schedule/news_release/empsit.htm"
  },
  {
+  "id": "2026-11-10-softbank-group",
+  "d": "2026-11-10",
+  "t": "15:30",
+  "country": "JP",
+  "title": "ソフトバンクグループ 4-9月期決算",
+  "desc": "AI投資の評価益と日本株への波及に注目",
+  "impact": 2,
+  "themes": [
+   "ai"
+  ],
+  "tentative": false,
+  "src": "https://group.softbank/news/info/20261002",
+  "code": "9984"
+ },
+ {
   "id": "2026-11-10-us-cpi",
   "d": "2026-11-10",
   "t": "22:30",

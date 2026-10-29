@@ -7807,5 +7807,20 @@
   ],
   "tentative": false,
   "src": "https://www.boj.or.jp/mopo/mpmsche_minu/index.htm"
+ },
+ {
+  "id": "2026-11-10-tsmc-monthly",
+  "d": "2026-11-10",
+  "country": "TW",
+  "title": "TSMC 月次売上高（10月）",
+  "desc": "世界の半導体需要を占う注目材料",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": true,
+  "ticker": "TSM",
+  "src": "https://pr.tsmc.com/english/news/3343"
  }
 ]

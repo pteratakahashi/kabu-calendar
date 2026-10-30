@@ -1422,5 +1422,29 @@
    "NVDA"
   ],
   "src": "https://news.yahoo.co.jp/articles/be345ab776a466e31e1988b44629a491ee81a92a"
+ },
+ {
+  "id": "2026-10-30-alphabet-intel-ai-selloff",
+  "d": "2026-10-30",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "cat": "AI・半導体",
+  "title": "アルファベット急落・インテル時間外大幅安",
+  "desc": "アルファベットは決算で-12.6%と上場以来最大の下げ。インテルも見通し弱く時間外で約2割安。日経平均は1369円安、イビデンはストップ安。",
+  "impact": 3,
+  "themes": [
+   "ai",
+   "semi",
+   "datacenter"
+  ],
+  "codes": [
+   "4062"
+  ],
+  "tickers": [
+   "GOOGL",
+   "INTC"
+  ],
+  "src": "https://www.nikkei.com/article/DGXZQOFL300LBTQ6A031C2000000/"
  }
 ]

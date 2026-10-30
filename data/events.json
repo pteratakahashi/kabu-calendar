@@ -7572,7 +7572,8 @@
   "themes": [
    "bank"
   ],
-  "tentative": true
+  "tentative": false,
+  "src": "https://www.jiji.com/jc/article?k=2026103000274&g=eco"
  },
  {
   "id": "2026-10-30-boj",

@@ -7726,20 +7726,21 @@
   "src": "https://www.bls.gov/schedule/news_release/cpi.htm"
  },
  {
-  "id": "2026-11-19-nvda",
-  "d": "2026-11-19",
+  "id": "2026-11-18-nvda",
+  "d": "2026-11-18",
   "t": "06:20",
   "approx": true,
   "country": "US",
   "title": "エヌビディア決算（Q3 FY27）",
-  "desc": "AI・半導体相場の最重要決算。日程未発表（例年11月下旬）",
+  "desc": "AI・半導体相場の最重要決算。現地17日引け後発表、説明会は07:00〜",
   "impact": 3,
   "themes": [
    "semi",
    "ai",
    "wire"
   ],
-  "tentative": true,
+  "tentative": false,
+  "src": "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873",
   "ticker": "NVDA"
  },
  {

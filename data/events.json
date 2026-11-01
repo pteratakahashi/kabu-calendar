@@ -7824,5 +7824,34 @@
   "tentative": true,
   "ticker": "TSM",
   "src": "https://pr.tsmc.com/english/news/3343"
+ },
+ {
+  "id": "2026-11-04-us-midterms",
+  "d": "2026-11-04",
+  "approx": true,
+  "country": "US",
+  "title": "米中間選挙（開票・11/3投票）",
+  "desc": "議会の勢力図で財政・関税・AI政策の見通しが変わりうる",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.schwabassetmanagement.com/story/what-2026-midterms-could-mean-markets"
+ },
+ {
+  "id": "2026-11-03-palantir",
+  "d": "2026-11-03",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "パランティア 7-9月期決算",
+  "desc": "AI・防衛ソフトの需要を占う（米引け後・日程は未公式確認）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "cyber"
+  ],
+  "tentative": true,
+  "ticker": "PLTR",
+  "src": "https://www.benzinga.com/quote/PLTR/earnings"
  }
 ]

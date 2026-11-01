@@ -1,28 +1,16 @@
 {
  "d": "2026-11-01",
- "t": "06:30",
+ "t": "17:30",
  "items": [
-  {
-   "h": "米株は30日にナスダック約3%安",
-   "b": "30日のダウは51,770ドル(-1.09%)、ナスダック総合は25,437(-2.85%、速報)。AI投資の収益化への不透明感からAIインフラ関連に売りが広がった(前回ブリーフ時点の数値)。"
-  },
-  {
-   "h": "今日は日曜、週明けも3日は東証休場",
-   "b": "3日(火)は文化の日で東京市場は休場。次の取引は4日(水)で、30日夜間の日経先物は62,420円と現物終値(63,290円)を下回って終えており、米ハイテク安の影響が意識されやすい。"
-  },
-  {
-   "h": "3日にISM製造業、アップル決算",
-   "b": "3日0:00に米10月ISM製造業景況指数、同日6:30頃にアップル7-9月期決算(現地2日引け後)。4日朝にはAMD決算(現地3日引け後)が続く。"
-  },
-  {
-   "h": "6日は米雇用統計、NVIDIA決算は18日",
-   "b": "6日22:30に米雇用統計(10月分)。NVIDIAの決算は現地17日引け後で、日本時間18日6:20頃の見通し(同社が説明会日程を発表)。"
-  }
+  {"h": "週末、東京市場は休み。米株は30日に急落", "b": "30日のS&P500は7,580.07(-1.82%)、ナスダック総合は25,437(-2.86%)、ダウは51,770(-1.09%)。AI投資の収益化への疑念が再燃し、インテルは約28.6%安と急落した。"},
+  {"h": "月間ではナスダックが-5.3%", "b": "10月の月間騰落率はS&P500 -0.94%、ナスダック -5.3%、ダウ +1.7%。ナスダック100は調整局面入りとの報道もあり、週明け4日の日本の半導体・AI関連が意識されやすい。"},
+  {"h": "3日は東証休場、米ISMとアップル決算", "b": "3日(火)は文化の日で東証は休場。同日0:00に米10月ISM製造業景況指数、6:30頃にアップル7-9月期決算(予想売上高は約1,134億ドルとの報道)。"},
+  {"h": "今週は4日AMD決算、6日米雇用統計", "b": "4日6:15頃にAMD決算、5日0:00に米ISM非製造業、6日22:30に米雇用統計(10月分)。日本は4日(水)から取引再開で、10日にはソフトバンクG決算。"}
  ],
  "src": [
+  "https://finance.yahoo.com/markets/stocks/articles/major-us-stock-indexes-fared-202111310.html",
+  "https://finance.yahoo.com/markets/live/stock-market-today-friday-october-30-dow-sp-500-nasdaq-amazon-intel-ai-sell-off-191429143.html",
   "https://www.mactrast.com/2026/10/apple-to-announce-fiscal-q4-2026-earnings-on-november-2/",
-  "https://ir.amd.com/news-events/press-releases/detail/1300/amd-to-report-fiscal-third-quarter-2026-financial-results",
-  "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873",
-  "https://kabutan.jp/news/marketnews/?b=n202610310072"
+  "https://ir.amd.com/news-events/press-releases/detail/1300/amd-to-report-fiscal-third-quarter-2026-financial-results"
  ]
 }

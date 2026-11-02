@@ -7844,14 +7844,26 @@
   "approx": true,
   "country": "US",
   "title": "パランティア 7-9月期決算",
-  "desc": "AI・防衛ソフトの需要を占う（米引け後・日程は未公式確認）",
+  "desc": "AI・防衛ソフトの需要を占う（米引け後・売上23.1億ドル、前年比+96%）",
   "impact": 2,
   "themes": [
    "ai",
    "cyber"
   ],
-  "tentative": true,
+  "tentative": false,
   "ticker": "PLTR",
-  "src": "https://www.benzinga.com/quote/PLTR/earnings"
+  "src": "https://www.sec.gov/Archives/edgar/data/0001321655/000132165526000045/a2026q3ex991pressrelease.htm"
+ },
+ {
+  "id": "2026-11-16-jp-gdp",
+  "d": "2026-11-16",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（7-9月期・1次速報）",
+  "desc": "国内景気の方向感を確認",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.esri.cao.go.jp/jp/sna/kouhyou/kouhyou_top.html"
  }
 ]

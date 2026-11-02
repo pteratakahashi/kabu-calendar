@@ -1,28 +1,27 @@
 {
  "d": "2026-11-02",
- "t": "06:30",
+ "t": "17:30",
  "items": [
   {
-   "h": "先週末の米株は急落、AI投資に警戒",
-   "b": "30日のS&P500は7,580.07(-1.82%)、ナスダック総合は25,437(-2.86%)、ダウは51,770(-1.09%)。インテルは約28.6%安。本日の日本の半導体・AI関連が意識されやすい。"
+   "h": "日経平均は小幅反落、半導体に売り",
+   "b": "大引けは63,081.86円(-208.25円、-0.33%)。AI・半導体関連の売りが根強い一方、終盤は下げ幅を縮める場面もあった(報道ベース)。"
   },
   {
-   "h": "10月はナスダックが月間-5.3%",
-   "b": "10月の月間騰落率はS&P500 -0.94%、ナスダック -5.3%、ダウ +1.7%。ナスダック100は調整局面入りとの報道もある。"
+   "h": "背景は先週末の米ハイテク安",
+   "b": "30日の米国はダウ51,770(-1.09%)。インテルは約28.6%安で、AI投資の採算への警戒が続いている。"
   },
   {
-   "h": "今日2日は東証が通常取引",
-   "b": "3日(火)は文化の日で東証は休場。米国は3日0:00に10月ISM製造業、6:30頃にアップル決算。日本は4日(水)に再開する。"
+   "h": "明日3日は東証休場、米ISM製造業",
+   "b": "3日(火・文化の日)は東証休場。米10月ISM製造業は3日0:00、アップル決算は6:30頃、パランティア決算は6:00頃(日程は未確定扱い)。"
   },
   {
-   "h": "今週はAMD決算・米中間選挙・雇用統計",
-   "b": "AMD決算は4日6:15頃、米中間選挙は3日投票(開票は日本時間4日)、米ISM非製造業は5日0:00、米雇用統計(10月分)は6日22:30。"
+   "h": "4日は日本再開、AMD決算・中間選挙",
+   "b": "米中間選挙は3日投票、開票は日本時間4日。AMD決算は4日6:15頃で、再開する日本の半導体株が意識されやすい。"
   }
  ],
  "src": [
-  "https://finance.yahoo.com/markets/live/stock-market-today-friday-october-30-dow-sp-500-nasdaq-amazon-intel-ai-sell-off-191429143.html",
-  "https://www.mactrast.com/2026/10/apple-to-announce-fiscal-q4-2026-earnings-on-november-2/",
-  "https://ir.amd.com/news-events/press-releases/detail/1300/amd-to-report-fiscal-third-quarter-2026-financial-results",
-  "https://www.schwabassetmanagement.com/story/what-2026-midterms-could-mean-markets"
+  "https://www.nikkei.com/markets/",
+  "https://kabutan.jp/news/marketnews/?b=n202610301226",
+  "https://ir.amd.com/news-events/press-releases/detail/1300/amd-to-report-fiscal-third-quarter-2026-financial-results"
  ]
 }

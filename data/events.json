@@ -7865,5 +7865,41 @@
   "themes": [],
   "tentative": false,
   "src": "https://www.esri.cao.go.jp/jp/sna/kouhyou/kouhyou_top.html"
+ },
+ {
+  "id": "2026-11-13-us-ppi",
+  "d": "2026-11-13",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PPI（10月分）",
+  "desc": "生産者物価。CPIの先行指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": true,
+  "src": "https://fedratecalc.com/us-economic-calendar/november-2026/"
+ },
+ {
+  "id": "2026-11-17-us-retail",
+  "d": "2026-11-17",
+  "t": "22:30",
+  "country": "US",
+  "title": "米小売売上高（10月分）",
+  "desc": "米個人消費の強さを測る指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": true,
+  "src": "https://fedratecalc.com/us-economic-calendar/november-2026/"
+ },
+ {
+  "id": "2026-11-19-fomc-minutes",
+  "d": "2026-11-19",
+  "t": "04:00",
+  "country": "US",
+  "title": "FOMC議事要旨（10月会合分）",
+  "desc": "10月27-28日会合の議論内容に注目",
+  "impact": 2,
+  "themes": [],
+  "tentative": true,
+  "src": "https://fedratecalc.com/us-economic-calendar/november-2026/"
  }
 ]

@@ -1446,5 +1446,28 @@
    "INTC"
   ],
   "src": "https://www.nikkei.com/article/DGXZQOFL300LBTQ6A031C2000000/"
+ },
+ {
+  "id": "2026-11-06-sox-crash-dem-ai-regulation",
+  "d": "2026-11-06",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "cat": "AI・半導体",
+  "title": "SOX指数12%安、日経平均3643円安",
+  "desc": "中間選挙で民主党が議会を奪還しデータセンター規制観測が拡大。5日の米SOXは-12.2%、ナスダック100は-6.4%。日経平均は5.96%安の5万7434円で引け、約7カ月ぶり安値",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "semiequip",
+   "datacenter"
+  ],
+  "codes": [
+   "6857",
+   "8035",
+   "9984"
+  ],
+  "src": "https://www.oanda.jp/lab-education/market_news/20261106_ai_stocks_selloff/"
  }
 ]

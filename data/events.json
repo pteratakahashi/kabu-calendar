@@ -7875,8 +7875,8 @@
   "desc": "生産者物価。CPIの先行指標",
   "impact": 2,
   "themes": [],
-  "tentative": true,
-  "src": "https://fedratecalc.com/us-economic-calendar/november-2026/"
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/ppi.htm"
  },
  {
   "id": "2026-11-17-us-retail",

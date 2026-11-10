@@ -7704,7 +7704,7 @@
   "t": "15:30",
   "country": "JP",
   "title": "ソフトバンクグループ 4-9月期決算",
-  "desc": "AI投資の評価益と日本株への波及に注目",
+  "desc": "上期は最終赤字7680億円と報じられた",
   "impact": 2,
   "themes": [
    "ai"
@@ -7815,15 +7815,15 @@
   "d": "2026-11-10",
   "country": "TW",
   "title": "TSMC 月次売上高（10月）",
-  "desc": "世界の半導体需要を占う注目材料",
+  "desc": "10月売上は前年比59.7%増で過去最高",
   "impact": 2,
   "themes": [
    "semi",
    "ai"
   ],
-  "tentative": true,
+  "tentative": false,
   "ticker": "TSM",
-  "src": "https://pr.tsmc.com/english/news/3343"
+  "src": "https://jp.investing.com/news/stock-market-news/article-1749906"
  },
  {
   "id": "2026-11-04-us-midterms",

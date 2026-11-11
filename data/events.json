@@ -7887,8 +7887,8 @@
   "desc": "米個人消費の強さを測る指標",
   "impact": 2,
   "themes": [],
-  "tentative": true,
-  "src": "https://fedratecalc.com/us-economic-calendar/november-2026/"
+  "tentative": false,
+  "src": "https://www.census.gov/retail/release_schedule.html"
  },
  {
   "id": "2026-11-19-fomc-minutes",

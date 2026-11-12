@@ -1469,5 +1469,28 @@
    "9984"
   ],
   "src": "https://www.oanda.jp/lab-education/market_news/20261106_ai_stocks_selloff/"
+ },
+ {
+  "id": "2026-11-10-nvidia-ceo-probe",
+  "d": "2026-11-10",
+  "approx": true,
+  "country": "US",
+  "cat": "企業",
+  "title": "エヌビディア、CEOを巡り調査開始",
+  "desc": "ファンCEOが外国の諜報の標的だった可能性を取締役会が調査と報道。NVIDIA株が急落し半導体株の重荷に",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai",
+   "datacenter"
+  ],
+  "codes": [
+   "6857",
+   "8035"
+  ],
+  "tickers": [
+   "NVDA"
+  ],
+  "src": "https://www.timeslive.co.za/news/business/2026-11-09-nvidias-shares-slide-as-ceo-probed-over-spy-claims/"
  }
 ]

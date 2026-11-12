@@ -1,26 +1,27 @@
 {
- "d": "2026-11-12",
- "t": "17:32",
+ "d": "2026-11-13",
+ "t": "06:31",
  "items": [
   {
-   "h": "日経平均は4日ぶり反落、6万819円",
-   "b": "12日の日経平均は前日比429円安(-0.70%)の6万819円36銭。前場は高かったが、NVIDIA CEOを巡る報道でAI・半導体株に売りが出て引けにかけ値を消した。"
+   "h": "米株は小幅安、ナスダックが軟調",
+   "b": "12日のNY市場は日本時間5時時点でダウ平均52,383ドル(-0.20%)、ナスダック25,334(-0.52%)。エヌビディア株が大きく動く場面もあった。"
   },
   {
-   "h": "NVIDIA CEO報道が半導体株の重荷に",
-   "b": "取締役会がファンCEOを巡る調査を進めていると報じられている。取締役会は同氏への信頼を表明との報道もあり、続報が意識されやすい。"
+   "h": "NVIDIA CEO調査が引き続き材料",
+   "b": "取締役会が独立調査を進めており、AI・半導体株の重荷として意識されやすい。シカゴ日経先物は6万1,300円台で推移。"
   },
   {
    "h": "今夜は米PPI(22:30)",
    "b": "13日22:30に米PPI(10月分)が予定されている。10日のCPIに続くインフレ指標として注目されやすい。"
   },
   {
-   "h": "来週は米小売売上高とNVIDIA決算",
-   "b": "17日22:30に米小売売上高、18日6:20頃にNVIDIA決算、19日4:00にFOMC議事要旨が予定されている。"
+   "h": "来週はNVIDIA決算が最大の焦点",
+   "b": "16日8:50に日本GDP、17日22:30に米小売売上高、18日6:20頃にNVIDIA決算、19日4:00にFOMC議事要旨が予定されている。"
   }
  ],
  "src": [
-  "https://www.daily.co.jp/society/economics/2026/11/12/0021026566.shtml",
-  "https://www.timeslive.co.za/news/business/2026-11-09-nvidias-shares-slide-as-ceo-probed-over-spy-claims/"
+  "https://fx.minkabu.jp/news/384332",
+  "https://www.aljazeera.com/economy/2026/11/9/nvidia-shares-slump-amid-investigation-into-ceo-jensen-huang",
+  "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Sets-Conference-Call-for-Third-Quarter-Financial-Results/"
  ]
 }

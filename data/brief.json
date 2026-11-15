@@ -1,14 +1,14 @@
 {
  "d": "2026-11-15",
- "t": "06:35",
+ "t": "17:31",
  "items": [
   {
    "h": "13日の米国株はまちまち、半導体が重し",
    "b": "NYダウは50.46ドル高の52,347.55ドル、ナスダックは0.91%安の25,136.27。エヌビディアのCEO辞任報道で半導体株に売りが出た。週間ではS&P500・ナスダックとも5週ぶり上昇と報じられた。"
   },
   {
-   "h": "今日は日曜、週明け16日の日本市場に注目",
-   "b": "13日の日経平均は61,142.35円(+0.53%)で引けた。16日は、13日の米ハイテク・半導体株安や為替が意識されやすい。"
+   "h": "日曜のため日本市場は休み、16日に注目",
+   "b": "直近13日の日経平均は61,142.35円(+0.53%)で引けた。来週は16日の日本GDP、18日朝のNVIDIA決算が意識されやすい。"
   },
   {
    "h": "米国では利上げ警戒感も重し",
@@ -23,6 +23,7 @@
   "https://www.zaikei.co.jp/article/20261114/877563.html",
   "https://www.zaikei.co.jp/article/20261114/877579.html",
   "https://www.zaikei.co.jp/article/20261114/877584.html",
-  "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Sets-Conference-Call-for-Third-Quarter-Financial-Results/"
+  "https://investor.nvidia.com/news/press-release-details/2026/NVIDIA-Sets-Conference-Call-for-Third-Quarter-Financial-Results/",
+  "https://diamond.jp/zai/articles/-/1075498"
  ]
 }

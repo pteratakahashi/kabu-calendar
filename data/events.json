@@ -3802,6 +3802,16 @@
   "src": "https://en.wikipedia.org/wiki/Greenland_crisis"
  },
  {
+  "id": "2026-01-19-us-holiday",
+  "d": "2026-01-19",
+  "country": "US",
+  "title": "米国市場休場（キング牧師記念日）",
+  "desc": "NY市場は終日休場",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.nyse.com/markets/hours-calendars"
+ },
+ {
   "id": "2026-01-19-cn-gdp",
   "d": "2026-01-19",
   "t": "11:00",
@@ -3811,16 +3821,6 @@
   "impact": 2,
   "themes": [],
   "src": "https://english.www.gov.cn/archive/statistics/202601/19/content_WS696ddb7dc6d00ca5f9a08a7f.html"
- },
- {
-  "id": "2026-01-19-us-holiday",
-  "d": "2026-01-19",
-  "country": "US",
-  "title": "米国市場休場（キング牧師記念日）",
-  "desc": "NY市場は終日休場",
-  "impact": 1,
-  "themes": [],
-  "src": "https://www.nyse.com/markets/hours-calendars"
  },
  {
   "id": "2026-01-21-netflix",
@@ -3851,6 +3851,16 @@
   ],
   "src": "https://scouter.monex.co.jp/news/detail/6146_20260121_act_20260121_160006_1",
   "code": "6146"
+ },
+ {
+  "id": "2026-01-23-jp-dissolution",
+  "d": "2026-01-23",
+  "country": "JP",
+  "title": "高市首相、衆議院を解散",
+  "desc": "2/8投開票の総選挙へ、財政拡張期待",
+  "impact": 2,
+  "themes": [],
+  "src": "https://en.wikipedia.org/wiki/2026_Japanese_general_election"
  },
  {
   "id": "2026-01-23-us-pce",
@@ -3904,16 +3914,6 @@
    "bank"
   ],
   "src": "https://www.am.mufg.jp/report/special/special_260123.pdf"
- },
- {
-  "id": "2026-01-23-jp-dissolution",
-  "d": "2026-01-23",
-  "country": "JP",
-  "title": "高市首相、衆議院を解散",
-  "desc": "2/8投開票の総選挙へ、財政拡張期待",
-  "impact": 2,
-  "themes": [],
-  "src": "https://en.wikipedia.org/wiki/2026_Japanese_general_election"
  },
  {
   "id": "2026-01-27-shinetsu",
@@ -4047,6 +4047,16 @@
   "code": "6861"
  },
  {
+  "id": "2026-01-30-warsh-nominee",
+  "d": "2026-01-30",
+  "country": "US",
+  "title": "トランプ氏、次期FRB議長にウォーシュ氏指名を発表",
+  "desc": "パウエル議長の後任、金融政策路線に注目",
+  "impact": 3,
+  "themes": [],
+  "src": "https://en.wikipedia.org/wiki/Kevin_Warsh"
+ },
+ {
   "id": "2026-01-30-apple",
   "d": "2026-01-30",
   "t": "06:30",
@@ -4085,16 +4095,6 @@
   "impact": 2,
   "themes": [],
   "src": "https://www.ftportfolios.com/Commentary/EconomicResearch/2026/1/30/the-producer-price-index-ppi-rose-0.5percent-in-december"
- },
- {
-  "id": "2026-01-30-warsh-nominee",
-  "d": "2026-01-30",
-  "country": "US",
-  "title": "トランプ氏、次期FRB議長にウォーシュ氏指名を発表",
-  "desc": "パウエル議長の後任、金融政策路線に注目",
-  "impact": 3,
-  "themes": [],
-  "src": "https://en.wikipedia.org/wiki/Kevin_Warsh"
  },
  {
   "id": "2026-01-31-cn-pmi",
@@ -4391,6 +4391,16 @@
   "src": "https://seekingalpha.com/news/4549450-retail-sales-flatline-in-december-missing-consensus"
  },
  {
+  "id": "2026-02-11-jp-holiday",
+  "d": "2026-02-11",
+  "country": "JP",
+  "title": "東証休場（建国記念の日）",
+  "desc": "祝日のため国内市場は休場",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html"
+ },
+ {
   "id": "2026-02-11-us-jobs",
   "d": "2026-02-11",
   "t": "22:30",
@@ -4400,16 +4410,6 @@
   "impact": 3,
   "themes": [],
   "src": "https://greenleaftrust.com/news/january-jobs-strong-start-to-2026/"
- },
- {
-  "id": "2026-02-11-jp-holiday",
-  "d": "2026-02-11",
-  "country": "JP",
-  "title": "東証休場（建国記念の日）",
-  "desc": "祝日のため国内市場は休場",
-  "impact": 1,
-  "themes": [],
-  "src": "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html"
  },
  {
   "id": "2026-02-12-sbg",
@@ -4438,6 +4438,16 @@
   "src": "https://www.ftportfolios.com/Commentary/EconomicResearch/2026/2/13/the-consumer-price-index-cpi-rose-0.2percent-in-january"
  },
  {
+  "id": "2026-02-16-us-holiday",
+  "d": "2026-02-16",
+  "country": "US",
+  "title": "米国市場休場（プレジデンツデー）",
+  "desc": "NY市場は終日休場",
+  "impact": 1,
+  "themes": [],
+  "src": "https://www.nyse.com/markets/hours-calendars"
+ },
+ {
   "id": "2026-02-16-jp-gdp",
   "d": "2026-02-16",
   "t": "08:50",
@@ -4447,16 +4457,6 @@
   "impact": 2,
   "themes": [],
   "src": "https://www.sakigake.jp/news/article/20260216CO0032/"
- },
- {
-  "id": "2026-02-16-us-holiday",
-  "d": "2026-02-16",
-  "country": "US",
-  "title": "米国市場休場（プレジデンツデー）",
-  "desc": "NY市場は終日休場",
-  "impact": 1,
-  "themes": [],
-  "src": "https://www.nyse.com/markets/hours-calendars"
  },
  {
   "id": "2026-02-19-us-fomc-minutes",
@@ -4843,6 +4843,15 @@
   "src": "https://www.metalsmine.com/news/1391567-us-manufacturing-pmi-at-527-march-2026-ism"
  },
  {
+  "id": "2026-04-03-us-holiday",
+  "d": "2026-04-03",
+  "country": "US",
+  "title": "米国市場休場（グッドフライデー）",
+  "desc": "米国株は休場。雇用統計は通常通り発表",
+  "impact": 1,
+  "themes": []
+ },
+ {
   "id": "2026-04-03-us-jobs",
   "d": "2026-04-03",
   "t": "21:30",
@@ -4852,15 +4861,6 @@
   "impact": 3,
   "themes": [],
   "src": "https://www.bls.gov/schedule/news_release/empsit.htm"
- },
- {
-  "id": "2026-04-03-us-holiday",
-  "d": "2026-04-03",
-  "country": "US",
-  "title": "米国市場休場（グッドフライデー）",
-  "desc": "米国株は休場。雇用統計は通常通り発表",
-  "impact": 1,
-  "themes": []
  },
  {
   "id": "2026-04-06-us-ism-services",
@@ -5232,6 +5232,18 @@
   "themes": []
  },
  {
+  "id": "2026-04-30-jp-fx-intervention",
+  "d": "2026-04-30",
+  "country": "JP",
+  "title": "政府・日銀が円買い介入（約1年9カ月ぶり）",
+  "desc": "160円台から155円台へ急伸。5/4・5/6も追加介入",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "src": "https://www.thestandard.com.hk/finance/article/330820/Yen-jumps-3-percent-after-officials-final-warning-oil-swept-lower"
+ },
+ {
   "id": "2026-04-30-fomc",
   "d": "2026-04-30",
   "t": "03:00",
@@ -5370,18 +5382,6 @@
   "src": "https://www.bea.gov/news/schedule/full"
  },
  {
-  "id": "2026-04-30-jp-fx-intervention",
-  "d": "2026-04-30",
-  "country": "JP",
-  "title": "政府・日銀が円買い介入（約1年9カ月ぶり）",
-  "desc": "160円台から155円台へ急伸。5/4・5/6も追加介入",
-  "impact": 2,
-  "themes": [
-   "auto"
-  ],
-  "src": "https://www.thestandard.com.hk/finance/article/330820/Yen-jumps-3-percent-after-officials-final-warning-oil-swept-lower"
- },
- {
   "id": "2026-05-01-apple",
   "d": "2026-05-01",
   "t": "05:30",
@@ -5417,17 +5417,6 @@
   "themes": []
  },
  {
-  "id": "2026-05-05-us-ism-services",
-  "d": "2026-05-05",
-  "t": "23:00",
-  "country": "US",
-  "title": "米4月ISM非製造業景況指数",
-  "desc": "米サービス業の景況感。50が節目",
-  "impact": 2,
-  "themes": [],
-  "src": "https://www.metalsmine.com/news/1396894-us-services-pmi-at-536-april-2026-ism/amp"
- },
- {
   "id": "2026-05-05-jp-holiday",
   "d": "2026-05-05",
   "country": "JP",
@@ -5437,20 +5426,15 @@
   "themes": []
  },
  {
-  "id": "2026-05-06-amd",
-  "d": "2026-05-06",
-  "t": "05:15",
-  "approx": true,
+  "id": "2026-05-05-us-ism-services",
+  "d": "2026-05-05",
+  "t": "23:00",
   "country": "US",
-  "title": "AMD 1-3月期決算",
-  "desc": "AI向けGPU需要。データセンター事業に注目",
+  "title": "米4月ISM非製造業景況指数",
+  "desc": "米サービス業の景況感。50が節目",
   "impact": 2,
-  "themes": [
-   "semi",
-   "ai"
-  ],
-  "src": "https://ir.amd.com/news-events/press-releases/detail/1284/amd-reports-first-quarter-2026-financial-results",
-  "ticker": "AMD"
+  "themes": [],
+  "src": "https://www.metalsmine.com/news/1396894-us-services-pmi-at-536-april-2026-ism/amp"
  },
  {
   "id": "2026-05-06-jp-holiday",
@@ -5473,6 +5457,22 @@
    "ai"
   ],
   "src": "https://www.semafor.com/article/05/06/2026/stocks-climb-on-us-iran-deal-hopes"
+ },
+ {
+  "id": "2026-05-06-amd",
+  "d": "2026-05-06",
+  "t": "05:15",
+  "approx": true,
+  "country": "US",
+  "title": "AMD 1-3月期決算",
+  "desc": "AI向けGPU需要。データセンター事業に注目",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "src": "https://ir.amd.com/news-events/press-releases/detail/1284/amd-reports-first-quarter-2026-financial-results",
+  "ticker": "AMD"
  },
  {
   "id": "2026-05-08-sony",
@@ -5945,6 +5945,15 @@
   "themes": []
  },
  {
+  "id": "2026-06-19-us-holiday",
+  "d": "2026-06-19",
+  "country": "US",
+  "title": "米国市場休場（ジューンティーンス）",
+  "desc": "米国株は休場。日本市場は通常取引",
+  "impact": 1,
+  "themes": []
+ },
+ {
   "id": "2026-06-19-jp-cpi",
   "d": "2026-06-19",
   "t": "08:30",
@@ -5956,15 +5965,6 @@
    "bank"
   ],
   "src": "https://english.adnkronos.com/2026/06/19/japan-core-consumer-prices-rise-1-4-pct-in-may/"
- },
- {
-  "id": "2026-06-19-us-holiday",
-  "d": "2026-06-19",
-  "country": "US",
-  "title": "米国市場休場（ジューンティーンス）",
-  "desc": "米国株は休場。日本市場は通常取引",
-  "impact": 1,
-  "themes": []
  },
  {
   "id": "2026-06-25-mu",
@@ -6208,6 +6208,19 @@
   "src": "https://www.census.gov/retail/release_schedule.html"
  },
  {
+  "id": "2026-07-17-nikkei-plunge",
+  "d": "2026-07-17",
+  "country": "JP",
+  "title": "日経平均2694円安（歴代5位の下げ幅）",
+  "desc": "米ハイテク安でAI・DC関連に売り集中",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "src": "https://kumanichi.com/articles/2014775"
+ },
+ {
   "id": "2026-07-17-netflix",
   "d": "2026-07-17",
   "t": "05:00",
@@ -6233,19 +6246,6 @@
   "impact": 1,
   "themes": [],
   "src": "https://tradingeconomics.com/united-states/consumer-confidence/news/567948"
- },
- {
-  "id": "2026-07-17-nikkei-plunge",
-  "d": "2026-07-17",
-  "country": "JP",
-  "title": "日経平均2694円安（歴代5位の下げ幅）",
-  "desc": "米ハイテク安でAI・DC関連に売り集中",
-  "impact": 2,
-  "themes": [
-   "semi",
-   "ai"
-  ],
-  "src": "https://kumanichi.com/articles/2014775"
  },
  {
   "id": "2026-07-20-jp-holiday",
@@ -6313,6 +6313,30 @@
   "src": "https://www.ecb.europa.eu/press/press_conference/monetary-policy-statement/2026/html/index_include.en.html"
  },
  {
+  "id": "2026-07-24-nikkei-mideast",
+  "d": "2026-07-24",
+  "country": "JP",
+  "title": "フーシ派タンカー攻撃で日経平均3%安",
+  "desc": "紅海の原油供給不安が再燃。一時2000円超安",
+  "impact": 2,
+  "themes": [
+   "ship"
+  ],
+  "src": "https://english.adnkronos.com/2026/07/24/nikkei-briefly-dives-over-2000-points-in-morning/"
+ },
+ {
+  "id": "2026-07-24-us-forced-labor-tariff",
+  "d": "2026-07-24",
+  "country": "US",
+  "title": "米、強制労働理由に60か国へ追加関税",
+  "desc": "日本は一律12.5%。122条関税の後継措置",
+  "impact": 2,
+  "themes": [
+   "auto"
+  ],
+  "src": "https://www.jetro.go.jp/biznews/2026/07/a4c34f1e9b687c71.html"
+ },
+ {
   "id": "2026-07-24-intel",
   "d": "2026-07-24",
   "t": "05:05",
@@ -6339,30 +6363,6 @@
    "bank"
   ],
   "src": "https://www.stat.go.jp/info/mail/pdf/20260724_no1880.pdf"
- },
- {
-  "id": "2026-07-24-nikkei-mideast",
-  "d": "2026-07-24",
-  "country": "JP",
-  "title": "フーシ派タンカー攻撃で日経平均3%安",
-  "desc": "紅海の原油供給不安が再燃。一時2000円超安",
-  "impact": 2,
-  "themes": [
-   "ship"
-  ],
-  "src": "https://english.adnkronos.com/2026/07/24/nikkei-briefly-dives-over-2000-points-in-morning/"
- },
- {
-  "id": "2026-07-24-us-forced-labor-tariff",
-  "d": "2026-07-24",
-  "country": "US",
-  "title": "米、強制労働理由に60か国へ追加関税",
-  "desc": "日本は一律12.5%。122条関税の後継措置",
-  "impact": 2,
-  "themes": [
-   "auto"
-  ],
-  "src": "https://www.jetro.go.jp/biznews/2026/07/a4c34f1e9b687c71.html"
  },
  {
   "id": "2026-07-28-nikkei-ai-selloff",
@@ -6673,19 +6673,6 @@
   "src": "https://www.federalreserve.gov/newsevents/2026-august.htm"
  },
  {
-  "id": "2026-08-21-jp-cpi",
-  "d": "2026-08-21",
-  "t": "08:30",
-  "country": "JP",
-  "title": "全国CPI（7月分）",
-  "desc": "コアCPIは前年比+1.8%。日銀の判断材料",
-  "impact": 2,
-  "themes": [
-   "bank"
-  ],
-  "src": "https://www.stat.go.jp/info/mail/pdf/20260821_no1889.pdf"
- },
- {
   "id": "2026-08-21-us-iran-sanctions",
   "d": "2026-08-21",
   "country": "US",
@@ -6697,6 +6684,19 @@
    "trading"
   ],
   "src": "https://www.thestar.com.my/business/business-news/2026/08/21/japan039s-nikkei-logs-worst-week-in-over-a-month-on-middle-east-uncertainty"
+ },
+ {
+  "id": "2026-08-21-jp-cpi",
+  "d": "2026-08-21",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国CPI（7月分）",
+  "desc": "コアCPIは前年比+1.8%。日銀の判断材料",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "src": "https://www.stat.go.jp/info/mail/pdf/20260821_no1889.pdf"
  },
  {
   "id": "2026-08-26-us-pce",
@@ -7057,6 +7057,20 @@
   "tentative": false
  },
  {
+  "id": "2026-10-08-samsung-prelim",
+  "d": "2026-10-08",
+  "country": "KR",
+  "title": "サムスン電子 7-9月期暫定決算",
+  "desc": "メモリ市況を占う。半導体株の材料",
+  "impact": 2,
+  "themes": [
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://news.samsung.com/global/samsung-electronics-announces-earnings-guidance-for-third-quarter-2026",
+  "ticker": "005930.KS"
+ },
+ {
   "id": "2026-10-08-fomc-minutes",
   "d": "2026-10-08",
   "t": "03:00",
@@ -7122,20 +7136,6 @@
   ],
   "tentative": false,
   "code": "9983"
- },
- {
-  "id": "2026-10-08-samsung-prelim",
-  "d": "2026-10-08",
-  "country": "KR",
-  "title": "サムスン電子 7-9月期暫定決算",
-  "desc": "メモリ市況を占う。半導体株の材料",
-  "impact": 2,
-  "themes": [
-   "semi"
-  ],
-  "tentative": false,
-  "src": "https://news.samsung.com/global/samsung-electronics-announces-earnings-guidance-for-third-quarter-2026",
-  "ticker": "005930.KS"
  },
  {
   "id": "2026-10-09-jp-machine-tool",
@@ -7325,6 +7325,40 @@
   "ticker": "NFLX"
  },
  {
+  "id": "2026-10-22-meta",
+  "d": "2026-10-22",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "メタ 7-9月期決算",
+  "desc": "AI設備投資額に注目。10/21引け後発表、説明会は日本時間06:30〜",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "semi"
+  ],
+  "tentative": false,
+  "src": "https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-to-Announce-Third-Quarter-2026-Results/default.aspx",
+  "ticker": "META"
+ },
+ {
+  "id": "2026-10-22-lam",
+  "d": "2026-10-22",
+  "t": "05:05",
+  "approx": true,
+  "country": "US",
+  "title": "ラムリサーチ 7-9月期決算",
+  "desc": "売上82.2億ドル（予想超え）。12月期ガイダンス86億ドル前後、時間外は下落との報道",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "semiequip"
+  ],
+  "tentative": false,
+  "src": "https://www.investing.com/news/earnings/lam-research-tops-firstquarter-targets-and-issues-upbeat-guidance-stock-falls-4963987",
+  "ticker": "LRCX"
+ },
+ {
   "id": "2026-10-22-tesla",
   "d": "2026-10-22",
   "t": "06:30",
@@ -7440,40 +7474,6 @@
   "tentative": false,
   "src": "https://abc.xyz/investor/news/news-details/2026/Alphabet-Announces-Date-of-Third-Quarter-2026-Financial-Results-Conference-Call-2026-8tpGZsLS6v/default.aspx",
   "ticker": "GOOGL"
- },
- {
-  "id": "2026-10-22-meta",
-  "d": "2026-10-22",
-  "t": "05:05",
-  "approx": true,
-  "country": "US",
-  "title": "メタ 7-9月期決算",
-  "desc": "AI設備投資額に注目。10/21引け後発表、説明会は日本時間06:30〜",
-  "impact": 2,
-  "themes": [
-   "ai",
-   "semi"
-  ],
-  "tentative": false,
-  "src": "https://investor.atmeta.com/investor-news/press-release-details/2026/Meta-to-Announce-Third-Quarter-2026-Results/default.aspx",
-  "ticker": "META"
- },
- {
-  "id": "2026-10-22-lam",
-  "d": "2026-10-22",
-  "t": "05:05",
-  "approx": true,
-  "country": "US",
-  "title": "ラムリサーチ 7-9月期決算",
-  "desc": "売上82.2億ドル（予想超え）。12月期ガイダンス86億ドル前後、時間外は下落との報道",
-  "impact": 2,
-  "themes": [
-   "semi",
-   "semiequip"
-  ],
-  "tentative": false,
-  "src": "https://www.investing.com/news/earnings/lam-research-tops-firstquarter-targets-and-issues-upbeat-guidance-stock-falls-4963987",
-  "ticker": "LRCX"
  },
  {
   "id": "2026-10-29-microsoft",
@@ -7608,6 +7608,16 @@
   "src": "https://www.stats.gov.cn/english/PressRelease/ReleaseCalendar/202512/t20251226_1962154.html"
  },
  {
+  "id": "2026-11-03-jp-holiday",
+  "d": "2026-11-03",
+  "country": "JP",
+  "title": "東証休場（文化の日）",
+  "desc": "日本市場は休場。米国株は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false
+ },
+ {
   "id": "2026-11-03-us-ism-mfg",
   "d": "2026-11-03",
   "t": "00:00",
@@ -7618,6 +7628,23 @@
   "themes": [],
   "tentative": false,
   "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/rob-report-calendar/"
+ },
+ {
+  "id": "2026-11-03-palantir",
+  "d": "2026-11-03",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "title": "パランティア 7-9月期決算",
+  "desc": "AI・防衛ソフトの需要を占う（米引け後・売上23.1億ドル、前年比+96%）",
+  "impact": 2,
+  "themes": [
+   "ai",
+   "cyber"
+  ],
+  "tentative": false,
+  "ticker": "PLTR",
+  "src": "https://www.sec.gov/Archives/edgar/data/0001321655/000132165526000045/a2026q3ex991pressrelease.htm"
  },
  {
   "id": "2026-11-03-apple",
@@ -7636,14 +7663,16 @@
   "ticker": "AAPL"
  },
  {
-  "id": "2026-11-03-jp-holiday",
-  "d": "2026-11-03",
-  "country": "JP",
-  "title": "東証休場（文化の日）",
-  "desc": "日本市場は休場。米国株は通常取引",
-  "impact": 1,
+  "id": "2026-11-04-us-midterms",
+  "d": "2026-11-04",
+  "approx": true,
+  "country": "US",
+  "title": "米中間選挙（開票・11/3投票）",
+  "desc": "議会の勢力図で財政・関税・AI政策の見通しが変わりうる",
+  "impact": 2,
   "themes": [],
-  "tentative": false
+  "tentative": false,
+  "src": "https://www.schwabassetmanagement.com/story/what-2026-midterms-could-mean-markets"
  },
  {
   "id": "2026-11-04-amd",
@@ -7699,6 +7728,21 @@
   "src": "https://www.bls.gov/schedule/news_release/empsit.htm"
  },
  {
+  "id": "2026-11-10-tsmc-monthly",
+  "d": "2026-11-10",
+  "country": "TW",
+  "title": "TSMC 月次売上高（10月）",
+  "desc": "10月売上は前年比59.7%増で過去最高",
+  "impact": 2,
+  "themes": [
+   "semi",
+   "ai"
+  ],
+  "tentative": false,
+  "ticker": "TSM",
+  "src": "https://jp.investing.com/news/stock-market-news/article-1749906"
+ },
+ {
   "id": "2026-11-10-softbank-group",
   "d": "2026-11-10",
   "t": "15:30",
@@ -7726,6 +7770,42 @@
   "src": "https://www.bls.gov/schedule/news_release/cpi.htm"
  },
  {
+  "id": "2026-11-13-us-ppi",
+  "d": "2026-11-13",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PPI（10月分）",
+  "desc": "生産者物価。CPIの先行指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.bls.gov/schedule/news_release/ppi.htm"
+ },
+ {
+  "id": "2026-11-16-jp-gdp",
+  "d": "2026-11-16",
+  "t": "08:50",
+  "country": "JP",
+  "title": "日本GDP（7-9月期・1次速報）",
+  "desc": "国内景気の方向感を確認",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.esri.cao.go.jp/jp/sna/kouhyou/kouhyou_top.html"
+ },
+ {
+  "id": "2026-11-17-us-retail",
+  "d": "2026-11-17",
+  "t": "22:30",
+  "country": "US",
+  "title": "米小売売上高（10月分）",
+  "desc": "米個人消費の強さを測る指標",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.census.gov/retail/release_schedule.html"
+ },
+ {
   "id": "2026-11-18-nvda",
   "d": "2026-11-18",
   "t": "06:20",
@@ -7742,6 +7822,29 @@
   "tentative": false,
   "src": "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873",
   "ticker": "NVDA"
+ },
+ {
+  "id": "2026-11-19-apec-summit",
+  "d": "2026-11-19",
+  "country": "CN",
+  "title": "APEC首脳会議・米中ロ首脳会談報道",
+  "desc": "中国・深センで18-19日開催、米中首脳会談に注目",
+  "impact": 2,
+  "themes": [],
+  "tentative": true,
+  "src": "https://kabutan.jp/news/marketnews/?b=n202611150071"
+ },
+ {
+  "id": "2026-11-19-fomc-minutes",
+  "d": "2026-11-19",
+  "t": "04:00",
+  "country": "US",
+  "title": "FOMC議事要旨（10月会合分）",
+  "desc": "10月27-28日会合の議論内容に注目",
+  "impact": 2,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.federalreserve.gov/newsevents/2026-november.htm"
  },
  {
   "id": "2026-12-04-us-jobs",
@@ -7809,97 +7912,5 @@
   ],
   "tentative": false,
   "src": "https://www.boj.or.jp/mopo/mpmsche_minu/index.htm"
- },
- {
-  "id": "2026-11-10-tsmc-monthly",
-  "d": "2026-11-10",
-  "country": "TW",
-  "title": "TSMC 月次売上高（10月）",
-  "desc": "10月売上は前年比59.7%増で過去最高",
-  "impact": 2,
-  "themes": [
-   "semi",
-   "ai"
-  ],
-  "tentative": false,
-  "ticker": "TSM",
-  "src": "https://jp.investing.com/news/stock-market-news/article-1749906"
- },
- {
-  "id": "2026-11-04-us-midterms",
-  "d": "2026-11-04",
-  "approx": true,
-  "country": "US",
-  "title": "米中間選挙（開票・11/3投票）",
-  "desc": "議会の勢力図で財政・関税・AI政策の見通しが変わりうる",
-  "impact": 2,
-  "themes": [],
-  "tentative": false,
-  "src": "https://www.schwabassetmanagement.com/story/what-2026-midterms-could-mean-markets"
- },
- {
-  "id": "2026-11-03-palantir",
-  "d": "2026-11-03",
-  "t": "06:00",
-  "approx": true,
-  "country": "US",
-  "title": "パランティア 7-9月期決算",
-  "desc": "AI・防衛ソフトの需要を占う（米引け後・売上23.1億ドル、前年比+96%）",
-  "impact": 2,
-  "themes": [
-   "ai",
-   "cyber"
-  ],
-  "tentative": false,
-  "ticker": "PLTR",
-  "src": "https://www.sec.gov/Archives/edgar/data/0001321655/000132165526000045/a2026q3ex991pressrelease.htm"
- },
- {
-  "id": "2026-11-16-jp-gdp",
-  "d": "2026-11-16",
-  "t": "08:50",
-  "country": "JP",
-  "title": "日本GDP（7-9月期・1次速報）",
-  "desc": "国内景気の方向感を確認",
-  "impact": 1,
-  "themes": [],
-  "tentative": false,
-  "src": "https://www.esri.cao.go.jp/jp/sna/kouhyou/kouhyou_top.html"
- },
- {
-  "id": "2026-11-13-us-ppi",
-  "d": "2026-11-13",
-  "t": "22:30",
-  "country": "US",
-  "title": "米PPI（10月分）",
-  "desc": "生産者物価。CPIの先行指標",
-  "impact": 2,
-  "themes": [],
-  "tentative": false,
-  "src": "https://www.bls.gov/schedule/news_release/ppi.htm"
- },
- {
-  "id": "2026-11-17-us-retail",
-  "d": "2026-11-17",
-  "t": "22:30",
-  "country": "US",
-  "title": "米小売売上高（10月分）",
-  "desc": "米個人消費の強さを測る指標",
-  "impact": 2,
-  "themes": [],
-  "tentative": false,
-  "src": "https://www.census.gov/retail/release_schedule.html"
- },
- {
-  "id": "2026-11-19-fomc-minutes",
-  "d": "2026-11-19",
-  "t": "04:00",
-  "country": "US",
-  "title": "FOMC議事要旨（10月会合分）",
-  "desc": "10月27-28日会合の議論内容に注目",
-  "impact": 2,
-  "themes": [],
-  "tentative": false,
-  "src": "https://www.federalreserve.gov/newsevents/2026-november.htm"
  }
 ]

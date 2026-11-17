@@ -7847,6 +7847,54 @@
   "src": "https://www.federalreserve.gov/newsevents/2026-november.htm"
  },
  {
+  "id": "2026-11-20-jp-cpi",
+  "d": "2026-11-20",
+  "t": "08:30",
+  "country": "JP",
+  "title": "全国消費者物価指数（10月分）",
+  "desc": "国内インフレ動向。日銀の利上げ判断材料",
+  "impact": 2,
+  "themes": [
+   "bank"
+  ],
+  "tentative": true,
+  "src": "https://www.stat.go.jp/data/cpi/"
+ },
+ {
+  "id": "2026-11-23-jp-holiday",
+  "d": "2026-11-23",
+  "country": "JP",
+  "title": "東証休場（勤労感謝の日）",
+  "desc": "日本市場は休場。米国株は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www8.cao.go.jp/chosei/shukujitsu/gaiyou.html"
+ },
+ {
+  "id": "2026-11-25-us-pce",
+  "d": "2026-11-25",
+  "t": "22:30",
+  "country": "US",
+  "title": "米PCEデフレーター（10月分）",
+  "desc": "FRBが重視する物価指標。12月FOMCの材料",
+  "impact": 2,
+  "themes": [],
+  "tentative": true,
+  "src": "https://www.bea.gov/news/schedule"
+ },
+ {
+  "id": "2026-11-26-us-holiday",
+  "d": "2026-11-26",
+  "country": "US",
+  "title": "米国市場休場（感謝祭）",
+  "desc": "米国株は休場。日本市場は通常取引",
+  "impact": 1,
+  "themes": [],
+  "tentative": false,
+  "src": "https://www.nyse.com/markets/hours-calendars"
+ },
+ {
   "id": "2026-12-04-us-jobs",
   "d": "2026-12-04",
   "t": "22:30",

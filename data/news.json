@@ -1492,5 +1492,30 @@
    "NVDA"
   ],
   "src": "https://www.timeslive.co.za/news/business/2026-11-09-nvidias-shares-slide-as-ceo-probed-over-spy-claims/"
+ },
+ {
+  "id": "2026-11-17-us-ai-chip-export-curbs",
+  "d": "2026-11-17",
+  "t": "06:00",
+  "approx": true,
+  "country": "US",
+  "cat": "関税・貿易",
+  "title": "米、AI半導体の輸出規制を強化",
+  "desc": "米商務省がシンガポール等5カ国向けAI半導体に許可制を導入と報道。16日SOXは5%超下落、日経平均は801円安",
+  "impact": 3,
+  "themes": [
+   "semi",
+   "ai",
+   "semiequip",
+   "datacenter"
+  ],
+  "codes": [
+   "6857",
+   "8035"
+  ],
+  "tickers": [
+   "NVDA"
+  ],
+  "src": "https://www.zaikei.co.jp/article/20261117/877970.html"
  }
 ]

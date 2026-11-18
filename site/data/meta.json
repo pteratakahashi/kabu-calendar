@@ -2,7 +2,7 @@
  "sources": {
   "jpx": {
    "ok": true,
-   "count": 3199
+   "count": 3204
   },
   "jquants": {
    "ok": false,
@@ -13,8 +13,8 @@
    "count": 1636
   }
  },
- "updated_at": "2026-11-18T12:27:37+09:00",
- "earnings_count": 4710,
- "stocks_count": 3686,
+ "updated_at": "2026-11-18T17:32:39+09:00",
+ "earnings_count": 4711,
+ "stocks_count": 3687,
  "events_count": 615
 }

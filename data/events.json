@@ -7867,13 +7867,13 @@
     "t": "08:30",
     "country": "JP",
     "title": "全国消費者物価指数（10月分）",
-    "desc": "国内インフレ動向。日銀の利上げ判断材料",
+    "desc": "コアCPIは前年比+2.2%（予想+2.3%）。12月利上げ観測は維持",
     "impact": 2,
     "themes": [
       "bank"
     ],
-    "tentative": true,
-    "src": "https://www.stat.go.jp/data/cpi/"
+    "tentative": false,
+    "src": "https://www.oanda.jp/lab-education/market_news/jpcpi-oct-2026-review/"
   },
   {
     "id": "2026-11-23-jp-holiday",

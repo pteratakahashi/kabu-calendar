@@ -7940,6 +7940,32 @@
     "src": "https://www.nyse.com/markets/hours-calendars"
   },
   {
+    "id": "2026-11-27-jp-tokyo-cpi",
+    "d": "2026-11-27",
+    "t": "08:30",
+    "country": "JP",
+    "title": "東京都区部CPI（11月分・中旬速報）",
+    "desc": "全国CPIの先行指標。日銀の12月会合判断材料",
+    "impact": 1,
+    "themes": [
+      "bank"
+    ],
+    "tentative": false,
+    "src": "https://www.e-stat.go.jp/release-calendar/detail/00200573/202611270830"
+  },
+  {
+    "id": "2026-12-02-us-ism-mfg",
+    "d": "2026-12-02",
+    "t": "00:00",
+    "country": "US",
+    "title": "米11月ISM製造業景況指数",
+    "desc": "米製造業の景況感。50が節目",
+    "impact": 2,
+    "themes": [],
+    "tentative": false,
+    "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/rob-report-calendar/"
+  },
+  {
     "id": "2026-12-03-crm",
     "d": "2026-12-03",
     "t": "06:00",
@@ -7954,6 +7980,18 @@
     "tentative": false,
     "ticker": "CRM",
     "src": "https://investor.salesforce.com/news/news-details/2026/Salesforce-Announces-Date-of-Third-Quarter-Fiscal-2027-Earnings-Release-and-Webcast/default.aspx"
+  },
+  {
+    "id": "2026-12-04-us-ism-services",
+    "d": "2026-12-04",
+    "t": "00:00",
+    "country": "US",
+    "title": "米11月ISM非製造業景況指数",
+    "desc": "米サービス業の景況感。50が節目",
+    "impact": 2,
+    "themes": [],
+    "tentative": false,
+    "src": "https://www.ismworld.org/supply-management-news-and-reports/reports/rob-report-calendar/"
   },
   {
     "id": "2026-12-04-us-jobs",

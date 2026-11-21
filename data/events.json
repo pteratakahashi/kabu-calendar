@@ -8059,5 +8059,23 @@
     ],
     "tentative": false,
     "src": "https://www.boj.or.jp/mopo/mpmsche_minu/index.htm"
+  },
+  {
+    "id": "2026-12-02-marvell",
+    "d": "2026-12-02",
+    "t": "06:30",
+    "approx": true,
+    "country": "US",
+    "title": "マーベル・テクノロジー決算（FY27 Q3）",
+    "desc": "AIカスタム半導体・データセンター需要を占う",
+    "impact": 2,
+    "themes": [
+      "semi",
+      "ai",
+      "datacenter"
+    ],
+    "tentative": false,
+    "src": "https://investor.marvell.com/news-events/press-releases/detail/1041/marvell-technology-inc-announces-conference-call-to-review-third-quarter-of-fiscal-year-2027-financial-results",
+    "ticker": "MRVL"
   }
 ]

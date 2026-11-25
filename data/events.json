@@ -7900,9 +7900,9 @@
       "datacenter",
       "semi"
     ],
-    "tentative": true,
+    "tentative": false,
     "ticker": "DELL",
-    "src": "https://walnutinvest.com/stocks/dell/earnings"
+    "src": "https://investors.delltechnologies.com/news-events/press-releases/detail/1665/dell-technologies-delivers-third-quarter-fiscal-2027-financial-results"
   },
   {
     "id": "2026-11-25-us-pce",
@@ -8077,5 +8077,16 @@
     "tentative": false,
     "src": "https://investor.marvell.com/news-events/press-releases/detail/1041/marvell-technology-inc-announces-conference-call-to-review-third-quarter-of-fiscal-year-2027-financial-results",
     "ticker": "MRVL"
+  },
+  {
+    "id": "2026-11-28-us-short-session",
+    "d": "2026-11-28",
+    "t": "03:00",
+    "country": "US",
+    "title": "米国市場 短縮取引（感謝祭翌日・13時引け）",
+    "desc": "米東部13時（日本時間3時）に前倒しで取引終了",
+    "impact": 1,
+    "themes": [],
+    "tentative": false
   }
 ]

@@ -8088,5 +8088,23 @@
     "impact": 1,
     "themes": [],
     "tentative": false
+  },
+  {
+    "id": "2026-12-10-broadcom",
+    "d": "2026-12-10",
+    "t": "06:15",
+    "approx": true,
+    "country": "US",
+    "title": "ブロードコム決算（Q4 FY26）",
+    "desc": "AI半導体・ネットワーク需要の注目決算",
+    "impact": 2,
+    "themes": [
+      "semi",
+      "ai",
+      "datacenter"
+    ],
+    "tentative": false,
+    "src": "https://investors.broadcom.com/news-releases/news-release-details/broadcom-inc-announce-fourth-quarter-and-fiscal-year-2026",
+    "ticker": "AVGO"
   }
 ]
